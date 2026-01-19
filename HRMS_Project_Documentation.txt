@@ -1,0 +1,3574 @@
+# HRMS (Human Resource Management System) - Complete Project Documentation
+
+## Version 1.0
+### BCA Semester 6 Project | MERN Stack Implementation
+
+---
+
+## Table of Contents
+
+1. [Executive Summary](#executive-summary)
+2. [Project Overview](#project-overview)
+3. [Objectives and Scope](#objectives-and-scope)
+4. [Technology Stack](#technology-stack)
+5. [System Requirements](#system-requirements)
+6. [User Roles and Access Control](#user-roles-and-access-control)
+7. [Functional Requirements](#functional-requirements)
+8. [Non-Functional Requirements](#non-functional-requirements)
+9. [System Architecture](#system-architecture)
+10. [Database Design](#database-design)
+11. [API Specification](#api-specification)
+12. [Detailed System Analysis](#detailed-system-analysis)
+13. [Step-by-Step Implementation Plan](#step-by-step-implementation-plan)
+14. [Testing Strategy](#testing-strategy)
+15. [Deployment Guide](#deployment-guide)
+16. [Future Enhancements](#future-enhancements)
+
+---
+
+## 1. Executive Summary
+
+The Human Resource Management System (HRMS) is a comprehensive web-based application designed to streamline and automate HR operations within an organization. This project is developed using the MERN stack (MongoDB, Express.js, React.js, Node.js) and provides core functionalities including employee management, attendance tracking, leave management, payroll processing, and basic recruitment workflows.
+
+**Project Scope:** Small to medium-scale organizations (100-1000 employees)
+**Development Timeline:** 8-12 weeks
+**Team Size:** 1-2 developers (suitable for BCA semester project)
+**Target Deployment:** Cloud-based (Vercel + Render/Railway)
+
+---
+
+## 2. Project Overview
+
+### 2.1 What is HRMS?
+
+A Human Resource Management System is a centralized digital platform that enables organizations to efficiently manage all HR-related processes and employee information in one place, replacing manual spreadsheets and paper-based systems.
+
+### 2.2 Problem Statement
+
+**Current Challenges (Manual System):**
+- Attendance tracking done manually on paper or Excel spreadsheets → error-prone
+- Leave requests managed via email → no audit trail
+- Payroll calculations are time-consuming and prone to mistakes
+- Employee information scattered across documents → difficult to access
+- No centralized employee database → data redundancy
+- Reports generation is manual and slow
+
+### 2.3 Proposed Solution
+
+An integrated HRMS application with:
+- Digital attendance tracking with automated reporting
+- Streamlined leave approval workflow
+- Automated payroll calculation based on attendance
+- Centralized employee database with document management
+- Role-based access for Admin, HR, and Employees
+- Real-time dashboards and analytics
+
+### 2.4 Key Features (MVP - Minimum Viable Product)
+
+| Feature | Description |
+|---------|-------------|
+| **User Authentication** | Secure JWT-based login with role-based access |
+| **Employee Management** | CRUD operations for employee records and documents |
+| **Attendance Management** | Check-in/check-out tracking with daily/monthly reports |
+| **Leave Management** | Apply, approve, track leaves with automatic balance calculation |
+| **Payroll Module** | Calculate salaries based on attendance and leaves |
+| **Dashboards** | Role-specific dashboards with key metrics |
+| **Reports** | Export attendance, leave, and payroll reports as CSV/PDF |
+| **Recruitment (Optional)** | Job postings and candidate management |
+
+---
+
+## 3. Objectives and Scope
+
+### 3.1 Primary Objectives
+
+1. **Centralization:** Create a single source of truth for all employee and HR data
+2. **Automation:** Reduce manual effort in attendance, leave, and payroll processing
+3. **Accuracy:** Minimize errors in calculations and data entry
+4. **Accessibility:** Provide real-time access to HR information for authorized personnel
+5. **Reporting:** Generate comprehensive reports for decision-making
+6. **Compliance:** Maintain proper audit trails and data integrity
+
+### 3.2 In-Scope Features (v1.0)
+
+- ✅ Multi-role authentication and authorization (Admin, HR, Employee)
+- ✅ Complete employee master data management
+- ✅ Daily attendance tracking (check-in/check-out)
+- ✅ Leave request and approval workflow
+- ✅ Basic payroll calculation (monthly salary against attendance)
+- ✅ Dashboard with key metrics
+- ✅ Report generation and export (CSV)
+- ✅ Basic recruitment module (optional)
+- ✅ Mobile-responsive UI
+
+### 3.3 Out-of-Scope Features (Future Versions)
+
+- ❌ Advanced statutory compliance (PF, ESI, Income Tax calculation)
+- ❌ Biometric device integration
+- ❌ Performance management and appraisal system
+- ❌ Training and development module
+- ❌ Advanced analytics and business intelligence
+- ❌ SMS/Email notifications (basic logging only)
+- ❌ API rate limiting and advanced security
+
+### 3.4 Business Constraints
+
+- **Budget:** College project (minimal/free resources)
+- **Timeline:** 8-12 weeks (typical semester duration)
+- **Team:** 1-2 developers
+- **Infrastructure:** Cloud-based free/trial tier services
+- **Data Volume:** Support up to 10,000 employee records in v1.0
+
+---
+
+## 4. Technology Stack
+
+### 4.1 Frontend Stack
+
+| Technology | Purpose | Version |
+|-----------|---------|---------|
+| **React.js** | UI library | 18.x |
+| **React Router** | Client-side routing | 6.x |
+| **Axios** | HTTP client for API calls | Latest |
+| **Tailwind CSS / Material-UI** | Styling and components | Latest |
+| **Zustand / Context API** | State management | Latest |
+| **React Query** | Server state management | 5.x |
+| **Formik + Yup** | Form validation | Latest |
+| **React DatePicker** | Date input component | Latest |
+| **Chart.js / Recharts** | Dashboard charts | Latest |
+
+### 4.2 Backend Stack
+
+| Technology | Purpose | Version |
+|-----------|---------|---------|
+| **Node.js** | Runtime environment | 18.x or 20.x |
+| **Express.js** | Web framework | 4.x |
+| **MongoDB** | NoSQL database | 4.x+ (Atlas) |
+| **Mongoose** | ODM for MongoDB | 7.x |
+| **JWT** | Authentication token | jsonwebtoken 9.x |
+| **bcrypt** | Password hashing | 5.x |
+| **Dotenv** | Environment variables | Latest |
+| **Cors** | Cross-origin handling | Latest |
+| **Multer** | File upload handling | Latest |
+| **Joi/Express-validator** | Input validation | Latest |
+
+### 4.3 Development Tools
+
+| Tool | Purpose |
+|------|---------|
+| **VS Code** | Code editor |
+| **Git/GitHub** | Version control |
+| **Postman** | API testing |
+| **MongoDB Compass** | Database GUI |
+| **npm/yarn** | Package manager |
+
+### 4.4 Deployment Stack
+
+| Component | Service |
+|-----------|---------|
+| **Frontend Hosting** | Vercel / Netlify |
+| **Backend Hosting** | Render / Railway / Heroku |
+| **Database** | MongoDB Atlas (Free tier) |
+| **File Storage** | Cloudinary (optional) or Local storage |
+| **Version Control** | GitHub |
+
+---
+
+## 5. System Requirements
+
+### 5.1 Hardware Requirements
+
+#### For Development
+- **Processor:** Intel i5 / Ryzen 5 or equivalent
+- **RAM:** 8 GB minimum (16 GB recommended)
+- **Storage:** 10 GB free disk space
+- **Internet:** Stable broadband connection (5 Mbps+)
+
+#### For Production Deployment
+- **Server:** Cloud server (Render/Railway free tier adequate for dev project)
+- **Database:** MongoDB Atlas free tier (512 MB storage)
+- **CDN:** Optional, not required for college project
+
+### 5.2 Software Requirements
+
+#### For Development
+- **OS:** Windows 10/11, macOS, or Ubuntu 20.04+
+- **Node.js:** v18.0 or v20.0 LTS
+- **npm:** v8.0+
+- **Git:** v2.30+
+- **Browser:** Chrome/Firefox/Edge (latest version)
+- **Code Editor:** VS Code
+
+#### For Running the Application
+- **Browser:** Chrome 90+, Firefox 88+, Safari 14+, Edge 90+
+- **Internet:** Minimum 2 Mbps
+- **RAM:** 2 GB (client-side)
+
+### 5.3 Database Requirements
+
+- **MongoDB version:** 4.4+ or MongoDB Atlas (cloud)
+- **Initial storage:** 100 MB
+- **Expected growth:** ~1 MB per 1000 employee records
+- **Backup:** Automatic (via MongoDB Atlas)
+
+---
+
+## 6. User Roles and Access Control
+
+### 6.1 Role Hierarchy
+
+```
+┌─────────────┐
+│   ADMIN     │ (Super User - Can manage everything)
+└─────────────┘
+       │
+       ├─→ Manage HR Users
+       ├─→ View all data
+       ├─→ System settings
+       │
+┌─────────────┐
+│     HR      │ (HR Manager - Manages employees and operations)
+└─────────────┘
+       │
+       ├─→ Manage Employees
+       ├─→ Review Attendance
+       ├─→ Approve/Reject Leaves
+       ├─→ Generate Payroll
+       ├─→ View Reports
+       │
+┌─────────────┐
+│  EMPLOYEE   │ (End User - Personal operations only)
+└─────────────┘
+       │
+       ├─→ View own profile
+       ├─→ Mark attendance
+       ├─→ Apply for leaves
+       ├─→ View payslip
+```
+
+### 6.2 Permission Matrix
+
+| Feature | Admin | HR | Employee |
+|---------|-------|----|----|
+| **User Management** | ✅ Full | ❌ None | ❌ None |
+| **Employee CRUD** | ✅ Full | ✅ Full | ❌ View only |
+| **Attendance View** | ✅ All | ✅ All | ❌ Own only |
+| **Attendance Mark** | ✅ All | ✅ On behalf | ✅ Own only |
+| **Leave Approve** | ✅ All | ✅ All | ❌ None |
+| **Leave Apply** | ✅ All | ✅ Own only | ✅ Own only |
+| **Payroll View** | ✅ All | ✅ All | ❌ Own only |
+| **Reports** | ✅ All | ✅ All | ❌ None |
+| **Settings** | ✅ All | ❌ None | ❌ None |
+
+### 6.3 Authentication & Authorization Flow
+
+```
+1. User logs in with email + password
+   ↓
+2. Backend verifies credentials and checks against users collection
+   ↓
+3. Password matched → Generate JWT token with role embedded
+   ↓
+4. Send token to frontend
+   ↓
+5. Frontend stores token in localStorage and redirects to dashboard
+   ↓
+6. Every API request includes Authorization: Bearer <token>
+   ↓
+7. Backend middleware extracts token, verifies signature, checks role
+   ↓
+8. If valid → Allow access; If invalid → Return 401/403
+```
+
+---
+
+## 7. Functional Requirements
+
+### 7.1 Authentication Module
+
+#### FR 1.1 User Registration
+- System shall allow Admin to create new HR and Employee user accounts
+- Email must be unique in the system
+- Password must be hashed using bcrypt with salt rounds = 10
+- Initial password can be auto-generated or provided by Admin
+
+#### FR 1.2 User Login
+- System shall accept email and password credentials
+- Invalid credentials shall show error message
+- Successful login shall return JWT token valid for 7 days
+- Token shall contain: userId, role, email
+
+#### FR 1.3 JWT Token Management
+- System shall validate token in every protected API request
+- Expired tokens shall trigger re-login requirement
+- Token refresh mechanism optional for v1.0
+
+#### FR 1.4 Password Management
+- System shall hash passwords before storing in database
+- Logged-in users can change own password
+- Admin can reset any user's password
+
+### 7.2 Employee Management Module
+
+#### FR 2.1 Employee CRUD Operations
+- Admin/HR can create new employee with:
+  - Personal info: Name, Email, Phone, DOB, Gender, Address
+  - Job info: Employee ID, Department, Designation, Salary, Join Date
+  - Status: Active, Inactive, On Leave, Terminated
+- System shall auto-generate Employee ID (format: EMP-YYYY-NNNN)
+- Admin/HR can edit all fields for existing employees
+- Admin/HR can deactivate/reactivate employees
+- Deleted employees remain in database with soft delete flag
+
+#### FR 2.2 Employee Profile View
+- Employee can view own profile (read-only for most fields)
+- Employee can edit personal fields: Phone, Address, Bank Account, Emergency Contact
+- System shall not allow employee to modify salary or job details
+
+#### FR 2.3 Employee Documents
+- Admin/HR can upload documents: Resume, ID Proof, Certificates
+- System shall store in secure location with employee folder structure
+- Employee can download own documents
+- Max file size: 5 MB per document
+
+#### FR 2.4 Employee Search & Filter
+- HR/Admin can search employees by: Name, Employee ID, Department, Designation, Status
+- System shall return results with pagination (20 per page)
+- Export employee list as CSV
+
+### 7.3 Attendance Management Module
+
+#### FR 3.1 Check-in/Check-out
+- Employee can click "Check In" button to mark attendance with timestamp
+- System shall validate: Only one check-in per day, check-in time must be within working hours (8 AM to 8 PM)
+- Employee can click "Check Out" after check-in
+- System shall calculate worked hours = Check Out Time - Check In Time
+- Status: Present, Half-day, Absent (auto-marked if no check-in by 11 AM)
+
+#### FR 3.2 Attendance Records
+- Admin/HR can view attendance records in calendar or list format
+- Admin/HR can manually add/edit attendance for past dates with reason
+- System shall show: Date, Check In, Check Out, Worked Hours, Status
+
+#### FR 3.3 Attendance Reports
+- System shall generate monthly attendance report showing:
+  - Total working days, Present days, Absent days, Half-days, Overtime hours
+  - Attendance percentage per employee
+- Report can be viewed on-screen or exported as CSV
+- Admin/HR can filter by month, year, department
+
+#### FR 3.4 Attendance Notifications
+- System shall mark "Absent" if employee doesn't check-in by end of day
+- Optional: Email notification for repeated absences
+
+### 7.4 Leave Management Module
+
+#### FR 4.1 Leave Types
+- System shall support leave types: Casual Leave, Sick Leave, Earned Leave, Maternity Leave, Unpaid Leave
+- Admin can configure: Annual quota, carryover rules for each type
+- System shall display leave balance for each employee
+
+#### FR 4.2 Leave Application
+- Employee can apply for leave with:
+  - Leave Type, From Date, To Date, Reason, Attachment (optional)
+  - System shall auto-calculate number of days
+  - System shall check if sufficient balance exists; if not, notify employee
+- Multiple leave applications can overlap (e.g., part of Casual, part of Unpaid)
+
+#### FR 4.3 Leave Approval Workflow
+- Submitted leaves appear in HR's "Pending Approvals" list
+- HR/Admin can Approve or Reject with reason
+- On approval: Leave balance is updated, mark days as "Leave" in attendance
+- On rejection: Notification sent to employee
+- Approval history maintained with approver name and date
+
+#### FR 4.4 Leave Cancellation
+- Employee can cancel own leave application if still in "Pending" status
+- HR can cancel approved leaves (before leave start date)
+- Cancelled leaves trigger balance recalculation
+
+#### FR 4.5 Leave Reports
+- System shall show:
+  - Leave balance per employee (remaining days per type)
+  - Leave history (past leaves taken)
+  - Leave trends (approval rate, most used leave type)
+
+### 7.5 Payroll Module
+
+#### FR 5.1 Salary Configuration
+- Admin/HR sets salary components for each employee:
+  - Basic Salary, HRA (House Rent Allowance), DA (Dearness Allowance) - optional for v1.0
+  - Deductions: PF (Provident Fund), TDS - optional for v1.0
+- For v1.0: Use only Basic Salary
+
+#### FR 5.2 Payroll Calculation
+- For a given month (M) and employee (E):
+  - Total days in month = 30 (standard)
+  - Working days = Total days - (Sundays + Public holidays)
+  - Payable days = Working days - (Unpaid leaves + Absences)
+  - Gross Salary = (Basic Salary / Working days) × Payable days
+- System shall round to nearest rupee
+
+#### FR 5.3 Payroll Generation
+- HR/Admin can generate payroll for a specific month:
+  - System processes all active employees
+  - Fetches attendance and leave data for the month
+  - Calculates salary for each employee
+  - Stores in Payroll collection with status "Generated"
+
+#### FR 5.4 Payslip View & Download
+- Employee can view own payslip (PDF format)
+- Payslip shows: Month, Salary components, Deductions, Net Salary, YTD (Year-To-Date)
+- HR can download payslips in bulk (CSV or ZIP with PDFs)
+
+#### FR 5.5 Payroll Reports
+- System shall generate payroll summary reports:
+  - Total salary disbursement for month
+  - Employee-wise breakdown
+  - Department-wise analysis
+- Export as CSV or PDF
+
+### 7.6 Recruitment Module (Optional)
+
+#### FR 6.1 Job Postings
+- HR can create job postings: Title, Description, Department, Salary Range, Skills Required
+- HR can set posting status: Open, Closed, On Hold
+- Job postings visible in public candidate portal
+
+#### FR 6.2 Candidate Application
+- Candidates can apply via web form: Name, Email, Phone, Resume (PDF/DOC), Cover Letter
+- System stores applications with submission date and status: New, Reviewed, Rejected, Selected
+
+#### FR 6.3 Candidate to Employee Conversion
+- HR can move selected candidates to Employee table:
+  - Pre-fill basic info from application
+  - Generate Employee ID and assign to department
+  - Create user account for new employee
+  - Status changes to "Employee"
+
+### 7.7 Dashboard & Reports
+
+#### FR 7.1 Admin Dashboard
+- Display: Total employees, Active/Inactive count
+- Today's attendance: Present, Absent, Half-day breakdown
+- Pending leaves for approval (count)
+- New candidates this month
+- Recent activities feed
+
+#### FR 7.2 HR Dashboard
+- Display: Employee count, Department breakdown
+- Today's attendance summary (pie chart)
+- Pending leave approvals (list with quick approve/reject)
+- Monthly payroll status
+- Attendance trends (bar chart last 30 days)
+- Leave balance warnings (employees running low on leave)
+
+#### FR 7.3 Employee Dashboard
+- My Info: Profile summary, next review date (if available)
+- Today's Status: Check-in status, worked hours so far
+- Leave Balance: Remaining leaves per type
+- Last Payslip: Download option
+- Quick Links: Apply leave, view attendance
+
+#### FR 7.4 Report Export
+- All reports can be exported as:
+  - CSV (for Excel)
+  - PDF (for printing) - optional, can use print feature
+- Include report generation date and criteria in header
+
+---
+
+## 8. Non-Functional Requirements
+
+### 8.1 Performance Requirements
+
+| Metric | Target | Acceptable |
+|--------|--------|-----------|
+| API Response Time | < 500 ms | < 1000 ms |
+| Dashboard Load Time | < 2 seconds | < 3 seconds |
+| Report Generation | < 5 seconds | < 10 seconds |
+| Database Query Time | < 100 ms | < 200 ms |
+| Concurrent Users | 50+ | 20+ |
+| Uptime | 99.5% | 99% |
+
+### 8.2 Security Requirements
+
+- **Authentication:** JWT-based with 7-day expiration
+- **Password Storage:** bcrypt with salt rounds = 10
+- **CORS:** Allow only frontend domain in production
+- **Input Validation:** Sanitize all user inputs server-side
+- **SQL Injection Prevention:** Use parameterized queries (Mongoose prevents this)
+- **XSS Prevention:** Escape HTML entities in output
+- **CSRF:** Implement CSRF tokens if needed (optional for API-based project)
+- **HTTPS:** Enforce SSL/TLS in production
+- **Data Encryption:** Sensitive fields optional (passwords handled separately)
+- **Audit Logging:** Log all admin actions, leave approvals, payroll generation
+
+### 8.3 Usability Requirements
+
+- **UI/UX:**
+  - Responsive design (works on desktop, tablet, mobile)
+  - Consistent color scheme and typography
+  - Clear error messages and validation feedback
+  - Maximum 3 clicks to reach any feature from dashboard
+  - Loading indicators for long operations
+
+- **Accessibility:**
+  - WCAG 2.1 Level AA compliance (optional but good)
+  - Proper heading hierarchy
+  - Alt text for images
+  - Keyboard navigation support
+  - Color contrast ratio ≥ 4.5:1 for normal text
+
+### 8.4 Reliability & Availability
+
+- **Error Handling:**
+  - Graceful error messages (no technical jargon to end users)
+  - Retry mechanism for failed API calls
+  - Session timeout handling with re-login prompt
+
+- **Data Integrity:**
+  - No data loss on browser refresh
+  - Transaction support for critical operations (payroll generation)
+  - Backup and recovery procedures (MongoDB Atlas automatic backups)
+
+- **Browser Compatibility:**
+  - Chrome 90+
+  - Firefox 88+
+  - Safari 14+
+  - Edge 90+
+
+### 8.5 Maintainability Requirements
+
+- **Code Quality:**
+  - Follow ES6+ standards for JavaScript
+  - Use meaningful variable and function names
+  - Max function length: 50 lines
+  - Code comments for complex logic
+  - Linting: ESLint + Prettier
+
+- **Documentation:**
+  - API documentation with Swagger/Postman collection
+  - Code comments for critical sections
+  - Architecture documentation
+  - Setup and deployment guide
+
+- **Testing:**
+  - Unit test coverage: ≥ 60%
+  - Integration tests for critical workflows
+  - Manual testing checklist for all features
+
+### 8.6 Scalability Requirements
+
+- **Current:** Support 10,000 employees
+- **Future:** Design to support 100,000 employees (indexing, pagination)
+- **Database:** Implement proper indexing on frequently queried fields
+- **API:** Implement pagination, filtering, sorting for large datasets
+- **Frontend:** Code splitting and lazy loading for performance
+
+---
+
+## 9. System Architecture
+
+### 9.1 High-Level Architecture Diagram
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                        CLIENT SIDE (React.js)                   │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐          │
+│  │   Login      │  │  Dashboards  │  │   Employee   │  ...     │
+│  │   Page       │  │  (Admin/HR)  │  │   Portal     │          │
+│  └──────────────┘  └──────────────┘  └──────────────┘          │
+│           │                │                │                   │
+│           └────────────────┴────────────────┘                   │
+│                       │                                         │
+│          Axios HTTP Client (with JWT Auth)                     │
+└───────────────────────┼─────────────────────────────────────────┘
+                        │
+                        │ HTTPS
+                        │
+┌───────────────────────┼─────────────────────────────────────────┐
+│                 SERVER SIDE (Node.js + Express)                 │
+│  ┌─────────────────────────────────────────────────────────┐   │
+│  │              Express.js API Server                       │   │
+│  │  ┌────────────────────────────────────────────────────┐ │   │
+│  │  │ Auth Routes (/auth)                                │ │   │
+│  │  │ - POST /login, /register, /logout                 │ │   │
+│  │  ├────────────────────────────────────────────────────┤ │   │
+│  │  │ Employee Routes (/employees)                       │ │   │
+│  │  │ - GET, POST, PUT, DELETE                          │ │   │
+│  │  ├────────────────────────────────────────────────────┤ │   │
+│  │  │ Attendance Routes (/attendance)                    │ │   │
+│  │  │ - POST check-in, check-out, GET records           │ │   │
+│  │  ├────────────────────────────────────────────────────┤ │   │
+│  │  │ Leave Routes (/leaves)                             │ │   │
+│  │  │ - POST apply, PUT approve/reject, GET balance     │ │   │
+│  │  ├────────────────────────────────────────────────────┤ │   │
+│  │  │ Payroll Routes (/payroll)                          │ │   │
+│  │  │ - POST generate, GET slips, GET reports           │ │   │
+│  │  ├────────────────────────────────────────────────────┤ │   │
+│  │  │ Dashboard Routes (/dashboard)                      │ │   │
+│  │  │ - GET metrics, charts data                         │ │   │
+│  │  └────────────────────────────────────────────────────┘ │   │
+│  │                       │                                  │   │
+│  │              Middleware Stack:                           │   │
+│  │    • CORS Handler                                        │   │
+│  │    • Authentication (JWT Verification)                  │   │
+│  │    • Authorization (Role-based)                         │   │
+│  │    • Request Validation (Joi)                           │   │
+│  │    • Error Handler                                      │   │
+│  └────────────┬─────────────────────────────────────────────┘   │
+│               │                                                  │
+│               │ Mongoose ODM                                    │
+└───────────────┼──────────────────────────────────────────────────┘
+                │
+                │ MongoDB Protocol
+                │
+┌───────────────┼──────────────────────────────────────────────────┐
+│               │                                                  │
+│        ┌──────▼──────┐                                           │
+│        │   MongoDB   │                                           │
+│        │   Database  │                                           │
+│        │   (Atlas)   │                                           │
+│        │             │                                           │
+│        │ Collections:│                                           │
+│        │ • users     │                                           │
+│        │ • employees │                                           │
+│        │ • attendance│                                           │
+│        │ • leaves    │                                           │
+│        │ • payrolls  │                                           │
+│        │ • jobs      │                                           │
+│        │ • candidates│                                           │
+│        └─────────────┘                                           │
+└──────────────────────────────────────────────────────────────────┘
+```
+
+### 9.2 Component Architecture
+
+#### Frontend Components Tree
+
+```
+App
+├── Layout
+│   ├── Header
+│   │   ├── Logo
+│   │   ├── Navigation
+│   │   └── UserProfile / Logout
+│   └── Sidebar
+│       ├── Menu Items (role-based)
+│       └── Search
+├── Pages
+│   ├── Auth
+│   │   ├── Login
+│   │   └── Logout
+│   ├── Dashboard
+│   │   ├── AdminDashboard
+│   │   ├── HRDashboard
+│   │   └── EmployeeDashboard
+│   ├── Employee Management
+│   │   ├── EmployeeList
+│   │   ├── EmployeeDetail
+│   │   ├── EmployeeForm (Create/Edit)
+│   │   └── EmployeeDocuments
+│   ├── Attendance
+│   │   ├── AttendanceMarkPage
+│   │   ├── AttendanceList
+│   │   └── AttendanceReports
+│   ├── Leave Management
+│   │   ├── LeaveApplication
+│   │   ├── LeaveApprovals
+│   │   ├── LeaveHistory
+│   │   └── LeaveBalance
+│   ├── Payroll
+│   │   ├── PayrollGeneration
+│   │   ├── PayslipView
+│   │   └── PayrollReports
+│   └── Recruitment (Optional)
+│       ├── JobPostings
+│       ├── CandidateApplications
+│       └── CandidateDetail
+├── Shared
+│   ├── Button
+│   ├── Modal
+│   ├── Alert/Toast
+│   ├── Table
+│   ├── Form Input
+│   └── Card
+└── Utils
+    ├── API Client (Axios)
+    ├── Auth Service
+    └── Formatters
+```
+
+#### Backend Project Structure
+
+```
+hrms-backend/
+├── config/
+│   ├── database.js          (MongoDB connection)
+│   ├── environment.js       (Env variables)
+│   └── constants.js         (App constants)
+├── models/
+│   ├── User.js
+│   ├── Employee.js
+│   ├── Attendance.js
+│   ├── Leave.js
+│   ├── Payroll.js
+│   ├── JobPosting.js
+│   └── Candidate.js
+├── routes/
+│   ├── auth.routes.js
+│   ├── employee.routes.js
+│   ├── attendance.routes.js
+│   ├── leave.routes.js
+│   ├── payroll.routes.js
+│   ├── dashboard.routes.js
+│   └── recruitment.routes.js
+├── controllers/
+│   ├── authController.js
+│   ├── employeeController.js
+│   ├── attendanceController.js
+│   ├── leaveController.js
+│   ├── payrollController.js
+│   ├── dashboardController.js
+│   └── recruitmentController.js
+├── middleware/
+│   ├── auth.middleware.js   (JWT verification)
+│   ├── authorize.middleware.js (Role check)
+│   ├── validation.middleware.js
+│   └── errorHandler.middleware.js
+├── services/
+│   ├── authService.js
+│   ├── employeeService.js
+│   ├── attendanceService.js
+│   ├── leaveService.js
+│   ├── payrollService.js
+│   └── reportService.js
+├── utils/
+│   ├── validators.js
+│   ├── helpers.js
+│   ├── constants.js
+│   └── logger.js
+├── .env.example
+├── .gitignore
+├── server.js                (Entry point)
+└── package.json
+```
+
+---
+
+## 10. Database Design
+
+### 10.1 MongoDB Schema (Mongoose Models)
+
+#### Users Collection
+
+```javascript
+{
+  _id: ObjectId,
+  name: String,
+  email: String (unique, indexed),
+  passwordHash: String,
+  role: String enum ['admin', 'hr', 'employee'],
+  status: String enum ['active', 'inactive'],
+  lastLogin: Date,
+  createdAt: Date,
+  updatedAt: Date,
+  createdBy: ObjectId (ref: User)
+}
+
+// Index on: email, role
+// Sample count: 1 admin + N HR users + M employee users
+```
+
+#### Employees Collection
+
+```javascript
+{
+  _id: ObjectId,
+  userId: ObjectId (ref: User, unique),
+  employeeCode: String (unique, indexed),
+  
+  // Personal Info
+  firstName: String,
+  lastName: String,
+  dateOfBirth: Date,
+  gender: String enum ['M', 'F', 'Other'],
+  phone: String,
+  email: String,
+  address: String,
+  city: String,
+  state: String,
+  pinCode: String,
+  emergencyContact: {
+    name: String,
+    relationship: String,
+    phone: String
+  },
+  
+  // Job Info
+  department: String (enum: ['IT', 'HR', 'Finance', 'Operations', ...]),
+  designation: String,
+  joinDate: Date,
+  salary: Number,
+  bankAccount: String,
+  panCard: String,
+  aadharCard: String,
+  
+  // Status
+  status: String enum ['active', 'inactive', 'on_leave', 'terminated'],
+  leaveBalance: {
+    casualLeave: Number,
+    sickLeave: Number,
+    earnedLeave: Number,
+    maternityLeave: Number,
+    unPaidLeave: Number
+  },
+  
+  // Documents
+  documents: [{
+    name: String,
+    type: String,
+    filePath: String,
+    uploadDate: Date
+  }],
+  
+  createdAt: Date,
+  updatedAt: Date,
+  createdBy: ObjectId (ref: User)
+}
+
+// Indexes on: employeeCode, department, email, status
+// Sample data: 1-10,000 records
+```
+
+#### Attendance Collection
+
+```javascript
+{
+  _id: ObjectId,
+  employeeId: ObjectId (ref: Employee, indexed),
+  date: Date (indexed),
+  checkInTime: Date,
+  checkOutTime: Date,
+  workedHours: Number (calculated as decimal),
+  status: String enum ['present', 'half_day', 'absent', 'holiday', 'leave'],
+  remarks: String (optional),
+  updatedBy: ObjectId (ref: User),
+  createdAt: Date,
+  updatedAt: Date
+}
+
+// Compound Index on: (employeeId, date)
+// Sample data: ~250 records per employee per year
+```
+
+#### Leaves Collection
+
+```javascript
+{
+  _id: ObjectId,
+  employeeId: ObjectId (ref: Employee, indexed),
+  leaveType: String enum ['casual', 'sick', 'earned', 'maternity', 'unpaid'],
+  fromDate: Date,
+  toDate: Date,
+  numberOfDays: Number (calculated),
+  reason: String,
+  attachment: String (file path, optional),
+  status: String enum ['pending', 'approved', 'rejected', 'cancelled'],
+  approvedBy: ObjectId (ref: User),
+  approvalDate: Date,
+  rejectionReason: String (if rejected),
+  appliedAt: Date,
+  updatedAt: Date
+}
+
+// Indexes on: employeeId, status, approvalDate
+// Sample data: 5-10 leaves per employee per year
+```
+
+#### Payroll Collection
+
+```javascript
+{
+  _id: ObjectId,
+  employeeId: ObjectId (ref: Employee, indexed),
+  month: Number (1-12),
+  year: Number,
+  
+  // Calculation Basis
+  totalDaysInMonth: Number,
+  publicHolidays: Number,
+  sundaysCount: Number,
+  workingDays: Number,
+  presentDays: Number,
+  absentDays: Number,
+  paidLeaves: Number,
+  unpaidLeaves: Number,
+  payableDays: Number,
+  
+  // Salary Calculation
+  basicSalary: Number,
+  hra: Number (optional),
+  da: Number (optional),
+  grossSalary: Number,
+  deductions: Number (optional),
+  netSalary: Number,
+  
+  status: String enum ['generated', 'approved', 'released', 'paid'],
+  generatedAt: Date,
+  approvedAt: Date,
+  paidAt: Date (optional),
+  createdAt: Date,
+  updatedAt: Date
+}
+
+// Compound Index on: (employeeId, month, year)
+// Sample data: 12 records per employee per year
+```
+
+#### JobPostings Collection (Optional)
+
+```javascript
+{
+  _id: ObjectId,
+  title: String,
+  description: String,
+  department: String,
+  salaryRange: {
+    min: Number,
+    max: Number
+  },
+  skillsRequired: [String],
+  numberOfOpenings: Number,
+  status: String enum ['open', 'closed', 'on_hold'],
+  postedDate: Date,
+  closureDate: Date,
+  postedBy: ObjectId (ref: User),
+  createdAt: Date,
+  updatedAt: Date
+}
+
+// Indexes on: status, department
+// Sample data: 10-50 records
+```
+
+#### Candidates Collection (Optional)
+
+```javascript
+{
+  _id: ObjectId,
+  jobPostingId: ObjectId (ref: JobPosting),
+  firstName: String,
+  lastName: String,
+  email: String,
+  phone: String,
+  resume: String (file path),
+  coverLetter: String,
+  skills: [String],
+  status: String enum ['new', 'reviewed', 'rejected', 'selected'],
+  appliedAt: Date,
+  reviewedAt: Date,
+  reviewedBy: ObjectId (ref: User),
+  notes: String,
+  createdAt: Date,
+  updatedAt: Date
+}
+
+// Indexes on: jobPostingId, status, email
+// Sample data: 50-500 applications per job
+```
+
+### 10.2 Database Relationships
+
+```
+User (1) ──────────────┐
+                       │
+                   (Many)
+                       │
+                    Employee (1) ───────────────┐
+                                                │
+                                            (Many)
+                                                │
+    ┌───────────────────────────────────────────┼───────────────────────────────────────┐
+    │                                           │                                       │
+Attendance (Many)                        Leave (Many)                            Payroll (Many)
+
+JobPosting (1) ─────────────┐
+                            │
+                        (Many)
+                            │
+                        Candidate
+```
+
+### 10.3 Data Flow and State Management
+
+#### Attendance State Flow
+
+```
+Employee Marks Check-In
+    ↓
+✓ Validate (working hours, not already checked in today)
+    ↓
+Create Attendance Record (checkInTime set)
+    ↓
+Response: "Checked In Successfully at 09:15 AM"
+    ↓
+[Later] Employee Marks Check-Out
+    ↓
+✓ Validate (checked in today, checkout after check-in)
+    ↓
+Update Attendance Record (checkOutTime set, workedHours calculated)
+    ↓
+Status auto-set based on workedHours
+    ↓
+Response: "Checked Out Successfully. Worked: 9.5 hours"
+```
+
+#### Leave State Flow
+
+```
+Employee Applies Leave
+    ↓
+✓ Validate (dates, leave balance, overlapping leaves)
+    ↓
+Create Leave Record (status: "pending")
+    ↓
+Notification to HR/Admin
+    ↓
+[HR Reviews]
+    ├─→ Approve: Update status → "approved", Update Employee.leaveBalance
+    │
+    └─→ Reject: Update status → "rejected", Add rejectionReason
+    ↓
+Mark Attendance Records in date range as "leave"
+    ↓
+Employee receives notification
+```
+
+#### Payroll State Flow
+
+```
+HR Initiates Payroll Generation for Month M
+    ↓
+System fetches all active employees
+    ↓
+For each employee:
+  ├─ Fetch Attendance records for Month M
+  ├─ Calculate presentDays, absentDays, paidLeaves, unpaidLeaves
+  ├─ Fetch Salary from Employee record
+  ├─ Calculate netSalary formula
+  ├─ Create Payroll record (status: "generated")
+    ↓
+Generate payroll for all employees (status: "generated")
+    ↓
+Payroll visible to HR for review/corrections
+    ↓
+[HR Approves]
+    ├─ Status changes to "approved"
+    │
+    └─ (Optional) Status changes to "released" → Ready for payment
+    ↓
+Employee can download payslip in "approved" or "released" status
+```
+
+---
+
+## 11. API Specification
+
+### 11.1 Authentication APIs
+
+#### POST /api/v1/auth/register
+
+**Description:** Register a new user (Admin creates accounts for HR/Employees)
+
+**Permissions:** Admin only
+
+**Request Body:**
+```json
+{
+  "name": "John Doe",
+  "email": "john@example.com",
+  "password": "SecurePass123",
+  "role": "hr",
+  "status": "active"
+}
+```
+
+**Response (201 Created):**
+```json
+{
+  "success": true,
+  "message": "User registered successfully",
+  "data": {
+    "_id": "507f1f77bcf86cd799439011",
+    "name": "John Doe",
+    "email": "john@example.com",
+    "role": "hr",
+    "status": "active"
+  }
+}
+```
+
+#### POST /api/v1/auth/login
+
+**Description:** Authenticate user and return JWT token
+
+**Permissions:** Public
+
+**Request Body:**
+```json
+{
+  "email": "john@example.com",
+  "password": "SecurePass123"
+}
+```
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "message": "Login successful",
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "user": {
+    "_id": "507f1f77bcf86cd799439011",
+    "name": "John Doe",
+    "email": "john@example.com",
+    "role": "hr"
+  },
+  "expiresIn": "7d"
+}
+```
+
+#### POST /api/v1/auth/change-password
+
+**Description:** Change password for logged-in user
+
+**Permissions:** Authenticated users
+
+**Request Body:**
+```json
+{
+  "currentPassword": "OldPass123",
+  "newPassword": "NewPass456"
+}
+```
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "message": "Password changed successfully"
+}
+```
+
+---
+
+### 11.2 Employee Management APIs
+
+#### GET /api/v1/employees
+
+**Description:** Fetch list of employees with pagination and filters
+
+**Permissions:** Admin, HR
+
+**Query Parameters:**
+- `page`: Integer (default: 1)
+- `limit`: Integer (default: 20)
+- `department`: String (optional)
+- `status`: String (optional)
+- `search`: String (name/email/employee code - optional)
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "data": {
+    "employees": [
+      {
+        "_id": "507f1f77bcf86cd799439011",
+        "employeeCode": "EMP-2024-0001",
+        "firstName": "Rajesh",
+        "lastName": "Kumar",
+        "email": "rajesh@example.com",
+        "department": "IT",
+        "designation": "Software Engineer",
+        "joinDate": "2023-01-15",
+        "salary": 500000,
+        "status": "active"
+      }
+    ],
+    "pagination": {
+      "totalRecords": 250,
+      "totalPages": 13,
+      "currentPage": 1,
+      "limit": 20
+    }
+  }
+}
+```
+
+#### GET /api/v1/employees/:id
+
+**Description:** Fetch detailed employee information
+
+**Permissions:** Admin, HR, Employee (own profile only)
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "data": {
+    "employee": {
+      "_id": "507f1f77bcf86cd799439011",
+      "employeeCode": "EMP-2024-0001",
+      "firstName": "Rajesh",
+      "lastName": "Kumar",
+      "email": "rajesh@example.com",
+      "phone": "9876543210",
+      "dateOfBirth": "1990-05-20",
+      "department": "IT",
+      "designation": "Software Engineer",
+      "joinDate": "2023-01-15",
+      "salary": 500000,
+      "status": "active",
+      "leaveBalance": {
+        "casualLeave": 10,
+        "sickLeave": 5,
+        "earnedLeave": 20
+      }
+    }
+  }
+}
+```
+
+#### POST /api/v1/employees
+
+**Description:** Create a new employee record
+
+**Permissions:** Admin, HR
+
+**Request Body:**
+```json
+{
+  "firstName": "Rajesh",
+  "lastName": "Kumar",
+  "email": "rajesh@example.com",
+  "phone": "9876543210",
+  "dateOfBirth": "1990-05-20",
+  "gender": "M",
+  "address": "123 Main St",
+  "city": "Bangalore",
+  "state": "Karnataka",
+  "pinCode": "560001",
+  "department": "IT",
+  "designation": "Software Engineer",
+  "joinDate": "2024-01-15",
+  "salary": 500000,
+  "bankAccount": "1234567890",
+  "emergencyContact": {
+    "name": "Priya Kumar",
+    "relationship": "Spouse",
+    "phone": "9876543211"
+  }
+}
+```
+
+**Response (201 Created):**
+```json
+{
+  "success": true,
+  "message": "Employee created successfully",
+  "data": {
+    "employee": { /* full employee object */ },
+    "generatedPassword": "TempPass123456"
+  }
+}
+```
+
+#### PUT /api/v1/employees/:id
+
+**Description:** Update employee information
+
+**Permissions:** Admin, HR, Employee (own profile limited fields)
+
+**Request Body:** (Same as POST, partial fields allowed)
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "message": "Employee updated successfully",
+  "data": { /* updated employee object */ }
+}
+```
+
+#### DELETE /api/v1/employees/:id
+
+**Description:** Soft delete an employee (change status to inactive)
+
+**Permissions:** Admin, HR
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "message": "Employee deactivated successfully"
+}
+```
+
+#### POST /api/v1/employees/:id/documents
+
+**Description:** Upload employee documents
+
+**Permissions:** Admin, HR, Employee (own documents)
+
+**Request:** Multipart form data
+- `file`: File (max 5MB, PDF/JPG/PNG/DOC/DOCX)
+- `documentType`: String (e.g., "Resume", "ID Proof")
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "message": "Document uploaded successfully",
+  "data": {
+    "documentId": "507f1f77bcf86cd799439011",
+    "fileName": "Rajesh_Resume.pdf",
+    "uploadedAt": "2024-01-15T10:30:00Z"
+  }
+}
+```
+
+---
+
+### 11.3 Attendance APIs
+
+#### POST /api/v1/attendance/check-in
+
+**Description:** Mark check-in for current user
+
+**Permissions:** Employee (own), Admin/HR (on behalf)
+
+**Request Body:**
+```json
+{
+  "employeeId": "507f1f77bcf86cd799439011",
+  "location": "Office" (optional)
+}
+```
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "message": "Checked in successfully",
+  "data": {
+    "attendanceId": "507f1f77bcf86cd799439012",
+    "checkInTime": "2024-01-15T09:15:00Z",
+    "workedHours": 0,
+    "message": "Checked in at 09:15 AM"
+  }
+}
+```
+
+#### POST /api/v1/attendance/check-out
+
+**Description:** Mark check-out for current user
+
+**Permissions:** Employee (own), Admin/HR (on behalf)
+
+**Request Body:**
+```json
+{
+  "employeeId": "507f1f77bcf86cd799439011",
+  "location": "Office" (optional)
+}
+```
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "message": "Checked out successfully",
+  "data": {
+    "attendanceId": "507f1f77bcf86cd799439012",
+    "checkInTime": "2024-01-15T09:15:00Z",
+    "checkOutTime": "2024-01-15T18:45:00Z",
+    "workedHours": 9.5,
+    "status": "present",
+    "message": "Checked out at 06:45 PM. Worked: 9.5 hours"
+  }
+}
+```
+
+#### GET /api/v1/attendance
+
+**Description:** Fetch attendance records with filters
+
+**Permissions:** Admin, HR, Employee (own only)
+
+**Query Parameters:**
+- `employeeId`: ObjectId (required for HR/Admin)
+- `startDate`: Date (YYYY-MM-DD)
+- `endDate`: Date (YYYY-MM-DD)
+- `status`: String (optional - present/absent/half_day)
+- `page`: Integer (default: 1)
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "data": {
+    "attendance": [
+      {
+        "_id": "507f1f77bcf86cd799439012",
+        "employeeId": "507f1f77bcf86cd799439011",
+        "date": "2024-01-15",
+        "checkInTime": "09:15:00",
+        "checkOutTime": "18:45:00",
+        "workedHours": 9.5,
+        "status": "present"
+      }
+    ],
+    "summary": {
+      "totalDays": 21,
+      "presentDays": 19,
+      "absentDays": 1,
+      "halfDays": 1,
+      "attendancePercentage": 90.48
+    }
+  }
+}
+```
+
+#### POST /api/v1/attendance/manual-entry
+
+**Description:** Manually create/edit attendance for past dates (Admin/HR only)
+
+**Permissions:** Admin, HR
+
+**Request Body:**
+```json
+{
+  "employeeId": "507f1f77bcf86cd799439011",
+  "date": "2024-01-10",
+  "checkInTime": "09:30:00",
+  "checkOutTime": "18:00:00",
+  "status": "present",
+  "reason": "Late attendance correction",
+  "remarks": "Approved by HR"
+}
+```
+
+**Response (201 Created / 200 OK):**
+```json
+{
+  "success": true,
+  "message": "Attendance record updated successfully",
+  "data": { /* updated attendance object */ }
+}
+```
+
+#### GET /api/v1/attendance/report
+
+**Description:** Generate attendance report for a month
+
+**Permissions:** Admin, HR
+
+**Query Parameters:**
+- `month`: Integer (1-12)
+- `year`: Integer (YYYY)
+- `department`: String (optional)
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "data": {
+    "report": {
+      "month": 1,
+      "year": 2024,
+      "generatedAt": "2024-01-31T23:59:59Z",
+      "summary": {
+        "totalWorkingDays": 21,
+        "totalEmployees": 50,
+        "averageAttendance": 87.5
+      },
+      "employeeWiseAttendance": [
+        {
+          "employeeCode": "EMP-2024-0001",
+          "name": "Rajesh Kumar",
+          "department": "IT",
+          "workingDays": 21,
+          "presentDays": 19,
+          "absentDays": 1,
+          "halfDays": 1,
+          "attendancePercentage": 90.48,
+          "overtimeHours": 2.5
+        }
+      ]
+    }
+  }
+}
+```
+
+---
+
+### 11.4 Leave Management APIs
+
+#### GET /api/v1/leaves/balance
+
+**Description:** Get leave balance for logged-in employee
+
+**Permissions:** Employee (own), Admin/HR (any employee with param)
+
+**Query Parameters:**
+- `employeeId`: ObjectId (optional, for Admin/HR)
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "data": {
+    "employeeId": "507f1f77bcf86cd799439011",
+    "balances": {
+      "casualLeave": {
+        "totalAllowed": 12,
+        "used": 2,
+        "available": 10,
+        "pending": 1
+      },
+      "sickLeave": {
+        "totalAllowed": 6,
+        "used": 1,
+        "available": 5,
+        "pending": 0
+      },
+      "earnedLeave": {
+        "totalAllowed": 20,
+        "used": 5,
+        "available": 15,
+        "pending": 0
+      }
+    },
+    "lastUpdated": "2024-01-15T00:00:00Z"
+  }
+}
+```
+
+#### POST /api/v1/leaves/apply
+
+**Description:** Apply for leave
+
+**Permissions:** Employee (own), Admin/HR (on behalf)
+
+**Request Body:**
+```json
+{
+  "employeeId": "507f1f77bcf86cd799439011",
+  "leaveType": "casual",
+  "fromDate": "2024-02-10",
+  "toDate": "2024-02-12",
+  "reason": "Personal work",
+  "attachment": null
+}
+```
+
+**Response (201 Created):**
+```json
+{
+  "success": true,
+  "message": "Leave application submitted successfully",
+  "data": {
+    "leaveId": "507f1f77bcf86cd799439013",
+    "leaveType": "casual",
+    "numberOfDays": 3,
+    "fromDate": "2024-02-10",
+    "toDate": "2024-02-12",
+    "status": "pending",
+    "appliedAt": "2024-01-15T14:30:00Z"
+  }
+}
+```
+
+#### GET /api/v1/leaves/pending-approvals
+
+**Description:** Get pending leave approvals (HR/Admin only)
+
+**Permissions:** Admin, HR
+
+**Query Parameters:**
+- `page`: Integer (default: 1)
+- `limit`: Integer (default: 20)
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "data": {
+    "leaves": [
+      {
+        "_id": "507f1f77bcf86cd799439013",
+        "employeeId": "507f1f77bcf86cd799439011",
+        "employeeName": "Rajesh Kumar",
+        "employeeEmail": "rajesh@example.com",
+        "leaveType": "casual",
+        "fromDate": "2024-02-10",
+        "toDate": "2024-02-12",
+        "numberOfDays": 3,
+        "reason": "Personal work",
+        "status": "pending",
+        "appliedAt": "2024-01-15T14:30:00Z"
+      }
+    ],
+    "totalPending": 15
+  }
+}
+```
+
+#### PUT /api/v1/leaves/:id/approve
+
+**Description:** Approve a leave application
+
+**Permissions:** Admin, HR
+
+**Request Body:**
+```json
+{
+  "approvalNotes": "Approved"
+}
+```
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "message": "Leave approved successfully",
+  "data": {
+    "leaveId": "507f1f77bcf86cd799439013",
+    "status": "approved",
+    "approvedAt": "2024-01-15T15:00:00Z",
+    "approvedBy": "HR Manager Name"
+  }
+}
+```
+
+#### PUT /api/v1/leaves/:id/reject
+
+**Description:** Reject a leave application
+
+**Permissions:** Admin, HR
+
+**Request Body:**
+```json
+{
+  "rejectionReason": "Cannot approve during critical project phase"
+}
+```
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "message": "Leave rejected successfully",
+  "data": {
+    "leaveId": "507f1f77bcf86cd799439013",
+    "status": "rejected",
+    "rejectionReason": "Cannot approve during critical project phase",
+    "rejectedAt": "2024-01-15T15:00:00Z"
+  }
+}
+```
+
+#### GET /api/v1/leaves/history
+
+**Description:** Get leave history for employee
+
+**Permissions:** Employee (own), Admin/HR (any)
+
+**Query Parameters:**
+- `employeeId`: ObjectId (required for HR/Admin)
+- `year`: Integer (optional)
+- `status`: String (optional - approved/rejected/cancelled)
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "data": {
+    "leaveHistory": [
+      {
+        "_id": "507f1f77bcf86cd799439013",
+        "leaveType": "casual",
+        "fromDate": "2024-02-10",
+        "toDate": "2024-02-12",
+        "numberOfDays": 3,
+        "status": "approved",
+        "reason": "Personal work",
+        "appliedAt": "2024-01-15T14:30:00Z",
+        "approvedAt": "2024-01-15T15:00:00Z"
+      }
+    ],
+    "summary": {
+      "totalLeavesTaken": 10,
+      "totalLeaveDays": 20,
+      "averageDaysPerLeave": 2
+    }
+  }
+}
+```
+
+---
+
+### 11.5 Payroll APIs
+
+#### POST /api/v1/payroll/generate
+
+**Description:** Generate payroll for a specific month
+
+**Permissions:** Admin, HR
+
+**Request Body:**
+```json
+{
+  "month": 1,
+  "year": 2024,
+  "includeEmployees": null
+}
+```
+
+**Response (202 Accepted / 200 OK):**
+```json
+{
+  "success": true,
+  "message": "Payroll generation initiated",
+  "data": {
+    "payrollId": "507f1f77bcf86cd799439014",
+    "month": 1,
+    "year": 2024,
+    "status": "generating",
+    "generatedAt": "2024-01-31T23:59:59Z",
+    "totalEmployees": 250,
+    "completionPercentage": 0
+  }
+}
+```
+
+#### GET /api/v1/payroll/:payrollId
+
+**Description:** Get payroll details (summary of all employees)
+
+**Permissions:** Admin, HR
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "data": {
+    "payroll": {
+      "_id": "507f1f77bcf86cd799439014",
+      "month": 1,
+      "year": 2024,
+      "status": "generated",
+      "generatedAt": "2024-01-31T23:59:59Z",
+      "totalEmployees": 250,
+      "payrollSummary": {
+        "totalGrossSalary": 12500000,
+        "totalDeductions": 1250000,
+        "totalNetSalary": 11250000
+      },
+      "employeePayrolls": [
+        {
+          "employeeId": "507f1f77bcf86cd799439011",
+          "employeeCode": "EMP-2024-0001",
+          "name": "Rajesh Kumar",
+          "department": "IT",
+          "basicSalary": 50000,
+          "workingDays": 21,
+          "payableDays": 20,
+          "grossSalary": 47619.05,
+          "deductions": 4761.90,
+          "netSalary": 42857.15
+        }
+      ]
+    }
+  }
+}
+```
+
+#### GET /api/v1/payroll/employee/:employeeId/slip
+
+**Description:** Get payslip for specific month
+
+**Permissions:** Employee (own), Admin/HR (any)
+
+**Query Parameters:**
+- `month`: Integer (1-12)
+- `year`: Integer (YYYY)
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "data": {
+    "payslip": {
+      "slipId": "507f1f77bcf86cd799439015",
+      "employeeCode": "EMP-2024-0001",
+      "employeeName": "Rajesh Kumar",
+      "designation": "Software Engineer",
+      "department": "IT",
+      "month": 1,
+      "year": 2024,
+      "earnings": {
+        "basicSalary": 50000,
+        "hra": 0,
+        "da": 0,
+        "grossSalary": 47619.05
+      },
+      "deductions": {
+        "pf": 4761.90,
+        "other": 0,
+        "totalDeductions": 4761.90
+      },
+      "netSalary": 42857.15,
+      "attendanceDetails": {
+        "workingDays": 21,
+        "presentDays": 19,
+        "absentDays": 1,
+        "paidLeaves": 1,
+        "unpaidLeaves": 0,
+        "payableDays": 20
+      },
+      "generatedAt": "2024-01-31T23:59:59Z"
+    }
+  }
+}
+```
+
+#### GET /api/v1/payroll/report
+
+**Description:** Get payroll summary report
+
+**Permissions:** Admin, HR
+
+**Query Parameters:**
+- `month`: Integer (1-12)
+- `year`: Integer (YYYY)
+- `department`: String (optional)
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "data": {
+    "report": {
+      "month": 1,
+      "year": 2024,
+      "generatedAt": "2024-01-31T23:59:59Z",
+      "summary": {
+        "totalEmployees": 250,
+        "totalGrossSalary": 12500000,
+        "totalDeductions": 1250000,
+        "totalNetSalary": 11250000,
+        "averageSalary": 45000
+      },
+      "departmentBreakdown": [
+        {
+          "department": "IT",
+          "employeeCount": 50,
+          "totalSalary": 2500000,
+          "averageSalary": 50000
+        }
+      ]
+    }
+  }
+}
+```
+
+---
+
+### 11.6 Dashboard APIs
+
+#### GET /api/v1/dashboard/admin
+
+**Description:** Get admin dashboard data
+
+**Permissions:** Admin
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "data": {
+    "metrics": {
+      "totalEmployees": 250,
+      "activeEmployees": 245,
+      "inactiveEmployees": 5,
+      "departmentCounts": {
+        "IT": 50,
+        "HR": 10,
+        "Finance": 20
+      }
+    },
+    "attendance": {
+      "today": {
+        "present": 240,
+        "absent": 5,
+        "halfDay": 5,
+        "attendancePercentage": 96
+      },
+      "weekTrend": [
+        { "day": "Monday", "present": 242, "percentage": 96.8 }
+      ]
+    },
+    "leavesPending": 12,
+    "payrollStatus": {
+      "lastGenerated": "2024-01-31",
+      "pending": 0,
+      "approved": 0
+    },
+    "recentActivities": [
+      {
+        "type": "leave_approved",
+        "description": "Rajesh Kumar's leave approved",
+        "timestamp": "2024-01-15T10:30:00Z"
+      }
+    ]
+  }
+}
+```
+
+#### GET /api/v1/dashboard/hr
+
+**Description:** Get HR dashboard data
+
+**Permissions:** HR, Admin
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "data": {
+    "metrics": {
+      "totalEmployees": 250,
+      "newHires": 5,
+      "departmentStats": [ /* ... */ ]
+    },
+    "todayAttendance": {
+      "present": 240,
+      "absent": 5,
+      "halfDay": 5,
+      "attendancePercentage": 96
+    },
+    "pendingLeaves": [
+      {
+        "leaveId": "507f1f77bcf86cd799439013",
+        "employeeName": "Rajesh Kumar",
+        "leaveType": "casual",
+        "days": 3,
+        "appliedAt": "2024-01-15T14:30:00Z"
+      }
+    ],
+    "attendanceTrend": [ /* chart data */ ],
+    "leaveBalanceWarnings": [ /* employees running low on balance */ ]
+  }
+}
+```
+
+#### GET /api/v1/dashboard/employee
+
+**Description:** Get employee dashboard data
+
+**Permissions:** Employee
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "data": {
+    "profile": {
+      "name": "Rajesh Kumar",
+      "designation": "Software Engineer",
+      "department": "IT",
+      "joinDate": "2023-01-15"
+    },
+    "attendance": {
+      "todayStatus": "present",
+      "checkInTime": "09:15:00",
+      "checkOutTime": null,
+      "workedHoursToday": 4.5
+    },
+    "leaveBalance": {
+      "casualLeave": 10,
+      "sickLeave": 5,
+      "earnedLeave": 15
+    },
+    "lastPayslip": {
+      "month": 12,
+      "year": 2023,
+      "netSalary": 42857,
+      "generatedAt": "2023-12-31"
+    },
+    "announcements": [ /* if available */ ]
+  }
+}
+```
+
+---
+
+### 11.7 API Response Format
+
+All API responses follow this standard format:
+
+**Success Response:**
+```json
+{
+  "success": true,
+  "message": "Optional message",
+  "data": { /* actual data */ }
+}
+```
+
+**Error Response:**
+```json
+{
+  "success": false,
+  "message": "Error description",
+  "error": {
+    "code": "ERROR_CODE",
+    "details": "Additional error details"
+  }
+}
+```
+
+**HTTP Status Codes:**
+- 200: OK
+- 201: Created
+- 202: Accepted (async operations)
+- 400: Bad Request (validation error)
+- 401: Unauthorized (invalid/missing token)
+- 403: Forbidden (insufficient permissions)
+- 404: Not Found
+- 500: Internal Server Error
+
+---
+
+## 12. Detailed System Analysis
+
+### 12.1 Use Case Diagram
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                   HRMS System                               │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│    ┌─────────────┐                                          │
+│    │   Admin     │                                          │
+│    └──────┬──────┘                                          │
+│           │                                                │
+│           ├─→ Manage HR Users ◇                            │
+│           ├─→ View System Reports ◇                        │
+│           ├─→ Configure Leave Types ◇                      │
+│           └─→ (All HR Use Cases)                           │
+│                                                             │
+│    ┌──────────────┐                                         │
+│    │   HR Manager │                                         │
+│    └──────┬───────┘                                         │
+│           │                                                │
+│           ├─→ Manage Employees ◇                           │
+│           │   ├─→ Add Employee                             │
+│           │   ├─→ Edit Employee                            │
+│           │   └─→ Deactivate Employee                      │
+│           │                                                │
+│           ├─→ Track Attendance ◇                           │
+│           │   ├─→ View Attendance Records                  │
+│           │   ├─→ Manual Entry                             │
+│           │   └─→ Generate Reports                         │
+│           │                                                │
+│           ├─→ Manage Leaves ◇                              │
+│           │   ├─→ Approve Leave                            │
+│           │   ├─→ Reject Leave                             │
+│           │   └─→ View Leave Balance                       │
+│           │                                                │
+│           ├─→ Generate Payroll ◇                           │
+│           │   ├─→ Calculate Salary                         │
+│           │   ├─→ View Payslips                            │
+│           │   └─→ Export Reports                           │
+│           │                                                │
+│           └─→ Manage Candidates ◇                          │
+│               ├─→ View Applications                        │
+│               ├─→ Move to Employee                         │
+│               └─→ Manage Job Postings                      │
+│                                                             │
+│    ┌──────────────┐                                         │
+│    │  Employee    │                                         │
+│    └──────┬───────┘                                         │
+│           │                                                │
+│           ├─→ View Profile ◇                               │
+│           │   └─→ Edit Personal Details                    │
+│           │                                                │
+│           ├─→ Mark Attendance ◇                            │
+│           │   ├─→ Check In                                 │
+│           │   ├─→ Check Out                                │
+│           │   └─→ View History                             │
+│           │                                                │
+│           ├─→ Manage Leaves ◇                              │
+│           │   ├─→ Apply for Leave                          │
+│           │   ├─→ View Applications                        │
+│           │   ├─→ View Balance                             │
+│           │   └─→ Cancel Leave                             │
+│           │                                                │
+│           ├─→ View Payslip ◇                               │
+│           │   └─→ Download Payslip                         │
+│           │                                                │
+│           └─→ View Announcements ◇                         │
+│               (Optional for v1.0)                          │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### 12.2 Data Flow Diagram (Level 0)
+
+```
+                              HRMS Context Diagram
+                              
+    ┌──────────────────────────────────────────────────────────────────┐
+    │                                                                  │
+    │                        ┌─────────────┐                           │
+    │                        │    HRMS     │                           │
+    │                        │   System    │                           │
+    │                        └─────────────┘                           │
+    │                              │                                   │
+    │              ┌───────────────┼───────────────┐                   │
+    │              │               │               │                   │
+    │         Employees      Admin/HR Users   Department            │
+    │         & Attendance   & Reports        Management            │
+    │              │               │               │                   │
+    │              │               │               │                   │
+    │              ▼               ▼               ▼                   │
+    │         ┌────────┐     ┌─────────┐     ┌──────────┐            │
+    │         │Employee│     │ Reports │     │Leave Type│            │
+    │         │ Data   │     │ & Salary│     │Config    │            │
+    │         └────────┘     └─────────┘     └──────────┘            │
+    │              │               │               │                   │
+    │              │               │               │                   │
+    └──────────────┼───────────────┼───────────────┼───────────────────┘
+                   │               │               │
+                   │               │               │
+                   ▼               ▼               ▼
+              ┌────────┐     ┌─────────┐     ┌──────────┐
+              │MongoDB │────│ Storage │────│ Backups  │
+              │Database│     │ Service │     │ Service  │
+              └────────┘     └─────────┘     └──────────┘
+```
+
+### 12.3 Data Flow Diagram (Level 1)
+
+```
+Employee Flow:
+
+    ┌──────────────┐
+    │  Employee    │
+    └──────┬───────┘
+           │
+           │ Mark Attendance
+           │ (Check-in/Check-out)
+           ▼
+    ┌──────────────────┐
+    │ Attendance Form  │
+    │ • Date/Time      │
+    │ • Status         │
+    └──────┬───────────┘
+           │ Validate
+           ▼
+    ┌──────────────────────┐
+    │ Attendance Process   │
+    │ • Check validity     │
+    │ • Calculate hours    │
+    │ • Set status         │
+    └──────┬───────────────┘
+           │ Store
+           ▼
+    ┌─────────────────┐      ┌─────────────────┐
+    │ Attendance DB   │─────→│ Reports Module  │
+    │ (MongoDB)       │      │ • Daily report  │
+    └─────────────────┘      │ • Monthly report│
+                             │ • Trends        │
+                             └─────────────────┘
+
+Leave Flow:
+
+    ┌──────────────┐
+    │  Employee    │
+    └──────┬───────┘
+           │ Apply Leave
+           │ (Type, Dates, Reason)
+           ▼
+    ┌──────────────────┐
+    │ Leave Form       │
+    │ • Leave Type     │
+    │ • Date Range     │
+    │ • Balance Check  │
+    └──────┬───────────┘
+           │ Validate
+           ▼
+    ┌──────────────────────┐
+    │ Leave Processing     │
+    │ • Check balance      │
+    │ • Check conflicts    │
+    │ • Create record      │
+    └──────┬───────────────┘
+           │ Store as "Pending"
+           ▼
+    ┌─────────────────────────┐
+    │ Notify HR/Admin         │
+    │ (Pending Approvals)     │
+    └──────┬──────────────────┘
+           │
+           ▼
+    ┌──────────────┐
+    │    HR/Admin  │
+    └──────┬───────┘
+           │ Review & Approve/Reject
+           ▼
+    ┌──────────────────────┐
+    │ Update Leave Status  │
+    │ • Approved/Rejected  │
+    │ • Update Balance     │
+    │ • Update Attendance  │
+    └──────┬───────────────┘
+           │ Notify Employee
+           ▼
+    ┌─────────────────┐
+    │ Leave DB        │
+    │ (MongoDB)       │
+    └─────────────────┘
+
+Payroll Flow:
+
+    ┌──────────────┐
+    │    HR/Admin  │
+    └──────┬───────┘
+           │ Generate Payroll
+           │ (Month, Year)
+           ▼
+    ┌──────────────────────┐
+    │ Fetch Data           │
+    │ • Employee records   │
+    │ • Attendance data    │
+    │ • Leave data         │
+    │ • Salary info        │
+    └──────┬───────────────┘
+           │
+           ▼
+    ┌──────────────────────┐
+    │ Calculate Salary     │
+    │ • Payable days       │
+    │ • Gross salary       │
+    │ • Deductions         │
+    │ • Net salary         │
+    └──────┬───────────────┘
+           │ Store as "Generated"
+           ▼
+    ┌─────────────────────┐
+    │ Payroll DB          │
+    │ (MongoDB)           │
+    └──────┬──────────────┘
+           │
+           ▼
+    ┌──────────────────┐
+    │ Generate Reports │
+    │ (CSV/PDF)        │
+    └──────┬───────────┘
+           │
+           ▼
+    ┌─────────────────┐
+    │ Employee View   │
+    │ Payslips        │
+    └─────────────────┘
+```
+
+### 12.4 Entity-Relationship Diagram (ERD)
+
+```
+┌────────────────────────────────────────────────────────────────┐
+│                                                                │
+│    Users                    Employees                          │
+│  ┌──────────┐            ┌──────────────┐                     │
+│  │_id (PK)  │◄───────────│userId (FK)   │                     │
+│  │email     │            │employeeCode  │                     │
+│  │role      │            │firstName     │   ┌──────────────┐  │
+│  │password  │            │lastName      │   │ LeaveBalance │  │
+│  └──────────┘            │department    │   │ ┌──────────┐ │  │
+│                          │salary        │───→│ casualL   │ │  │
+│                          │status        │   │ │ sickL    │ │  │
+│                          │joinDate      │   │ │ earnedL  │ │  │
+│                          │leaveBalance  │   │ └──────────┘ │  │
+│                          │documents     │   └──────────────┘  │
+│                          └──────────────┘                     │
+│                               ▲                                │
+│                               │(1:Many)                        │
+│          ┌────────────────────┼────────────────────┐          │
+│          │                    │                    │          │
+│  (1:Many)│              (1:Many)             (1:Many)        │
+│          │                    │                    │          │
+│          ▼                    ▼                    ▼          │
+│    ┌──────────────┐  ┌──────────────┐  ┌────────────────┐   │
+│    │ Attendance   │  │   Leaves     │  │    Payroll     │   │
+│    ├──────────────┤  ├──────────────┤  ├────────────────┤   │
+│    │_id (PK)      │  │_id (PK)      │  │_id (PK)        │   │
+│    │employeeId(FK)│  │employeeId(FK)│  │employeeId(FK)  │   │
+│    │date          │  │leaveType     │  │month/year      │   │
+│    │checkIn       │  │fromDate      │  │workingDays     │   │
+│    │checkOut      │  │toDate        │  │payableDays     │   │
+│    │workedHours   │  │numberOfDays  │  │basicSalary     │   │
+│    │status        │  │reason        │  │netSalary       │   │
+│    │              │  │status        │  │status          │   │
+│    │              │  │approvedBy(FK)│  │                │   │
+│    └──────────────┘  │approvalDate  │  └────────────────┘   │
+│                      │              │                        │
+│                      └──────────────┘                        │
+│                                                                │
+│    JobPostings             Candidates                         │
+│  ┌──────────────┐        ┌──────────────┐                    │
+│  │_id (PK)      │◄───────│jobPostingId  │                    │
+│  │title         │(1:Many)│firstName     │                    │
+│  │description   │        │email         │                    │
+│  │department    │        │resume        │                    │
+│  │skillsRequired│        │status        │                    │
+│  │status        │        │appliedAt     │                    │
+│  │postedDate    │        └──────────────┘                    │
+│  └──────────────┘                                            │
+│                                                                │
+└────────────────────────────────────────────────────────────────┘
+
+Legend:
+─────  One-to-Many relationship
+(FK)   Foreign Key
+(PK)   Primary Key
+```
+
+### 12.5 Process Flow Diagrams
+
+#### Leave Approval Workflow
+
+```
+Start
+  │
+  ▼
+Employee Fills Leave Form
+  │
+  ├─ Fields: Type, FromDate, ToDate, Reason
+  │
+  ▼
+Validate Input
+  │
+  ├─ Check dates are valid (To ≥ From)
+  ├─ Check future or recent past dates
+  │
+  ▼
+Check Leave Balance
+  │
+  ├─ If sufficient balance
+  │   └─→ Continue
+  │
+  └─ If insufficient balance
+     └─→ Show Error & Stop
+  │
+  ▼
+Check for Conflicts
+  │
+  ├─ Check overlapping approved leaves
+  ├─ Check overlapping pending leaves
+  │
+  ├─ If conflicts found
+  │   └─→ Show Warning (can proceed)
+  │
+  └─ If no conflicts
+     └─→ Continue
+  │
+  ▼
+Submit Leave Application
+  │
+  ├─ Create Leave record (status: "pending")
+  ├─ Deduct from leave balance (tentatively)
+  │
+  ▼
+Notify HR/Admin
+  │
+  ├─ Email notification (optional)
+  ├─ Dashboard update
+  │
+  ▼
+HR/Admin Review
+  │
+  ├─ View in "Pending Approvals"
+  │
+  ├─ Decision Branch:
+  │   │
+  │   ├─→ Approve
+  │   │     └─ Update status: "approved"
+  │   │     └─ Mark attendance days as "leave"
+  │   │     └─ Notify employee
+  │   │     └─ End
+  │   │
+  │   └─→ Reject
+  │         └─ Update status: "rejected"
+  │         └─ Restore leave balance
+  │         └─ Notify employee with reason
+  │         └─ End
+  │
+  ▼
+End
+```
+
+#### Payroll Generation Workflow
+
+```
+Start
+  │
+  ▼
+HR/Admin Initiates Payroll for Month M
+  │
+  ├─ Input: Month, Year (e.g., Jan 2024)
+  │
+  ▼
+Fetch All Active Employees
+  │
+  ├─ Get list of employees with status="active"
+  ├─ Filter by department (if needed)
+  │
+  ▼
+For Each Employee:
+  │
+  ├─ Step 1: Fetch Salary Data
+  │   └─ Basic Salary from Employee record
+  │
+  ├─ Step 2: Fetch Attendance Data (Month M)
+  │   ├─ Count Present days
+  │   ├─ Count Absent days
+  │   ├─ Count Half-days
+  │   └─ Count Overtime (if any)
+  │
+  ├─ Step 3: Fetch Leave Data (Month M)
+  │   ├─ Count Approved leaves (paid)
+  │   └─ Count Unpaid leaves
+  │
+  ├─ Step 4: Calculate Payable Days
+  │   ├─ Total working days in month
+  │   ├─ Subtract: Unpaid leaves + Absences
+  │   └─ Payable days = Working days - (Unpaid leaves + Absences)
+  │
+  ├─ Step 5: Calculate Net Salary
+  │   ├─ Gross = (Basic × Payable days) / Working days
+  │   ├─ Deductions = Gross × Deduction %
+  │   └─ Net = Gross - Deductions
+  │
+  ├─ Step 6: Create Payroll Record
+  │   └─ Store with status="generated"
+  │
+  ▼ (Repeat for all employees)
+  │
+  ▼
+Payroll Generation Complete
+  │
+  ├─ Total employees processed
+  ├─ Total salary disbursement
+  ├─ Any errors encountered
+  │
+  ▼
+HR Reviews Payroll (Optional)
+  │
+  ├─ View summary
+  ├─ Check for anomalies
+  ├─ Can make corrections
+  │
+  ├─ Decision:
+  │   │
+  │   ├─→ Approve
+  │   │     └─ Status: "approved"
+  │   │
+  │   └─→ Reject & Regenerate
+  │         └─ Delete current payroll
+  │         └─ Correct issue
+  │         └─ Re-generate
+  │
+  ▼
+Payroll Ready for Release
+  │
+  ├─ Employees can download payslips
+  ├─ Finance can process payment
+  │
+  ▼
+End
+```
+
+### 12.6 Wireframes / UI Mock-ups
+
+#### Login Page
+
+```
+┌─────────────────────────────────┐
+│        HRMS Logo                │
+│   (Human Resource Management)   │
+├─────────────────────────────────┤
+│                                 │
+│    Login to Your Account        │
+│                                 │
+│  Email                          │
+│  [____________________]         │
+│                                 │
+│  Password                       │
+│  [____________________]         │
+│                                 │
+│  [ ] Remember Me                │
+│  Forgot Password?               │
+│                                 │
+│  [    LOGIN    ]                │
+│                                 │
+│  Don't have an account?         │
+│  Contact Administrator          │
+│                                 │
+└─────────────────────────────────┘
+```
+
+#### HR Dashboard
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│ HRMS │ ☰ Dashboard  Employees  Attendance  Leaves  Payroll  🔔 👤 │
+├──────────────────────────────────────────────────────────────────┤
+│                                                                  │
+│  Welcome, HR Manager!                          Last Update: 2min │
+│                                                                  │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐          │
+│  │  250         │  │  245         │  │  5           │          │
+│  │ Employees    │  │ Active       │  │ Inactive     │          │
+│  └──────────────┘  └──────────────┘  └──────────────┘          │
+│                                                                  │
+│  Today's Attendance                                              │
+│  ┌──────────────────────────────────────────────────────────┐   │
+│  │ Present: 240 (96%)  Absent: 5  Half-day: 5              │   │
+│  │                                                          │   │
+│  │  [████████████████] 96%                                 │   │
+│  └──────────────────────────────────────────────────────────┘   │
+│                                                                  │
+│  Pending Leave Approvals (12)                                   │
+│  ┌──────────────────────────────────────────────────────────┐   │
+│  │ Name          Leave Type  Days  From Date   Actions    │   │
+│  ├──────────────────────────────────────────────────────────┤   │
+│  │ Rajesh Kumar  Casual      3     2024-02-10  ✓ ✗        │   │
+│  │ Priya Singh   Sick        2     2024-02-15  ✓ ✗        │   │
+│  │ ...                                                     │   │
+│  └──────────────────────────────────────────────────────────┘   │
+│                                                                  │
+│  Attendance Trend (Last 7 Days)                                  │
+│  ┌──────────────────────────────────────────────────────────┐   │
+│  │   ┆    ┆    ┆    ┆    ┆    ┆    ┆                      │   │
+│  │   │ 240│ 238│ 245│ 242│ 240│ 235│                      │   │
+│  │   │    │    │    │    │    │    │                      │   │
+│  │   └────┴────┴────┴────┴────┴────┴                      │   │
+│  │   Mon  Tue  Wed  Thu  Fri  Sat  Sun                    │   │
+│  └──────────────────────────────────────────────────────────┘   │
+│                                                                  │
+│  Leave Balance Warnings (Employees running low)                  │
+│  ┌──────────────────────────────────────────────────────────┐   │
+│  │ • Rajesh Kumar (Casual: 1 day left)                     │   │
+│  │ • Priya Singh (Earned Leave: 2 days left)              │   │
+│  └──────────────────────────────────────────────────────────┘   │
+│                                                                  │
+└──────────────────────────────────────────────────────────────────┘
+```
+
+#### Employee List Page
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│ HRMS │ ☰ Dashboard  Employees  Attendance  Leaves  Payroll  🔔 👤 │
+├──────────────────────────────────────────────────────────────────┤
+│                                                                  │
+│  Employees                              [+ Add Employee]       │
+│                                                                  │
+│  Search: [_____________________]  Filter:  All ▼                │
+│                                                                  │
+│  ┌──────────────────────────────────────────────────────────┐   │
+│  │ Emp Code  Name            Dept       Desig     Status   │   │
+│  ├──────────────────────────────────────────────────────────┤   │
+│  │ EMP-0001  Rajesh Kumar    IT        Engineer   Active   │   │
+│  │ EMP-0002  Priya Singh     HR        Manager    Active   │   │
+│  │ EMP-0003  Amit Patel      Finance   Analyst    Active   │   │
+│  │ EMP-0004  Neha Sharma     IT        Developer  Active   │   │
+│  │ EMP-0005  Vikram Desai    Ops       Exec       Inactive │   │
+│  │                                                          │   │
+│  │ ... (showing 1-20 of 250)                               │   │
+│  │                                                          │   │
+│  │ Pagination: [<]  1  2  3  [>]                           │   │
+│  └──────────────────────────────────────────────────────────┘   │
+│                                                                  │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+#### Attendance Page
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│ HRMS │ ☰ Dashboard  Employees  Attendance  Leaves  Payroll  🔔 👤 │
+├──────────────────────────────────────────────────────────────────┤
+│                                                                  │
+│  Mark Attendance                                                 │
+│                                                                  │
+│  Today: Monday, 15 Jan 2024                                      │
+│                                                                  │
+│  Current Status: Not Checked In                                  │
+│                                                                  │
+│  ┌──────────────────────┐  ┌──────────────────────┐             │
+│  │  [  CHECK IN  ]      │  │  [ CHECK OUT ]       │             │
+│  │   09:00 AM - 6 PM    │  │   (Disabled)         │             │
+│  └──────────────────────┘  └──────────────────────┘             │
+│                                                                  │
+│  ─────────────────────────────────────────────────────────────  │
+│                                                                  │
+│  Attendance Records                                              │
+│                                                                  │
+│  Month: January ▼  Year: 2024 ▼  [Generate Report]             │
+│                                                                  │
+│  ┌──────────────────────────────────────────────────────────┐   │
+│  │ Date   Check-In  Check-Out  Hours  Status      │   │
+│  ├──────────────────────────────────────────────────────────┤   │
+│  │ 15     09:15     18:45      9.5    Present     │   │
+│  │ 14     09:00     17:30      8.5    Present     │   │
+│  │ 13     09:30     -          -      Half-day    │   │
+│  │ 12     -         -          -      Absent      │   │
+│  │ 11     09:00     18:00      9.0    Present     │   │
+│  │                                                │   │
+│  │ Summary: 21 working days                       │   │
+│  │          19 present, 1 absent, 1 half-day     │   │
+│  │          Attendance: 90.5%                     │   │
+│  └──────────────────────────────────────────────────────────┘   │
+│                                                                  │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+#### Leave Application Page
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│ HRMS │ ☰ Dashboard  Employees  Attendance  Leaves  Payroll  🔔 👤 │
+├──────────────────────────────────────────────────────────────────┤
+│                                                                  │
+│  Apply for Leave                                                 │
+│                                                                  │
+│  ┌──────────────────────────────────────────────────────────┐   │
+│  │                                                          │   │
+│  │  Leave Type *                                           │   │
+│  │  [Casual Leave ▼]                                       │   │
+│  │  Balance: 10 days                                       │   │
+│  │                                                          │   │
+│  │  From Date *                                            │   │
+│  │  [15/02/2024] (Calendar picker)                         │   │
+│  │                                                          │   │
+│  │  To Date *                                              │   │
+│  │  [17/02/2024] (Calendar picker)                         │   │
+│  │  Requested Days: 3                                      │   │
+│  │                                                          │   │
+│  │  Reason *                                               │   │
+│  │  [_____________________________]                        │   │
+│  │  Personal / Family Work / Medical / Other               │   │
+│  │                                                          │   │
+│  │  Attachment (optional)                                  │   │
+│  │  [ Choose File ]  (max 5MB)                            │   │
+│  │                                                          │   │
+│  │           [  APPLY  ]  [  CANCEL  ]                     │   │
+│  │                                                          │   │
+│  └──────────────────────────────────────────────────────────┘   │
+│                                                                  │
+│  ─────────────────────────────────────────────────────────────  │
+│                                                                  │
+│  Leave History                                                   │
+│                                                                  │
+│  ┌──────────────────────────────────────────────────────────┐   │
+│  │ Leave  From Date  To Date   Days  Status   Applied   │   │
+│  ├──────────────────────────────────────────────────────────┤   │
+│  │ Casual 10/02/24   12/02/24  3     Approved  08/02/24 │   │
+│  │ Sick   05/02/24   05/02/24  1     Approved  04/02/24 │   │
+│  │ Casual 01/02/24   03/02/24  3     Pending   01/02/24 │   │
+│  └──────────────────────────────────────────────────────────┘   │
+│                                                                  │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+#### Payroll Page
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│ HRMS │ ☰ Dashboard  Employees  Attendance  Leaves  Payroll  🔔 👤 │
+├──────────────────────────────────────────────────────────────────┤
+│                                                                  │
+│  Payroll Management                                              │
+│                                                                  │
+│  Generate Payroll                                                │
+│  Month: [January ▼]  Year: [2024 ▼]  [  GENERATE  ]            │
+│                                                                  │
+│  ─────────────────────────────────────────────────────────────  │
+│                                                                  │
+│  Latest Payroll: January 2024  [Generated on 31 Jan 2024]       │
+│                                                                  │
+│  Summary:                                                        │
+│  • Total Employees: 250                                          │
+│  • Total Gross Salary: ₹ 1,25,00,000                            │
+│  • Total Deductions: ₹ 12,50,000                                │
+│  • Total Net Salary: ₹ 1,12,50,000                              │
+│  • Status: Generated                                             │
+│                                                                  │
+│  ┌──────────────────────────────────────────────────────────┐   │
+│  │ Emp Code  Name           Gross   Deduct   Net   Actions│   │
+│  ├──────────────────────────────────────────────────────────┤   │
+│  │ EMP-0001  Rajesh Kumar   50,000  5,000   45,000  👁 ↓ │   │
+│  │ EMP-0002  Priya Singh    60,000  6,000   54,000  👁 ↓ │   │
+│  │ EMP-0003  Amit Patel     45,000  4,500   40,500  👁 ↓ │   │
+│  │                                                          │   │
+│  │ ... (showing 1-20 of 250)                               │   │
+│  │                                                          │   │
+│  │ [EXPORT as CSV]  [PRINT]  [APPROVE]                    │   │
+│  └──────────────────────────────────────────────────────────┘   │
+│                                                                  │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 13. Step-by-Step Implementation Plan
+
+### Phase 1: Project Setup & Database Design (Week 1)
+
+**Duration:** 3-4 days
+
+**Tasks:**
+1. Create GitHub repository with proper .gitignore and README
+2. Setup MongoDB Atlas cluster and create database
+3. Create two projects: `hrms-backend` and `hrms-frontend`
+4. Setup Node.js project structure with dependencies
+5. Create .env.example with all required variables
+6. Design and finalize MongoDB collections (schemas)
+7. Create Mongoose models for all collections
+8. Setup basic Express server with CORS, middleware
+9. Create project documentation (this SRS)
+
+**Deliverables:**
+- GitHub repository with both projects
+- MongoDB Atlas cluster configured
+- Backend project with basic setup
+- SRS documentation (PDF/DOC)
+
+---
+
+### Phase 2: Authentication & User Management (Week 1-2)
+
+**Duration:** 3-4 days
+
+**Tasks:**
+1. Implement User model with password hashing (bcrypt)
+2. Create auth routes: `/register`, `/login`, `/logout`
+3. Implement JWT token generation and verification
+4. Create auth middleware for token validation
+5. Create authorization middleware for role-based access
+6. Setup password validation rules
+7. Test all auth endpoints with Postman
+8. Create React login/signup pages
+
+**Deliverables:**
+- Working auth API endpoints
+- JWT token management
+- Login page with form validation
+- Protected routes in backend
+
+**Test Cases:**
+- ✓ Register new user with valid data
+- ✓ Register fails with duplicate email
+- ✓ Login with correct credentials
+- ✓ Login fails with incorrect password
+- ✓ Invalid token returns 401
+- ✓ Unauthorized role access returns 403
+
+---
+
+### Phase 3: Employee Management Module (Week 2)
+
+**Duration:** 3-4 days
+
+**Tasks:**
+1. Create Employee model and schema
+2. Implement CRUD APIs for employees:
+   - GET /employees (list with pagination)
+   - GET /employees/:id (detail)
+   - POST /employees (create)
+   - PUT /employees/:id (update)
+   - DELETE /employees/:id (soft delete)
+3. Implement document upload functionality
+4. Add search and filter functionality
+5. Create React components:
+   - Employee list page
+   - Employee detail view
+   - Create/edit employee form
+   - Document upload component
+6. Implement responsive table with pagination
+7. Test all endpoints
+
+**Deliverables:**
+- Working employee management API
+- Employee admin panel UI
+- Full CRUD functionality with validation
+- Document management
+
+**Test Cases:**
+- ✓ Create employee with valid data
+- ✓ Create employee fails with missing required fields
+- ✓ Edit employee updates only provided fields
+- ✓ Search employee by name/code
+- ✓ Soft delete deactivates employee
+- ✓ Upload document with file validation
+
+---
+
+### Phase 4: Attendance Management Module (Week 3)
+
+**Duration:** 3-4 days
+
+**Tasks:**
+1. Create Attendance model and schema
+2. Implement attendance APIs:
+   - POST /attendance/check-in (mark check-in)
+   - POST /attendance/check-out (mark check-out)
+   - GET /attendance (list records)
+   - POST /attendance/manual-entry (admin)
+   - GET /attendance/report (generate report)
+3. Auto-calculate worked hours
+4. Auto-set status (present/absent/half-day) based on rules
+5. Create React components:
+   - Attendance marking page (check-in/check-out buttons)
+   - Attendance list view
+   - Attendance report page
+6. Add calendar view for attendance
+7. Test all endpoints
+
+**Deliverables:**
+- Working attendance tracking system
+- Real-time check-in/check-out functionality
+- Attendance reports with metrics
+- Auto-attendance marking
+
+**Test Cases:**
+- ✓ Check-in successful during working hours
+- ✓ Check-in fails if already checked in today
+- ✓ Check-out calculates worked hours correctly
+- ✓ Half-day status set if worked < 4 hours
+- ✓ Absent auto-marked if no check-in by EOD
+- ✓ Manual entry only by admin/HR
+- ✓ Report shows monthly attendance summary
+
+---
+
+### Phase 5: Leave Management Module (Week 3-4)
+
+**Duration:** 4-5 days
+
+**Tasks:**
+1. Create Leave model and schema
+2. Setup leave types and annual quotas
+3. Implement leave APIs:
+   - POST /leaves/apply (employee applies)
+   - GET /leaves/balance (check balance)
+   - GET /leaves/pending-approvals (HR view)
+   - PUT /leaves/:id/approve (HR approve)
+   - PUT /leaves/:id/reject (HR reject)
+   - GET /leaves/history (employee view)
+4. Auto-calculate leave balance
+5. Implement leave conflict detection
+6. Create React components:
+   - Leave application form
+   - Leave balance view
+   - Leave approval list (HR)
+   - Leave history
+7. Add leave calendar view
+8. Test all endpoints
+
+**Deliverables:**
+- Complete leave management system
+- Leave approval workflow
+- Balance tracking and calculations
+- Leave history and reports
+
+**Test Cases:**
+- ✓ Apply leave with valid dates
+- ✓ Apply fails if insufficient balance
+- ✓ Apply fails with overlapping dates
+- ✓ HR can approve pending leave
+- ✓ HR can reject with reason
+- ✓ Balance updates on approval
+- ✓ Employee gets notification on decision
+
+---
+
+### Phase 6: Payroll Module (Week 4-5)
+
+**Duration:** 4-5 days
+
+**Tasks:**
+1. Create Payroll model and schema
+2. Implement payroll APIs:
+   - POST /payroll/generate (generate for month)
+   - GET /payroll/:payrollId (get details)
+   - GET /payroll/employee/:id/slip (get payslip)
+   - GET /payroll/report (payroll report)
+3. Implement salary calculation logic:
+   - Fetch attendance and leave data
+   - Calculate payable days
+   - Calculate net salary
+4. Create React components:
+   - Payroll generation page
+   - Payroll summary view
+   - Payslip viewer
+   - Payroll reports
+5. Add CSV export functionality
+6. Optional: PDF generation for payslips
+7. Test all calculations
+
+**Deliverables:**
+- Working payroll calculation system
+- Monthly payroll generation
+- Payslip generation and download
+- Payroll reports and analytics
+
+**Test Cases:**
+- ✓ Payroll generation for all active employees
+- ✓ Salary calculated based on attendance
+- ✓ Unpaid leaves reduce payable days
+- ✓ Absent days reduce payable days
+- ✓ Employee can view own payslip
+- ✓ HR can view all payslips
+- ✓ Export payroll as CSV
+
+---
+
+### Phase 7: Dashboards & Reports (Week 5)
+
+**Duration:** 3-4 days
+
+**Tasks:**
+1. Create dashboard APIs:
+   - GET /dashboard/admin
+   - GET /dashboard/hr
+   - GET /dashboard/employee
+2. Fetch required data (employees, attendance, leaves, payroll)
+3. Calculate metrics and summaries
+4. Create React dashboard components:
+   - Admin dashboard with system-wide metrics
+   - HR dashboard with daily operations
+   - Employee dashboard with personal info
+5. Implement charts (using Recharts/Chart.js):
+   - Attendance trend chart
+   - Department distribution pie chart
+   - Leave approval status chart
+6. Add real-time data updates
+7. Test dashboard loads and displays correctly
+
+**Deliverables:**
+- Working dashboards for all roles
+- Dashboard analytics and charts
+- Real-time metrics
+- Performance optimized dashboard
+
+**Test Cases:**
+- ✓ Admin dashboard shows all system metrics
+- ✓ HR dashboard shows pending approvals
+- ✓ Employee dashboard shows personal information
+- ✓ Charts render correctly with data
+- ✓ Filters work on dashboard
+
+---
+
+### Phase 8: Recruitment Module (Optional) (Week 5-6)
+
+**Duration:** 2-3 days
+
+**Tasks:**
+1. Create JobPosting and Candidate models
+2. Implement recruitment APIs:
+   - GET /jobs (list job postings)
+   - POST /jobs (create posting)
+   - POST /candidates/apply (apply for job)
+   - GET /candidates (view applications)
+   - PUT /candidates/:id/move-to-employee (hire candidate)
+3. Create React components:
+   - Job posting list (public)
+   - Candidate application form
+   - Candidate management (HR)
+4. Implement candidate filtering and sorting
+5. Test all endpoints
+
+**Deliverables:**
+- Basic recruitment module
+- Job posting management
+- Candidate application handling
+- Employee onboarding from candidate
+
+---
+
+### Phase 9: Frontend Polish & UI/UX (Week 6)
+
+**Duration:** 3-4 days
+
+**Tasks:**
+1. Review and improve all pages' UI/UX
+2. Ensure responsive design on mobile/tablet
+3. Add loading spinners and skeletons
+4. Implement toast notifications (success/error/warning)
+5. Improve form validation messages
+6. Add breadcrumb navigation
+7. Implement dark/light theme (optional)
+8. Optimize images and assets
+9. Improve accessibility (WCAG)
+10. Test on different browsers
+
+**Deliverables:**
+- Polished and responsive UI
+- Professional look and feel
+- Better user experience
+- Cross-browser compatibility
+
+---
+
+### Phase 10: Testing & Quality Assurance (Week 6-7)
+
+**Duration:** 4-5 days
+
+**Tasks:**
+1. **Unit Testing:**
+   - Test individual functions and components
+   - Focus on business logic (salary calculation, leave balance)
+   - Create test cases for each module
+
+2. **Integration Testing:**
+   - Test module interactions (leave affects attendance affects payroll)
+   - Test API workflows
+   - Test database operations
+
+3. **System Testing:**
+   - Test complete user workflows
+   - Test end-to-end scenarios for each role
+   - Performance testing with sample data
+
+4. **UAT (User Acceptance Testing):**
+   - Create test scenarios based on requirements
+   - Test with realistic data
+   - Get feedback from potential users
+
+5. **Bug Fixing:**
+   - Document all bugs found
+   - Prioritize and fix critical bugs
+   - Regression testing
+
+**Test Scenarios:**
+- Admin creates HR user, HR creates employee, employee marks attendance, HR approves leave, payroll generates correctly
+- Employee applies leave, HR approves, attendance auto-marked as leave, payroll reflects paid leave
+- Multiple employees, different departments, complex attendance patterns
+
+**Deliverables:**
+- Test cases document
+- Bug report and fixes
+- Performance metrics
+- UAT sign-off
+
+---
+
+### Phase 11: Deployment & Documentation (Week 7-8)
+
+**Duration:** 2-3 days
+
+**Tasks:**
+1. **Backend Deployment:**
+   - Setup Render / Railway account
+   - Configure environment variables
+   - Setup MongoDB Atlas production cluster
+   - Deploy backend application
+   - Test APIs on production
+
+2. **Frontend Deployment:**
+   - Setup Vercel / Netlify
+   - Configure production environment
+   - Deploy frontend application
+   - Setup custom domain (optional)
+   - Enable HTTPS
+
+3. **Documentation:**
+   - Create deployment guide
+   - Create user manual (how to use each feature)
+   - Create admin guide (system setup, configuration)
+   - Create developer guide (setup, architecture, code structure)
+   - Update README with live links
+
+4. **Post-Deployment:**
+   - Monitor application for errors
+   - Setup error logging (Sentry optional)
+   - Create backup procedures
+   - Document known issues
+
+**Deliverables:**
+- Live application (frontend + backend + database)
+- Complete documentation set
+- Deployment guide
+- User manuals
+
+---
+
+### Phase 12: Presentation & Submission (Week 8)
+
+**Duration:** 1-2 days
+
+**Tasks:**
+1. Prepare project presentation
+2. Create demo video (10-15 minutes)
+3. Prepare documentation for submission:
+   - SRS document
+   - System design document
+   - Implementation report
+   - Test cases document
+   - User manual
+4. Create GitHub repository with proper documentation
+5. Prepare for live demo/presentation
+6. Gather feedback from evaluators
+
+**Deliverables:**
+- Presentation slides
+- Demo video
+- All documentation
+- GitHub repository with clean code
+
+---
+
+## 14. Testing Strategy
+
+### 14.1 Unit Testing
+
+**Focus:** Individual functions, business logic, utilities
+
+**Examples:**
+```javascript
+// Payroll calculation test
+describe('Payroll Calculation', () => {
+  test('Should calculate net salary correctly', () => {
+    const basic = 50000;
+    const workingDays = 21;
+    const payableDays = 20;
+    const expectedGross = 47619.05;
+    
+    const gross = (basic * payableDays) / workingDays;
+    expect(Math.round(gross * 100) / 100).toBe(expectedGross);
+  });
+  
+  test('Should handle leave balance updates', () => {
+    const initialBalance = 12;
+    const leaveTaken = 3;
+    const expectedBalance = 9;
+    
+    const finalBalance = initialBalance - leaveTaken;
+    expect(finalBalance).toBe(expectedBalance);
+  });
+});
+
+// Authentication test
+describe('Authentication', () => {
+  test('Should hash password securely', async () => {
+    const password = 'TestPass123';
+    const hashed = await bcrypt.hash(password, 10);
+    expect(hashed).not.toBe(password);
+    const isMatch = await bcrypt.compare(password, hashed);
+    expect(isMatch).toBe(true);
+  });
+});
+```
+
+### 14.2 Integration Testing
+
+**Focus:** Module interactions, API workflows, database operations
+
+**Examples:**
+```javascript
+// Leave workflow integration test
+describe('Leave Management Workflow', () => {
+  test('Should complete leave approval workflow', async () => {
+    // 1. Employee applies for leave
+    const leaveApp = await Leave.create({
+      employeeId: 'emp123',
+      leaveType: 'casual',
+      fromDate: '2024-02-10',
+      toDate: '2024-02-12',
+      numberOfDays: 3,
+      status: 'pending'
+    });
+    
+    // 2. HR approves leave
+    leaveApp.status = 'approved';
+    await leaveApp.save();
+    
+    // 3. Leave balance updates
+    const employee = await Employee.findById('emp123');
+    expect(employee.leaveBalance.casualLeave).toBe(9); // 12 - 3
+    
+    // 4. Attendance marked as leave
+    const attendance = await Attendance.find({
+      employeeId: 'emp123',
+      date: { $gte: '2024-02-10', $lte: '2024-02-12' }
+    });
+    attendance.forEach(att => {
+      expect(att.status).toBe('leave');
+    });
+  });
+});
+
+// Payroll generation integration test
+describe('Payroll Generation', () => {
+  test('Should generate payroll for all employees with correct calculations', async () => {
+    await Payroll.generateForMonth(1, 2024);
+    
+    const payrolls = await Payroll.find({ month: 1, year: 2024 });
+    expect(payrolls.length).toBe(250); // All active employees
+    
+    payrolls.forEach(payroll => {
+      expect(payroll.netSalary).toBeGreaterThan(0);
+      expect(payroll.status).toBe('generated');
+    });
+  });
+});
+```
+
+### 14.3 System/End-to-End Testing
+
+**Focus:** Complete user workflows, system behavior
+
+**Test Scenarios:**
+
+1. **Employee Onboarding Flow**
+   - Admin creates HR user
+   - HR creates employee
+   - Employee logs in for first time
+   - Employee marks attendance
+   - Employee applies leave
+   - HR approves leave
+   - Payroll generated correctly
+   ✓ All steps succeed without errors
+
+2. **Monthly Operations Flow**
+   - Employees mark attendance daily
+   - HR approves leaves throughout month
+   - At month-end, HR generates payroll
+   - Employees download payslips
+   - HR generates reports
+   ✓ All operations accurate and timely
+
+3. **Error Handling Flow**
+   - Employee tries to check-out without check-in
+   - Employee applies leave with insufficient balance
+   - HR tries to delete active employee
+   - Invalid data submitted
+   ✓ System shows appropriate error messages
+
+### 14.4 Performance Testing
+
+**Metrics to Measure:**
+- API response time (target: < 500ms for typical queries)
+- Dashboard load time (target: < 2 seconds)
+- Report generation time (target: < 5 seconds)
+- Concurrent user support (target: 50+ users)
+
+**Load Testing:**
+```javascript
+// Simulate 50 concurrent API requests
+const loadTest = async () => {
+  const startTime = Date.now();
+  const requests = Array(50).fill().map(() => 
+    axios.get('/api/v1/employees?page=1&limit=20')
+  );
+  
+  const responses = await Promise.all(requests);
+  const endTime = Date.now();
+  
+  const avgResponseTime = (endTime - startTime) / 50;
+  console.log(`Average response time: ${avgResponseTime}ms`);
+};
+```
+
+### 14.5 UAT Checklist
+
+**Admin User Tests:**
+- ✓ Can create/manage HR users
+- ✓ Can create/manage employees
+- ✓ Can view all system data
+- ✓ Can generate reports
+- ✓ Can configure system settings
+
+**HR User Tests:**
+- ✓ Can manage employees
+- ✓ Can review and approve/reject leaves
+- ✓ Can mark/edit attendance
+- ✓ Can generate payroll
+- ✓ Can view HR dashboard
+- ✓ Can generate reports
+
+**Employee User Tests:**
+- ✓ Can view own profile
+- ✓ Can mark check-in/check-out
+- ✓ Can apply for leave
+- ✓ Can download payslip
+- ✓ Can view leave balance
+- ✓ Can view attendance history
+- ✓ Can view employee dashboard
+
+---
+
+## 15. Deployment Guide
+
+### 15.1 Backend Deployment (Render)
+
+**Prerequisites:**
+- Render account (free tier available)
+- GitHub repository with backend code
+- MongoDB Atlas cluster
+
+**Steps:**
+
+1. **Prepare code for deployment:**
+   ```bash
+   # Create Procfile (not needed for Render, but good practice)
+   # Create .env.production with production values
+   # Update package.json start script: "start": "node server.js"
+   ```
+
+2. **Connect GitHub to Render:**
+   - Go to render.com and sign in
+   - Click "New +" → "Web Service"
+   - Connect GitHub repository
+   - Select backend repository
+
+3. **Configure environment:**
+   - Set Environment Variables:
+     - MONGODB_URI: `mongodb+srv://user:pass@cluster.mongodb.net/hrms`
+     - JWT_SECRET: (generate random string)
+     - NODE_ENV: `production`
+     - FRONTEND_URL: `https://your-frontend-url.vercel.app`
+     - PORT: `3000`
+
+4. **Deploy:**
+   - Render auto-deploys on push to main/master
+   - Monitor deployment in Render dashboard
+   - Test API endpoints
+
+**Production URL:** `https://your-app-name.onrender.com`
+
+### 15.2 Frontend Deployment (Vercel)
+
+**Steps:**
+
+1. **Prepare code:**
+   ```bash
+   # Create .env.production
+   REACT_APP_API_URL=https://your-app-name.onrender.com/api/v1
+   ```
+
+2. **Deploy to Vercel:**
+   - Go to vercel.com and sign in with GitHub
+   - Click "Add New +" → "Project"
+   - Import GitHub repository (frontend)
+   - Configure:
+     - Framework: React
+     - Build command: `npm run build`
+     - Output directory: `build`
+     - Environment variables from .env.production
+
+3. **Complete:**
+   - Vercel auto-deploys on push
+   - Get production URL
+   - Test frontend
+
+**Production URL:** `https://your-app-name.vercel.app`
+
+### 15.3 Production Environment Variables
+
+**Backend (.env.production):**
+```
+NODE_ENV=production
+PORT=3000
+MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/hrms_production
+JWT_SECRET=your-super-secret-key-min-32-chars
+JWT_EXPIRE=7d
+FRONTEND_URL=https://your-frontend.vercel.app
+LOG_LEVEL=warn
+```
+
+**Frontend (.env.production):**
+```
+REACT_APP_API_URL=https://your-backend.onrender.com/api/v1
+REACT_APP_ENVIRONMENT=production
+REACT_APP_LOG_LEVEL=error
+```
+
+### 15.4 Backup & Recovery
+
+**MongoDB Atlas Backup:**
+- MongoDB Atlas automatically backs up data
+- Configure backup frequency in Atlas dashboard
+- Download backups as needed
+- Test restore procedure periodically
+
+**Code Backup:**
+- GitHub is your code backup
+- Tag releases for versioning
+- Create backup branch before major changes
+
+---
+
+## 16. Future Enhancements
+
+### 16.1 Short-term Enhancements (v1.1 - v1.5)
+
+1. **Email Notifications**
+   - Send email on leave approval/rejection
+   - Send monthly payslip via email
+   - Attendance reminders
+
+2. **SMS Integration**
+   - Critical notifications via SMS
+   - Leave approval/rejection notification
+   - Optional for v1.0
+
+3. **Advanced Attendance**
+   - Geolocation-based attendance (mobile app)
+   - Biometric device integration (future)
+   - Location-based check-in validation
+
+4. **Performance Management**
+   - Employee appraisal/review system
+   - Performance ratings
+   - Goal tracking
+
+5. **Mobile Application**
+   - Native iOS/Android app
+   - Offline attendance marking capability
+   - Push notifications
+
+### 16.2 Medium-term Enhancements (v2.0)
+
+1. **Advanced Payroll**
+   - Income Tax calculation (TDS)
+   - Provident Fund (PF) management
+   - Employee State Insurance (ESI)
+   - Statutory compliance reporting
+
+2. **Analytics & Business Intelligence**
+   - Advanced dashboards with filters
+   - Predictive analytics
+   - Custom report builder
+   - Data export to BI tools
+
+3. **Workflow Automation**
+   - Automated reminders
+   - Bulk leave approvals
+   - Auto-mark holidays
+   - Automated notifications
+
+4. **Document Management**
+   - Digital document storage
+   - E-signature support
+   - Approval workflows
+   - Compliance documentation
+
+5. **Multi-company Support**
+   - Support multiple company branches
+   - Department/Location hierarchy
+   - Consolidated reporting
+
+### 16.3 Long-term Enhancements (v3.0+)
+
+1. **AI/ML Features**
+   - Attrition prediction
+   - Anomaly detection (unusual attendance patterns)
+   - Recommend optimal leave allocation
+   - Sentiment analysis on feedback
+
+2. **Integrations**
+   - Accounting software (Tally, SAP)
+   - Bank API for salary disbursement
+   - Calendar integration (leave blocking in calendar)
+   - Video conferencing integration
+
+3. **Advanced Security**
+   - Two-factor authentication (2FA)
+   - Biometric authentication
+   - Role-based access control (RBAC) v2
+   - Data encryption at rest
+
+4. **Scalability Improvements**
+   - Microservices architecture
+   - Load balancing
+   - Caching layer (Redis)
+   - Database replication
+   - GraphQL API
+
+5. **Training & Development Module**
+   - Training programs management
+   - Skill tracking
+   - Certification management
+   - Learning path recommendations
+
+---
+
+## Conclusion
+
+This comprehensive HRMS project documentation provides everything needed for a successful semester project. The system is designed to be:
+
+- **Modular:** Each feature can be developed independently
+- **Scalable:** Easy to add new features and support more employees
+- **Maintainable:** Clear code structure and documentation
+- **User-Friendly:** Intuitive UI for all user roles
+- **Production-Ready:** Can be deployed to real users after completion
+
+### Key Success Factors
+
+1. **Follow the phased approach:** Don't skip phases, each builds on previous
+2. **Test thoroughly:** Create test cases as you code
+3. **Maintain code quality:** Follow coding standards and document your code
+4. **Regular commits:** Push code to GitHub regularly (daily minimum)
+5. **Collect feedback:** Test with potential users and incorporate feedback
+6. **Document everything:** Keep documentation updated as you build
+
+### Expected Outcomes
+
+After completing this project, you will have:
+- ✅ A fully functional HRMS web application
+- ✅ Experience with MERN stack development
+- ✅ Understanding of system design and architecture
+- ✅ Database design skills
+- ✅ API development expertise
+- ✅ Frontend development proficiency
+- ✅ Testing and QA experience
+- ✅ Deployment and DevOps basics
+- ✅ Project management skills
+
+### Resources
+
+- **Backend Framework:** https://expressjs.com/
+- **Frontend Framework:** https://reactjs.org/
+- **Database:** https://www.mongodb.com/
+- **Deployment:** https://render.com/ & https://vercel.com/
+- **Documentation:** https://swagger.io/ (API documentation)
+
+---
+
+**Document Version:** 1.0  
+**Last Updated:** January 2024  
+**Status:** Ready for Implementation
+
+---
+
+*This document is a comprehensive guide for developing an HRMS system using MERN stack. Modify requirements based on your specific needs. Good luck with your project!*
