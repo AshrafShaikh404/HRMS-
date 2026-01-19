@@ -40,6 +40,7 @@ import {
     FileDownload as DownloadIcon,
     PictureAsPdf as PdfIcon,
 } from '@mui/icons-material';
+import SharedCalendar from '../components/SharedCalendar';
 
 function Leaves({ user }) {
     const { showSuccess, showError } = useNotification();
@@ -368,86 +369,88 @@ function Leaves({ user }) {
                 </Box>
             )}
 
-            {/* My Leaves */}
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                <Typography variant="h5" fontWeight={600}>
-                    My Leave History
-                </Typography>
-                {(user.role === 'admin' || user.role === 'hr') && (
-                    <Box sx={{ display: 'flex', gap: 1 }}>
-                        <Button
-                            variant="outlined"
-                            size="small"
-                            startIcon={exporting ? <CircularProgress size={16} /> : <DownloadIcon />}
-                            onClick={handleExportCSV}
-                            disabled={exporting || leaves.length === 0}
-                            color="success"
-                        >
-                            Export CSV
-                        </Button>
-                        <Button
-                            variant="outlined"
-                            size="small"
-                            startIcon={exporting ? <CircularProgress size={16} /> : <PdfIcon />}
-                            onClick={handleExportPDF}
-                            disabled={exporting || leaves.length === 0}
-                            color="error"
-                        >
-                            Export PDF
-                        </Button>
-                    </Box>
-                )}
-            </Box>
-            <TableContainer component={Paper} sx={{ borderRadius: 2 }}>
-                <Table>
-                    <TableHead>
-                        <TableRow>
-                            <TableCell>Type</TableCell>
-                            <TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }}>From</TableCell>
-                            <TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }}>To</TableCell>
-                            <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>Days</TableCell>
-                            <TableCell sx={{ display: { xs: 'none', lg: 'table-cell' } }}>Reason</TableCell>
-                            <TableCell>Status</TableCell>
-                            <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>Applied On</TableCell>
-                        </TableRow>
-                    </TableHead>
-                    <TableBody>
-                        {leaves.map((leave) => (
-                            <TableRow key={leave._id} hover>
-                                <TableCell>
-                                    <Chip label={leave.leaveType} color={getLeaveTypeColor(leave.leaveType)} size="small" />
-                                </TableCell>
-                                <TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }}>
-                                    {new Date(leave.fromDate).toLocaleDateString()}
-                                </TableCell>
-                                <TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }}>
-                                    {new Date(leave.toDate).toLocaleDateString()}
-                                </TableCell>
-                                <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>{leave.numberOfDays}</TableCell>
-                                <TableCell sx={{ display: { xs: 'none', lg: 'table-cell' } }}>{leave.reason}</TableCell>
-                                <TableCell>
-                                    <Chip label={leave.status} color={getStatusColor(leave.status)} size="small" />
-                                </TableCell>
-                                <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>
-                                    {new Date(leave.appliedAt).toLocaleDateString()}
-                                </TableCell>
+            {/* Leave History Table */}
+            <Box sx={{ mb: 2 }}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                    <Typography variant="h5" fontWeight={600}>
+                        My Leave History
+                    </Typography>
+                    {(user.role === 'admin' || user.role === 'hr') && (
+                        <Box sx={{ display: 'flex', gap: 1 }}>
+                            <Button
+                                variant="outlined"
+                                size="small"
+                                startIcon={exporting ? <CircularProgress size={16} /> : <DownloadIcon />}
+                                onClick={handleExportCSV}
+                                disabled={exporting || leaves.length === 0}
+                                color="success"
+                            >
+                                Export CSV
+                            </Button>
+                            <Button
+                                variant="outlined"
+                                size="small"
+                                startIcon={exporting ? <CircularProgress size={16} /> : <PdfIcon />}
+                                onClick={handleExportPDF}
+                                disabled={exporting || leaves.length === 0}
+                                color="error"
+                            >
+                                Export PDF
+                            </Button>
+                        </Box>
+                    )}
+                </Box>
+                <TableContainer component={Paper} sx={{ borderRadius: 2 }}>
+                    <Table>
+                        <TableHead>
+                            <TableRow>
+                                <TableCell>Type</TableCell>
+                                <TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }}>From</TableCell>
+                                <TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }}>To</TableCell>
+                                <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>Days</TableCell>
+                                <TableCell sx={{ display: { xs: 'none', lg: 'table-cell' } }}>Reason</TableCell>
+                                <TableCell>Status</TableCell>
+                                <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>Applied On</TableCell>
                             </TableRow>
-                        ))}
-                    </TableBody>
-                </Table>
+                        </TableHead>
+                        <TableBody>
+                            {leaves.map((leave) => (
+                                <TableRow key={leave._id} hover>
+                                    <TableCell>
+                                        <Chip label={leave.leaveType} color={getLeaveTypeColor(leave.leaveType)} size="small" />
+                                    </TableCell>
+                                    <TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }}>
+                                        {new Date(leave.fromDate).toLocaleDateString()}
+                                    </TableCell>
+                                    <TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }}>
+                                        {new Date(leave.toDate).toLocaleDateString()}
+                                    </TableCell>
+                                    <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>{leave.numberOfDays}</TableCell>
+                                    <TableCell sx={{ display: { xs: 'none', lg: 'table-cell' } }}>{leave.reason}</TableCell>
+                                    <TableCell>
+                                        <Chip label={leave.status} color={getStatusColor(leave.status)} size="small" />
+                                    </TableCell>
+                                    <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>
+                                        {new Date(leave.appliedAt).toLocaleDateString()}
+                                    </TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
 
-                {leaves.length === 0 && (
-                    <Box sx={{ p: 4, textAlign: 'center' }}>
-                        <Typography color="text.secondary">No leave records found</Typography>
-                    </Box>
-                )}
-            </TableContainer>
+                    {leaves.length === 0 && (
+                        <Box sx={{ p: 4, textAlign: 'center' }}>
+                            <Typography color="text.secondary">No leave records found</Typography>
+                        </Box>
+                    )}
+                </TableContainer>
+            </Box>
 
             {/* Apply Leave Dialog */}
             <Dialog
                 open={showApplyModal}
                 onClose={() => setShowApplyModal(false)}
-                maxWidth="sm"
+                maxWidth="lg"
                 fullWidth
             >
                 <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -458,54 +461,70 @@ function Leaves({ user }) {
                 </DialogTitle>
                 <form onSubmit={handleApplyLeave}>
                     <DialogContent dividers>
-                        <Grid container spacing={2}>
-                            <Grid item xs={12}>
-                                <FormControl fullWidth required>
-                                    <InputLabel>Leave Type</InputLabel>
-                                    <Select
-                                        value={newLeave.leaveType}
-                                        onChange={(e) => setNewLeave({ ...newLeave, leaveType: e.target.value })}
-                                        label="Leave Type"
-                                    >
-                                        <MenuItem value="casual">Casual Leave</MenuItem>
-                                        <MenuItem value="sick">Sick Leave</MenuItem>
-                                        <MenuItem value="earned">Earned Leave</MenuItem>
-                                        <MenuItem value="unpaid">Unpaid Leave</MenuItem>
-                                    </Select>
-                                </FormControl>
+                        <Grid container spacing={3}>
+                            {/* Form Section (Left Side) */}
+                            <Grid item xs={12} md={5} sx={{ order: { xs: 1, md: 1 } }}>
+                                <Typography variant="h6" gutterBottom>Application Details</Typography>
+                                <Grid container spacing={2}>
+                                    <Grid item xs={12}>
+                                        <FormControl fullWidth required>
+                                            <InputLabel>Leave Type</InputLabel>
+                                            <Select
+                                                value={newLeave.leaveType}
+                                                onChange={(e) => setNewLeave({ ...newLeave, leaveType: e.target.value })}
+                                                label="Leave Type"
+                                            >
+                                                <MenuItem value="casual">Casual Leave</MenuItem>
+                                                <MenuItem value="sick">Sick Leave</MenuItem>
+                                                <MenuItem value="earned">Earned Leave</MenuItem>
+                                                <MenuItem value="unpaid">Unpaid Leave</MenuItem>
+                                            </Select>
+                                        </FormControl>
+                                    </Grid>
+                                    <Grid item xs={12} sm={6}>
+                                        <TextField
+                                            fullWidth
+                                            label="From Date"
+                                            type="date"
+                                            required
+                                            value={newLeave.fromDate}
+                                            onChange={(e) => setNewLeave({ ...newLeave, fromDate: e.target.value })}
+                                            InputLabelProps={{ shrink: true }}
+                                        />
+                                    </Grid>
+                                    <Grid item xs={12} sm={6}>
+                                        <TextField
+                                            fullWidth
+                                            label="To Date"
+                                            type="date"
+                                            required
+                                            value={newLeave.toDate}
+                                            onChange={(e) => setNewLeave({ ...newLeave, toDate: e.target.value })}
+                                            InputLabelProps={{ shrink: true }}
+                                        />
+                                    </Grid>
+                                    <Grid item xs={12}>
+                                        <TextField
+                                            fullWidth
+                                            label="Reason"
+                                            multiline
+                                            rows={3}
+                                            required
+                                            value={newLeave.reason}
+                                            onChange={(e) => setNewLeave({ ...newLeave, reason: e.target.value })}
+                                        />
+                                    </Grid>
+                                </Grid>
                             </Grid>
-                            <Grid item xs={12} sm={6}>
-                                <TextField
-                                    fullWidth
-                                    label="From Date"
-                                    type="date"
-                                    required
-                                    value={newLeave.fromDate}
-                                    onChange={(e) => setNewLeave({ ...newLeave, fromDate: e.target.value })}
-                                    InputLabelProps={{ shrink: true }}
-                                />
-                            </Grid>
-                            <Grid item xs={12} sm={6}>
-                                <TextField
-                                    fullWidth
-                                    label="To Date"
-                                    type="date"
-                                    required
-                                    value={newLeave.toDate}
-                                    onChange={(e) => setNewLeave({ ...newLeave, toDate: e.target.value })}
-                                    InputLabelProps={{ shrink: true }}
-                                />
-                            </Grid>
-                            <Grid item xs={12}>
-                                <TextField
-                                    fullWidth
-                                    label="Reason"
-                                    multiline
-                                    rows={3}
-                                    required
-                                    value={newLeave.reason}
-                                    onChange={(e) => setNewLeave({ ...newLeave, reason: e.target.value })}
-                                />
+
+                            {/* Calendar Section (Right Side for visibility) */}
+                            <Grid item xs={12} md={7} sx={{ order: { xs: 2, md: 2 } }}>
+                                <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                                    Check availability and holidays
+                                </Typography>
+                                <Paper variant="outlined" sx={{ p: 1, borderRadius: 2 }}>
+                                    <SharedCalendar user={user} height="400px" embedded={true} />
+                                </Paper>
                             </Grid>
                         </Grid>
                     </DialogContent>

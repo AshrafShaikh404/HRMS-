@@ -160,6 +160,24 @@ exports.getHRDashboard = async (req, res) => {
             ]
         }).select('firstName lastName leaveBalance').limit(5);
 
+        // Get HR's own attendance status
+        const hrEmployee = await Employee.findOne({ userId: req.user._id });
+        let hrTodayStatus = null;
+        if (hrEmployee) {
+            const hrAttendance = await Attendance.findOne({
+                employeeId: hrEmployee._id,
+                date: { $gte: today, $lt: tomorrow }
+            });
+            hrTodayStatus = {
+                checkedIn: hrAttendance ? !!hrAttendance.checkInTime : false,
+                checkedOut: hrAttendance ? !!hrAttendance.checkOutTime : false,
+                checkInTime: hrAttendance?.checkInTime,
+                checkOutTime: hrAttendance?.checkOutTime,
+                workedHours: hrAttendance?.workedHours || 0,
+                status: hrAttendance?.status || 'absent'
+            };
+        }
+
         res.status(200).json({
             success: true,
             data: {
@@ -191,7 +209,8 @@ exports.getHRDashboard = async (req, res) => {
                     name: `${e.firstName} ${e.lastName}`,
                     casualLeave: e.leaveBalance.casualLeave,
                     sickLeave: e.leaveBalance.sickLeave
-                }))
+                })),
+                todayStatus: hrTodayStatus
             }
         });
     } catch (error) {

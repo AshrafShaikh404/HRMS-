@@ -12,7 +12,6 @@ import Leaves from './pages/Leaves';
 import Payroll from './pages/Payroll';
 import Profile from './pages/Profile';
 import Helpdesk from './pages/Helpdesk';
-import Calendar from './pages/Calendar';
 
 import { NotificationProvider } from './contexts/NotificationContext';
 
@@ -67,7 +66,6 @@ function App() {
                                     <DashboardLayout user={user} onLogout={handleLogout}>
                                         <Routes>
                                             <Route path="/dashboard" element={<Dashboard user={user} />} />
-                                            <Route path="/calendar" element={<Calendar user={user} />} />
                                             <Route path="/profile" element={<Profile user={user} />} />
                                             <Route path="/employees" element={<Employees user={user} />} />
                                             <Route path="/attendance" element={<Attendance user={user} />} />

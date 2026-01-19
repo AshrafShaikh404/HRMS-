@@ -20,21 +20,18 @@ import {
     Paper,
     Chip,
     Card,
-    CardContent,
     Grid,
     Skeleton,
     CircularProgress,
 } from '@mui/material';
 import {
-    Login as CheckInIcon,
-    Logout as CheckOutIcon,
     FilterAlt as FilterIcon,
     Refresh as RefreshIcon,
-    AccessTime as TimeIcon,
     FileDownload as DownloadIcon,
     PictureAsPdf as PdfIcon,
 } from '@mui/icons-material';
 import AttendanceChart from '../components/AttendanceChart';
+import AttendanceWidget from '../components/dashboard/AttendanceWidget';
 
 function Attendance({ user }) {
     const { showSuccess, showError } = useNotification();
@@ -56,10 +53,10 @@ function Attendance({ user }) {
             fetchEmployees();
         }
         fetchAttendance();
-        if (user.role === 'employee') {
+        if (user.role === 'employee' || user.role === 'hr') {
             checkTodayStatus();
         }
-    }, [user]);
+    }, [user, isHRorAdmin]);
 
     const fetchEmployees = async () => {
         try {
@@ -97,31 +94,11 @@ function Attendance({ user }) {
             });
             if (response.data.data.attendance.length > 0) {
                 setTodayStatus(response.data.data.attendance[0]);
+            } else {
+                setTodayStatus(null);
             }
         } catch (err) {
             console.error('Error checking today status:', err);
-        }
-    };
-
-    const handleCheckIn = async () => {
-        try {
-            await attendanceAPI.checkIn();
-            showSuccess('Checked in successfully!');
-            checkTodayStatus();
-            fetchAttendance();
-        } catch (err) {
-            showError(err.response?.data?.message || 'Check-in failed');
-        }
-    };
-
-    const handleCheckOut = async () => {
-        try {
-            await attendanceAPI.checkOut();
-            showSuccess('Checked out successfully!');
-            checkTodayStatus();
-            fetchAttendance();
-        } catch (err) {
-            showError(err.response?.data?.message || 'Check-out failed');
         }
     };
 
@@ -231,63 +208,18 @@ function Attendance({ user }) {
                 </Typography>
             </Box>
 
-            {/* Employee's own check-in/out card */}
-            {user.role === 'employee' && (
+            {/* Employee/HR Check-in/out Widget */}
+            {(user.role === 'employee' || user.role === 'hr') && (
                 <Grid container spacing={3} sx={{ mb: 4 }}>
                     <Grid item xs={12} sm={6} md={4}>
-                        <Card sx={{ height: '100%' }}>
-                            <CardContent>
-                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-                                    <TimeIcon color="primary" />
-                                    <Typography variant="h6" fontWeight={600}>
-                                        Today's Status
-                                    </Typography>
-                                </Box>
-                                {todayStatus ? (
-                                    <Box>
-                                        <Typography variant="body2" sx={{ mb: 1 }}>
-                                            <strong>Check-in:</strong> {todayStatus.checkInTime ? new Date(todayStatus.checkInTime).toLocaleTimeString() : 'Not checked in'}
-                                        </Typography>
-                                        <Typography variant="body2" sx={{ mb: 1 }}>
-                                            <strong>Check-out:</strong> {todayStatus.checkOutTime ? new Date(todayStatus.checkOutTime).toLocaleTimeString() : 'Not checked out'}
-                                        </Typography>
-                                        <Typography variant="body2" sx={{ mb: 1 }}>
-                                            <strong>Hours:</strong> {todayStatus.workedHours || 0} hours
-                                        </Typography>
-                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-                                            <Typography variant="body2"><strong>Status:</strong></Typography>
-                                            <Chip label={todayStatus.status} color={getStatusColor(todayStatus.status)} size="small" />
-                                        </Box>
-
-                                        {!todayStatus.checkOutTime && (
-                                            <Button
-                                                variant="contained"
-                                                color="secondary"
-                                                startIcon={<CheckOutIcon />}
-                                                onClick={handleCheckOut}
-                                                fullWidth
-                                            >
-                                                Check Out
-                                            </Button>
-                                        )}
-                                    </Box>
-                                ) : (
-                                    <Box>
-                                        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                                            You haven't checked in today
-                                        </Typography>
-                                        <Button
-                                            variant="contained"
-                                            startIcon={<CheckInIcon />}
-                                            onClick={handleCheckIn}
-                                            fullWidth
-                                        >
-                                            Check In
-                                        </Button>
-                                    </Box>
-                                )}
-                            </CardContent>
-                        </Card>
+                        <AttendanceWidget
+                            user={user}
+                            todayStatus={todayStatus || {}}
+                            onStatusChange={() => {
+                                checkTodayStatus();
+                                fetchAttendance();
+                            }}
+                        />
                     </Grid>
                 </Grid>
             )}
