@@ -28,6 +28,8 @@ import {
     SupportAgent as SupportIcon,
     CalendarToday as CalendarIcon,
     Work as WorkIcon,
+    Home as HomeIcon,
+    Business as BusinessIcon,
 } from '@mui/icons-material';
 import { useState } from 'react';
 import Logo from '../assets/Admin.webp';
@@ -43,15 +45,15 @@ function DashboardLayout({ user, onLogout, children }) {
     const isActive = (path) => location.pathname === path;
 
     const navItems = [
-        { path: '/dashboard', label: 'Dashboard', icon: <DashboardIcon />, roles: ['admin', 'hr', 'employee'] },
-        { path: '/profile', label: 'My Profile', icon: <ProfileIcon />, roles: ['employee'] },
-        { path: '/employees', label: 'Employees', icon: <PeopleIcon />, roles: ['admin', 'hr'] },
-        { path: '/calendar', label: 'Calendar', icon: <CalendarIcon />, roles: ['admin', 'hr', 'employee'] },
+        { path: '/dashboard', label: 'Home', icon: <HomeIcon />, roles: ['admin', 'hr', 'employee'] },
+        { path: '/todo', label: 'To do', icon: <CalendarIcon />, roles: ['admin', 'hr', 'employee'] }, // Placeholder route
+        { path: '/payroll', label: 'Salary', icon: <PayrollIcon />, roles: ['admin', 'hr', 'employee'] },
+        { path: '/leaves', label: 'Leave', icon: <LeavesIcon />, roles: ['admin', 'hr', 'employee'] },
         { path: '/attendance', label: 'Attendance', icon: <AttendanceIcon />, roles: ['admin', 'hr', 'employee'] },
-        { path: '/leaves', label: 'Leaves', icon: <LeavesIcon />, roles: ['admin', 'hr', 'employee'] },
-        { path: '/payroll', label: 'Payroll', icon: <PayrollIcon />, roles: ['admin', 'hr', 'employee'] },
-
-        { path: '/helpdesk', label: 'Helpdesk', icon: <SupportIcon />, roles: ['admin', 'hr', 'employee'] },
+        { path: '/expenses', label: 'Expense Claims', icon: <WorkIcon />, roles: ['admin', 'hr', 'employee'] }, // Placeholder route
+        { path: '/documents', label: 'Document Center', icon: <BusinessIcon />, roles: ['admin', 'hr', 'employee'] }, // Placeholder route
+        { path: '/employees', label: 'People', icon: <PeopleIcon />, roles: ['admin', 'hr'] },
+        { path: '/helpdesk', label: 'Help Desk', icon: <SupportIcon />, roles: ['admin', 'hr', 'employee'] },
     ];
 
     const visibleNavItems = navItems.filter(item => item.roles.includes(user.role));

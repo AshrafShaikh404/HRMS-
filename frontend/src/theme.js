@@ -4,9 +4,9 @@ const theme = createTheme({
     palette: {
         mode: 'light',
         primary: {
-            main: '#FF5B37', // SmartHR Coral
-            light: '#FF8A70',
-            dark: '#E0411F',
+            main: '#2563EB', // Blue
+            light: '#60A5FA',
+            dark: '#1D4ED8',
             contrastText: '#ffffff',
         },
         secondary: {
@@ -31,9 +31,9 @@ const theme = createTheme({
             dark: '#B91C1C',
         },
         info: {
-            main: '#3FC1C9', // Teal/Cyan accent
-            light: '#72DCDF',
-            dark: '#2A8F96',
+            main: '#3B82F6', // Blue accent
+            light: '#60A5FA',
+            dark: '#2563EB',
         },
         background: {
             default: '#F8F9FA', // Light Gray Body
@@ -85,11 +85,11 @@ const theme = createTheme({
                     padding: '8px 20px',
                     boxShadow: 'none',
                     '&:hover': {
-                        boxShadow: '0px 4px 12px rgba(255, 91, 55, 0.15)',
+                        boxShadow: '0px 4px 12px rgba(37, 99, 235, 0.15)', // Blue shadow
                     },
                 },
                 containedPrimary: {
-                    background: 'linear-gradient(135deg, #FF5B37 0%, #FF4010 100%)',
+                    background: 'linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%)', // Blue gradient
                 },
             },
         },
@@ -118,13 +118,13 @@ const theme = createTheme({
                     borderRadius: 8,
                     margin: '4px 8px',
                     '&.Mui-selected': {
-                        backgroundColor: alpha('#FF5B37', 0.08),
-                        color: '#FF5B37',
+                        backgroundColor: alpha('#2563EB', 0.08), // Blue alpha
+                        color: '#2563EB',
                         '&:hover': {
-                            backgroundColor: alpha('#FF5B37', 0.12),
+                            backgroundColor: alpha('#2563EB', 0.12),
                         },
                         '& .MuiListItemIcon-root': {
-                            color: '#FF5B37',
+                            color: '#2563EB',
                         },
                     },
                 },

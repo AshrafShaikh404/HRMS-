@@ -78,7 +78,7 @@ const Calendar = ({ user }) => {
     };
 
     return (
-    return (
+
         <Box sx={{ height: 'calc(100vh - 100px)' }}>
             {/* Page Header */}
             <Box sx={{ mb: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
