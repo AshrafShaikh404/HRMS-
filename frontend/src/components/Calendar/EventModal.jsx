@@ -6,7 +6,7 @@ import {
 } from '@mui/material';
 import { calendarAPI } from '../../utils/calendarApi';
 
-const EventModal = ({ open, onClose, event, onEventSaved }) => {
+const EventModal = ({ open, onClose, event, onEventSaved, readOnly = false }) => {
     const [formData, setFormData] = useState({
         title: '',
         description: '',
@@ -84,7 +84,9 @@ const EventModal = ({ open, onClose, event, onEventSaved }) => {
 
     return (
         <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-            <DialogTitle>{event?.title ? 'Edit Event' : 'New Event'}</DialogTitle>
+            <DialogTitle>
+                {readOnly ? 'Event Details' : (event?.title ? 'Edit Event' : 'New Event')}
+            </DialogTitle>
             <DialogContent>
                 <Box component="form" sx={{ mt: 1 }}>
                     <Grid container spacing={2}>
@@ -96,6 +98,7 @@ const EventModal = ({ open, onClose, event, onEventSaved }) => {
                                 required
                                 value={formData.title}
                                 onChange={handleChange}
+                                disabled={readOnly}
                             />
                         </Grid>
                         <Grid item xs={12}>
@@ -107,6 +110,7 @@ const EventModal = ({ open, onClose, event, onEventSaved }) => {
                                 rows={3}
                                 value={formData.description}
                                 onChange={handleChange}
+                                disabled={readOnly}
                             />
                         </Grid>
                         <Grid item xs={6}>
@@ -117,6 +121,7 @@ const EventModal = ({ open, onClose, event, onEventSaved }) => {
                                     value={formData.eventType}
                                     label="Type"
                                     onChange={handleChange}
+                                    disabled={readOnly}
                                 >
                                     <MenuItem value="MEETING">Meeting</MenuItem>
                                     <MenuItem value="INTERVIEW">Interview</MenuItem>
@@ -135,6 +140,7 @@ const EventModal = ({ open, onClose, event, onEventSaved }) => {
                                     value={formData.visibility}
                                     label="Visibility"
                                     onChange={handleChange}
+                                    disabled={readOnly}
                                 >
                                     <MenuItem value="PERSONAL">Personal</MenuItem>
                                     <MenuItem value="TEAM">Team</MenuItem>
@@ -149,6 +155,7 @@ const EventModal = ({ open, onClose, event, onEventSaved }) => {
                                         name="allDay"
                                         checked={formData.allDay}
                                         onChange={handleChange}
+                                        disabled={readOnly}
                                     />
                                 }
                                 label="All Day Event"
@@ -163,6 +170,7 @@ const EventModal = ({ open, onClose, event, onEventSaved }) => {
                                 InputLabelProps={{ shrink: true }}
                                 value={formData.start}
                                 onChange={handleChange}
+                                disabled={readOnly}
                             />
                         </Grid>
                         <Grid item xs={6}>
@@ -174,21 +182,26 @@ const EventModal = ({ open, onClose, event, onEventSaved }) => {
                                 InputLabelProps={{ shrink: true }}
                                 value={formData.end}
                                 onChange={handleChange}
+                                disabled={readOnly}
                             />
                         </Grid>
                     </Grid>
                 </Box>
             </DialogContent>
             <DialogActions>
-                {event?.id && (
+                {!readOnly && event?.id && (
                     <Button onClick={handleDelete} color="error" sx={{ mr: 'auto' }}>
                         Delete
                     </Button>
                 )}
-                <Button onClick={onClose}>Cancel</Button>
-                <Button onClick={handleSubmit} variant="contained">
-                    Save
+                <Button onClick={onClose}>
+                    {readOnly ? 'Close' : 'Cancel'}
                 </Button>
+                {!readOnly && (
+                    <Button onClick={handleSubmit} variant="contained">
+                        Save
+                    </Button>
+                )}
             </DialogActions>
         </Dialog>
     );

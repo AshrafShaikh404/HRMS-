@@ -4,9 +4,9 @@ const theme = createTheme({
     palette: {
         mode: 'light',
         primary: {
-            main: '#FF5B37', // SmartHR Coral
-            light: '#FF8A70',
-            dark: '#E0411F',
+            main: '#1976D2', // Blue
+            light: '#42A5F5',
+            dark: '#1565C0',
             contrastText: '#ffffff',
         },
         secondary: {
@@ -85,11 +85,11 @@ const theme = createTheme({
                     padding: '8px 20px',
                     boxShadow: 'none',
                     '&:hover': {
-                        boxShadow: '0px 4px 12px rgba(255, 91, 55, 0.15)',
+                        boxShadow: '0px 4px 12px rgba(25, 118, 210, 0.15)',
                     },
                 },
                 containedPrimary: {
-                    background: 'linear-gradient(135deg, #FF5B37 0%, #FF4010 100%)',
+                    background: 'linear-gradient(135deg, #1976D2 0%, #1565C0 100%)',
                 },
             },
         },
@@ -118,13 +118,13 @@ const theme = createTheme({
                     borderRadius: 8,
                     margin: '4px 8px',
                     '&.Mui-selected': {
-                        backgroundColor: alpha('#FF5B37', 0.08),
-                        color: '#FF5B37',
+                        backgroundColor: alpha('#1976D2', 0.08),
+                        color: '#1976D2',
                         '&:hover': {
-                            backgroundColor: alpha('#FF5B37', 0.12),
+                            backgroundColor: alpha('#1976D2', 0.12),
                         },
                         '& .MuiListItemIcon-root': {
-                            color: '#FF5B37',
+                            color: '#1976D2',
                         },
                     },
                 },

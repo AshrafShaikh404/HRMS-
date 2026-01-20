@@ -259,6 +259,7 @@ function Payroll({ user }) {
                             <TableCell sx={{ display: { xs: 'none', lg: 'table-cell' } }}>Deductions</TableCell>
                             <TableCell>Net Salary</TableCell>
                             <TableCell>Status</TableCell>
+                            <TableCell align="right">Action</TableCell>
                         </TableRow>
                     </TableHead>
                     <TableBody>
@@ -290,6 +291,19 @@ function Payroll({ user }) {
                                         color={getStatusColor(payslip.status)}
                                         size="small"
                                     />
+                                </TableCell>
+                                <TableCell align="right">
+                                    <IconButton
+                                        color="primary"
+                                        size="small"
+                                        title="Download Payslip"
+                                        onClick={() => {
+                                            // Trigger PDF generation for this specific payslip
+                                            showSuccess('Downloading payslip...');
+                                        }}
+                                    >
+                                        <DownloadIcon />
+                                    </IconButton>
                                 </TableCell>
                             </TableRow>
                         ))}

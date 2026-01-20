@@ -59,11 +59,13 @@ const SharedCalendar = ({ user, height = 'calc(100vh - 100px)', embedded = false
             case 'MEETING': return theme.palette.primary.main;
             case 'INTERVIEW': return theme.palette.info.main;
             case 'TRAINING': return theme.palette.warning.main;
+            case 'PRESENT': return theme.palette.success.main;
             default: return theme.palette.grey[500];
         }
     };
 
     const handleDateClick = (arg) => {
+        if (!['admin', 'hr'].includes(user.role)) return;
         setSelectedEvent({ start: arg.date, end: arg.date });
         setModalOpen(true);
     };
@@ -248,7 +250,7 @@ const SharedCalendar = ({ user, height = 'calc(100vh - 100px)', embedded = false
                                 week: 'Week',
                                 day: 'Day',
                             }}
-                            editable={user.role === 'admin'}
+                            editable={['admin', 'hr'].includes(user.role)}
                             selectable={true}
                             selectMirror={true}
                             dayMaxEvents={true}
@@ -257,6 +259,13 @@ const SharedCalendar = ({ user, height = 'calc(100vh - 100px)', embedded = false
                             eventClick={handleEventClick}
                             height="100%"
                             eventClassNames="custom-fc-event"
+                            dayCellClassNames={(arg) => {
+                                const day = arg.date.getUTCDay();
+                                if (day === 0 || day === 6) { // Sunday or Saturday
+                                    return 'fc-day-weekend';
+                                }
+                                return '';
+                            }}
                         />
                     </Card>
                 </Box>
@@ -282,6 +291,7 @@ const SharedCalendar = ({ user, height = 'calc(100vh - 100px)', embedded = false
                     fetchEvents();
                     setModalOpen(false);
                 }}
+                readOnly={!['admin', 'hr'].includes(user.role)}
             />
         </Box>
     );
