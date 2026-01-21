@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNotification } from '../contexts/NotificationContext';
+import { useAuth } from '../contexts/AuthContext';
 import { leaveAPI } from '../utils/api';
 import { handleExport, generateFilename } from '../utils/exportHelper';
 import {
@@ -42,7 +43,8 @@ import {
 } from '@mui/icons-material';
 import SharedCalendar from '../components/SharedCalendar';
 
-function Leaves({ user }) {
+const Leaves = () => {
+    const { user, hasPermission } = useAuth();
     const { showSuccess, showError } = useNotification();
     const [leaves, setLeaves] = useState([]);
     const [leaveBalance, setLeaveBalance] = useState(null);
@@ -60,7 +62,9 @@ function Leaves({ user }) {
     useEffect(() => {
         fetchLeaves();
         fetchLeaveBalance();
-        if (user.role === 'admin' || user.role === 'hr') {
+        fetchLeaves();
+        fetchLeaveBalance();
+        if (hasPermission('manage_leaves')) {
             fetchPendingLeaves();
         }
     }, [user]);
@@ -211,14 +215,16 @@ function Leaves({ user }) {
                         Manage your leave applications
                     </Typography>
                 </Box>
-                <Button
-                    variant="contained"
-                    startIcon={<AddIcon />}
-                    onClick={() => setShowApplyModal(true)}
-                    sx={{ borderRadius: 2 }}
-                >
-                    Apply for Leave
-                </Button>
+                {hasPermission('apply_leave') && (
+                    <Button
+                        variant="contained"
+                        startIcon={<AddIcon />}
+                        onClick={() => setShowApplyModal(true)}
+                        sx={{ borderRadius: 2 }}
+                    >
+                        Apply for Leave
+                    </Button>
+                )}
             </Box>
 
             {/* Leave Balance */}
@@ -306,7 +312,7 @@ function Leaves({ user }) {
             )}
 
             {/* Pending Approvals (Admin/HR only) */}
-            {(user.role === 'admin' || user.role === 'hr') && pendingLeaves.length > 0 && (
+            {hasPermission('manage_leaves') && pendingLeaves.length > 0 && (
                 <Box sx={{ mb: 4 }}>
                     <Typography variant="h5" fontWeight={600} sx={{ mb: 2 }}>
                         Pending Approvals
@@ -375,7 +381,7 @@ function Leaves({ user }) {
                     <Typography variant="h5" fontWeight={600}>
                         My Leave History
                     </Typography>
-                    {(user.role === 'admin' || user.role === 'hr') && (
+                    {hasPermission('manage_leaves') && (
                         <Box sx={{ display: 'flex', gap: 1 }}>
                             <Button
                                 variant="outlined"

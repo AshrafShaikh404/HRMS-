@@ -16,6 +16,20 @@ exports.getLeaveBalance = async (req, res) => {
             // Get employee for current user
             const employee = await Employee.findOne({ userId: req.user._id });
             if (!employee) {
+                // If user is Admin/HR but has no employee profile, return empty balance instead of 404
+                if (req.user.role === 'admin' || req.user.role === 'hr') {
+                    return res.status(200).json({
+                        success: true,
+                        data: {
+                            balances: {
+                                casualLeave: { totalAllowed: 0, used: 0, available: 0, pending: 0 },
+                                sickLeave: { totalAllowed: 0, used: 0, available: 0, pending: 0 },
+                                earnedLeave: { totalAllowed: 0, used: 0, available: 0, pending: 0 },
+                                maternityLeave: { totalAllowed: 0, used: 0, available: 0, pending: 0 }
+                            }
+                        }
+                    });
+                }
                 return res.status(404).json({
                     success: false,
                     message: 'Employee profile not found'

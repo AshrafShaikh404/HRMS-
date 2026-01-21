@@ -30,11 +30,13 @@ import {
     Visibility as VisibilityIcon
 } from '@mui/icons-material';
 import { employeeAPI } from '../utils/api';
+import { useAuth } from '../contexts/AuthContext';
 import { useNotification } from '../contexts/NotificationContext';
 
 const steps = ['Personal Details', 'Job Information', 'Statutory Details', 'Documents'];
 
-const EmployeeForm = ({ employeeId, onSuccess, onClose, userRole }) => {
+const EmployeeForm = ({ employeeId, onSuccess, onClose }) => {
+    const { hasPermission } = useAuth();
     const { showSuccess, showError } = useNotification();
     const [activeStep, setActiveStep] = useState(0);
     const [loading, setLoading] = useState(false);
@@ -445,8 +447,8 @@ const EmployeeForm = ({ employeeId, onSuccess, onClose, userRole }) => {
                                                         <VisibilityIcon />
                                                     </IconButton>
 
-                                                    {/* Verification Controls (Admin/HR only) */}
-                                                    {(userRole === 'admin' || userRole === 'hr') && doc.status === 'Pending' && (
+                                                    {/* Verification Controls (Permission based) */}
+                                                    {hasPermission('manage_employees') && doc.status === 'Pending' && (
                                                         <>
                                                             <Button size="small" color="success" onClick={() => handleVerifyDoc(doc._id, 'Verified')}>Verify</Button>
                                                             <Button size="small" color="error" onClick={() => handleVerifyDoc(doc._id, 'Rejected')}>Reject</Button>

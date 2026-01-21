@@ -1,10 +1,12 @@
 import { AppBar, Toolbar, IconButton, Box, Typography, InputBase, Badge, Avatar, Menu, MenuItem, ListItemIcon, Divider } from '@mui/material';
 import { Search, NotificationsOutlined, ChatBubbleOutline, Menu as MenuIcon, Logout, Person, Settings } from '@mui/icons-material';
+import { useAuth } from '../contexts/AuthContext';
 import { alpha } from '@mui/material/styles';
 
 import { useState } from 'react';
 
-function TopHeader({ onMenuClick, user, isMobile, onLogout }) {
+function TopHeader({ onMenuClick, isMobile, onLogout, onViewProfile, onEditProfile }) {
+    const { user, hasPermission } = useAuth();
     const [anchorEl, setAnchorEl] = useState(null);
     const open = Boolean(anchorEl);
 
@@ -14,6 +16,16 @@ function TopHeader({ onMenuClick, user, isMobile, onLogout }) {
 
     const handleClose = () => {
         setAnchorEl(null);
+    };
+
+    const handleViewProfile = () => {
+        handleClose();
+        if (onViewProfile) onViewProfile();
+    };
+
+    const handleEditProfile = () => {
+        handleClose();
+        if (onEditProfile) onEditProfile();
     };
 
     const handleLogout = () => {
@@ -72,7 +84,7 @@ function TopHeader({ onMenuClick, user, isMobile, onLogout }) {
                     </IconButton>
 
                     <Box sx={{
-                        display: 'flex',
+                        display: { xs: 'flex', md: 'flex' },
                         alignItems: 'center',
                         gap: 1.5,
                         ml: 1.5,
@@ -123,18 +135,22 @@ function TopHeader({ onMenuClick, user, isMobile, onLogout }) {
                         transformOrigin={{ horizontal: 'right', vertical: 'top' }}
                         anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
                     >
-                        <MenuItem onClick={handleClose}>
-                            <ListItemIcon>
-                                <Person fontSize="small" />
-                            </ListItemIcon>
-                            Profile
-                        </MenuItem>
-                        <MenuItem onClick={handleClose}>
-                            <ListItemIcon>
-                                <Settings fontSize="small" />
-                            </ListItemIcon>
-                            Settings
-                        </MenuItem>
+                        {hasPermission('view_profile') && (
+                            <MenuItem onClick={handleViewProfile}>
+                                <ListItemIcon>
+                                    <Person fontSize="small" />
+                                </ListItemIcon>
+                                View Profile
+                            </MenuItem>
+                        )}
+                        {hasPermission('edit_profile') && (
+                            <MenuItem onClick={handleEditProfile}>
+                                <ListItemIcon>
+                                    <Settings fontSize="small" />
+                                </ListItemIcon>
+                                Edit Profile
+                            </MenuItem>
+                        )}
                         <Divider />
                         <MenuItem onClick={handleLogout}>
                             <ListItemIcon>

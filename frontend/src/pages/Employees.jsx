@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNotification } from '../contexts/NotificationContext';
+import { useAuth } from '../contexts/AuthContext';
 import { employeeAPI } from '../utils/api';
 import {
     Box,
@@ -38,7 +39,8 @@ import {
 } from '@mui/icons-material';
 import EmployeeForm from '../components/EmployeeForm';
 
-function Employees({ user }) {
+const Employees = () => {
+    const { user, hasPermission } = useAuth();
     const { showSuccess, showError } = useNotification();
     const [employees, setEmployees] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -141,7 +143,7 @@ function Employees({ user }) {
                         Manage your organization's employees
                     </Typography>
                 </Box>
-                {(user.role === 'admin' || user.role === 'hr') && (
+                {hasPermission('manage_employees') && (
                     <Button
                         variant="contained"
                         startIcon={<AddIcon />}
@@ -207,7 +209,7 @@ function Employees({ user }) {
                             <TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }}>Department</TableCell>
                             <TableCell sx={{ display: { xs: 'none', lg: 'table-cell' } }}>Designation</TableCell>
                             <TableCell>Status</TableCell>
-                            {(user.role === 'admin' || user.role === 'hr') && <TableCell>Actions</TableCell>}
+                            {hasPermission('manage_employees') && <TableCell>Actions</TableCell>}
                         </TableRow>
                     </TableHead>
                     <TableBody>
@@ -227,7 +229,7 @@ function Employees({ user }) {
                                         size="small"
                                     />
                                 </TableCell>
-                                {(user.role === 'admin' || user.role === 'hr') && (
+                                {hasPermission('manage_employees') && (
                                     <TableCell>
                                         <IconButton
                                             color="primary"
@@ -275,7 +277,6 @@ function Employees({ user }) {
                         employeeId={selectedEmployeeId}
                         onSuccess={handleFormSuccess}
                         onClose={() => setShowFormModal(false)}
-                        userRole={user.role}
                     />
                 </DialogContent>
             </Dialog>

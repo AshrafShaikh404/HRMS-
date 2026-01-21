@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNotification } from '../contexts/NotificationContext';
+import { useAuth } from '../contexts/AuthContext';
 import { payrollAPI, employeeAPI } from '../utils/api';
 import { handleExport, generateFilename } from '../utils/exportHelper';
 import {
@@ -34,7 +35,8 @@ import {
     PictureAsPdf as PdfIcon,
 } from '@mui/icons-material';
 
-function Payroll({ user }) {
+const Payroll = () => {
+    const { user, hasPermission } = useAuth();
     const { showSuccess, showError } = useNotification();
     const [payslips, setPayslips] = useState([]);
     const [loading, setLoading] = useState(true);

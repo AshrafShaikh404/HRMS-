@@ -16,6 +16,7 @@ import {
     alpha,
 } from '@mui/material';
 import TopHeader from './TopHeader';
+import ProfileDrawer from './ProfileDrawer';
 import {
     Dashboard as DashboardIcon,
     People as PeopleIcon,
@@ -30,30 +31,74 @@ import {
     Work as WorkIcon,
 } from '@mui/icons-material';
 import { useState } from 'react';
+import { useAuth } from '../contexts/AuthContext';
 import Logo from '../assets/Admin.webp';
 
 const DRAWER_WIDTH = 260;
 
-function DashboardLayout({ user, onLogout, children }) {
+function DashboardLayout({ children }) {
+    const { user, logout, hasAnyPermission } = useAuth();
     const location = useLocation();
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('md'));
     const [mobileOpen, setMobileOpen] = useState(false);
 
+    // Profile Drawer State
+    const [profileOpen, setProfileOpen] = useState(false);
+    const [profileMode, setProfileMode] = useState('view');
+
+    const handleViewProfile = () => {
+        setProfileMode('view');
+        setProfileOpen(true);
+    };
+
+    const handleEditProfile = () => {
+        setProfileMode('edit');
+        setProfileOpen(true);
+    };
+
     const isActive = (path) => location.pathname === path;
 
     const navItems = [
-        { path: '/dashboard', label: 'Dashboard', icon: <DashboardIcon />, roles: ['admin', 'hr', 'employee'] },
-        { path: '/profile', label: 'My Profile', icon: <ProfileIcon />, roles: ['employee'] },
-        { path: '/employees', label: 'Employees', icon: <PeopleIcon />, roles: ['admin', 'hr'] },
-        { path: '/attendance', label: 'Attendance', icon: <AttendanceIcon />, roles: ['admin', 'hr', 'employee'] },
-        { path: '/leaves', label: 'Leaves', icon: <LeavesIcon />, roles: ['admin', 'hr', 'employee'] },
-        { path: '/payroll', label: 'Payroll', icon: <PayrollIcon />, roles: ['admin', 'hr', 'employee'] },
-
-        { path: '/helpdesk', label: 'Helpdesk', icon: <SupportIcon />, roles: ['admin', 'hr', 'employee'] },
+        {
+            path: '/dashboard',
+            label: 'Dashboard',
+            icon: <DashboardIcon />,
+            requiredPermissions: ['view_dashboard_admin', 'view_dashboard_hr', 'view_dashboard_employee']
+        },
+        {
+            path: '/employees',
+            label: 'Employees',
+            icon: <PeopleIcon />,
+            requiredPermissions: ['view_employees']
+        },
+        {
+            path: '/attendance',
+            label: 'Attendance',
+            icon: <AttendanceIcon />,
+            requiredPermissions: ['view_attendance_all', 'view_attendance_own']
+        },
+        {
+            path: '/leaves',
+            label: 'Leaves',
+            icon: <LeavesIcon />,
+            requiredPermissions: ['view_leaves_all', 'view_leaves_own']
+        },
+        {
+            path: '/payroll',
+            label: 'Payroll',
+            icon: <PayrollIcon />,
+            requiredPermissions: ['view_payroll_all', 'view_payroll_own']
+        },
+        {
+            path: '/helpdesk',
+            label: 'Helpdesk',
+            icon: <SupportIcon />,
+            requiredPermissions: ['view_tickets_all', 'view_tickets_own']
+        },
     ];
 
-    const visibleNavItems = navItems.filter(item => item.roles.includes(user.role));
+    const visibleNavItems = navItems.filter(item => hasAnyPermission(item.requiredPermissions));
 
     const handleDrawerToggle = () => {
         setMobileOpen(!mobileOpen);
@@ -118,7 +163,7 @@ function DashboardLayout({ user, onLogout, children }) {
 
             <Box sx={{ p: 2, borderTop: '1px solid', borderColor: 'divider' }}>
                 <ListItemButton
-                    onClick={onLogout}
+                    onClick={logout}
                     sx={{
                         borderRadius: 2,
                         color: 'error.main',
@@ -215,7 +260,9 @@ function DashboardLayout({ user, onLogout, children }) {
                     onMenuClick={handleDrawerToggle}
                     user={user}
                     isMobile={isMobile}
-                    onLogout={onLogout}
+                    onLogout={logout}
+                    onViewProfile={handleViewProfile}
+                    onEditProfile={handleEditProfile}
                 />
 
                 {/* Main Content */}
@@ -231,6 +278,14 @@ function DashboardLayout({ user, onLogout, children }) {
                     {children}
                 </Box>
             </Box>
+            {/* Profile Drawer */}
+            <ProfileDrawer
+                open={profileOpen}
+                onClose={() => setProfileOpen(false)}
+                mode={profileMode}
+                onModeChange={setProfileMode}
+                user={user} // Pass user if needed for initial optimists
+            />
         </Box>
     );
 }

@@ -3,6 +3,7 @@ const Employee = require('../models/Employee');
 const { generateToken } = require('../middleware/auth.middleware');
 const admin = require('../config/firebaseAdmin');
 const crypto = require('crypto');
+const PERMISSIONS = require('../config/permissions');
 
 // @desc    Register a new user
 // @route   POST /api/v1/auth/register
@@ -38,8 +39,10 @@ exports.register = async (req, res) => {
                 _id: user._id,
                 name: user.name,
                 email: user.email,
+                email: user.email,
                 role: user.role,
-                status: user.status
+                status: user.status,
+                permissions: PERMISSIONS[user.role] || []
             }
         });
     } catch (error) {
@@ -117,7 +120,10 @@ exports.login = async (req, res) => {
                 _id: user._id,
                 name: user.name,
                 email: user.email,
-                role: user.role
+                name: user.name,
+                email: user.email,
+                role: user.role,
+                permissions: PERMISSIONS[user.role] || []
             },
             expiresIn: process.env.JWT_EXPIRE || '7d'
         });
@@ -230,7 +236,10 @@ exports.googleLogin = async (req, res) => {
                 name: user.name,
                 email: user.email,
                 role: user.role,
-                picture
+                email: user.email,
+                role: user.role,
+                picture,
+                permissions: PERMISSIONS[user.role] || []
             }
         });
 
@@ -298,7 +307,10 @@ exports.getMe = async (req, res) => {
         res.status(200).json({
             success: true,
             data: {
-                user,
+                user: {
+                    ...user.toObject(),
+                    permissions: PERMISSIONS[user.role] || []
+                },
                 employee: employeeDetails
             }
         });
