@@ -55,7 +55,16 @@ function DashboardLayout({ user, onLogout, children }) {
         { path: '/profile', label: 'My Profile', icon: <ProfileIcon /> }, // Always visible
         { path: '/employees', label: 'Employees', icon: <PeopleIcon />, permission: 'view_employees' },
         { path: '/attendance', label: 'Attendance', icon: <AttendanceIcon />, permission: 'view_attendance' },
-        { path: '/leaves', label: 'Leaves', icon: <LeavesIcon />, permission: 'view_leaves' },
+        {
+            label: 'Leave Management',
+            icon: <LeavesIcon />,
+            permission: 'view_leave_balance',
+            children: [
+                { path: '/my-leaves', label: 'My Leaves', icon: <CalendarIcon /> },
+                { path: '/leave-approvals', label: 'Approvals', icon: <WorkIcon />, permission: 'approve_leave' },
+                { path: '/leave-settings', label: 'Settings', icon: <CategoryIcon />, permission: 'manage_leave_types' },
+            ]
+        },
         { path: '/payroll', label: 'Payroll', icon: <PayrollIcon />, permission: 'view_payroll' },
         { path: '/helpdesk', label: 'Helpdesk', icon: <SupportIcon />, permission: 'view_helpdesk' },
         {

@@ -181,28 +181,29 @@ exports.getLeaveHistory = async (req, res) => {
     try {
         let query = {};
 
-        if (req.user.role.name === 'Employee' || req.user.role.name === 'employee') {
-            const employee = await Employee.findOne({ userId: req.user._id });
-            if (!employee) {
-                return res.status(404).json({ success: false, message: 'Employee profile not found' });
-            }
-            query.employeeId = employee._id;
-        } else if (req.query.employeeId) {
-            query.employeeId = req.query.employeeId;
+        const employee = await Employee.findOne({ userId: req.user._id });
+        if (!employee) {
+            return res.status(404).json({ success: false, message: 'Employee profile not found' });
         }
 
-        if (req.query.status) {
-            query.status = req.query.status;
-        }
-
-        const history = await LeaveApplication.find(query)
+        const history = await LeaveApplication.find({ employeeId: employee._id })
             .populate('leaveType')
             .populate('employeeId', 'firstName lastName employeeCode')
             .populate('approvedBy', 'name')
             .sort({ createdAt: -1 });
 
+        // Graceful empty state
+        if (!history || history.length === 0) {
+            return res.status(200).json({
+                success: true,
+                data: [],
+                message: 'No leave applications found'
+            });
+        }
+
         res.status(200).json({ success: true, data: history });
     } catch (error) {
+        console.error('Leave History Error:', error);
         res.status(500).json({ success: false, message: error.message });
     }
 };
@@ -214,8 +215,19 @@ exports.getPendingApprovals = async (req, res) => {
             .populate('leaveType')
             .sort({ createdAt: -1 });
 
+        // Graceful empty state
+        if (!pending || pending.length === 0) {
+            return res.status(200).json({
+                success: true,
+                data: [],
+                count: 0,
+                message: 'No pending approvals'
+            });
+        }
+
         res.status(200).json({ success: true, data: pending, count: pending.length });
     } catch (error) {
+        console.error('Pending Approvals Error:', error);
         res.status(500).json({ success: false, message: error.message });
     }
 };
@@ -299,17 +311,31 @@ exports.updateLeaveStatus = async (req, res) => {
 
 exports.getLeaveBalance = async (req, res) => {
     try {
-        const employee = await Employee.findOne({ userId: req.user._id });
+        const employee = await Employee.findOne({ userId: req.user._id })
+            .populate('employmentDetails.assignedLeavePolicy');
+
         if (!employee) {
             return res.status(404).json({ success: false, message: 'Employee profile not found' });
         }
 
-        const policies = await LeavePolicy.find({ isActive: true }).populate('leaveTypes.leaveType');
-        if (!policies.length) {
-            return res.status(200).json({ success: true, data: [] });
+        // Check for assigned policy first, then fall back to default active policy
+        let policy = employee.employmentDetails?.assignedLeavePolicy;
+
+        if (!policy || !policy.isActive) {
+            const policies = await LeavePolicy.find({ isActive: true }).populate('leaveTypes.leaveType');
+            if (!policies.length) {
+                return res.status(200).json({
+                    success: true,
+                    data: [],
+                    message: 'No active leave policy found. Please contact HR.'
+                });
+            }
+            policy = policies[0];
+        } else {
+            // Populate leave types if using assigned policy
+            await policy.populate('leaveTypes.leaveType');
         }
 
-        const policy = policies[0];
         const balance = [];
 
         for (const item of policy.leaveTypes) {
@@ -330,7 +356,7 @@ exports.getLeaveBalance = async (req, res) => {
                 leaveType: item.leaveType,
                 quota: item.quota,
                 used: usedDays,
-                available: item.quota - usedDays
+                available: Math.max(0, item.quota - usedDays) // Ensure non-negative
             });
         }
 

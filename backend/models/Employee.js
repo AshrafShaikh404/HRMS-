@@ -106,6 +106,10 @@ const employeeSchema = new mongoose.Schema({
         },
         workSchedule: {
             type: String // Placeholder for Phase 3.1
+        },
+        assignedLeavePolicy: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'LeavePolicy'
         }
     },
 

@@ -17,6 +17,9 @@ import UserRoleAssignment from './pages/UserRoleAssignment';
 import Departments from './pages/Departments';
 import Designations from './pages/Designations';
 import Locations from './pages/Locations';
+import LeaveSettings from './pages/LeaveSettings';
+import MyLeaves from './pages/MyLeaves';
+import LeaveApprovals from './pages/LeaveApprovals';
 
 import { NotificationProvider } from './contexts/NotificationContext';
 
@@ -82,6 +85,9 @@ function App() {
                                             <Route path="/departments" element={<Departments user={user} />} />
                                             <Route path="/designations" element={<Designations user={user} />} />
                                             <Route path="/locations" element={<Locations user={user} />} />
+                                            <Route path="/leave-settings" element={<LeaveSettings user={user} />} />
+                                            <Route path="/my-leaves" element={<MyLeaves user={user} />} />
+                                            <Route path="/leave-approvals" element={<LeaveApprovals user={user} />} />
 
                                             <Route path="/" element={<Navigate to="/dashboard" replace />} />
                                         </Routes>
