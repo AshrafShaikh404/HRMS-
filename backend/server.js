@@ -40,6 +40,10 @@ app.use('/api/v1/dashboard', require('./routes/dashboard.routes'));
 app.use('/api/v1/recruitment', require('./routes/recruitment.routes'));
 app.use('/api/v1/helpdesk', require('./routes/helpdesk'));
 app.use('/api/v1/calendar', require('./routes/calendarRoutes'));
+app.use('/api/v1/roles', require('./routes/role.routes'));
+app.use('/api/v1/departments', require('./routes/department.routes'));
+app.use('/api/v1/designations', require('./routes/designation.routes'));
+app.use('/api/v1/locations', require('./routes/location.routes'));
 
 // Error handling middleware
 app.use((err, req, res, next) => {

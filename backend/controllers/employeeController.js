@@ -1,5 +1,8 @@
 const Employee = require('../models/Employee');
 const User = require('../models/User');
+const Department = require('../models/Department');
+const Designation = require('../models/Designation');
+const Location = require('../models/Location');
 
 // @desc    Get all employees with pagination and filters
 // @route   GET /api/v1/employees
@@ -136,10 +139,20 @@ exports.createEmployee = async (req, res) => {
             state,
             pinCode,
             emergencyContact,
-            department,
-            designation,
+
+            // Nested Job Info IDs or Objects
+            department, // Expecting ID now
+            designation, // Expecting ID now
+            location, // Expecting ID now
+            reportingManager,
+
+            // Nested Employment Details
             employmentType,
+            employmentStatus,
             joinDate,
+            probationPeriod,
+            confirmationDate,
+
             salary,
             bankAccount,
             panCard,
@@ -149,48 +162,61 @@ exports.createEmployee = async (req, res) => {
             esiNumber
         } = req.body;
 
-        // Check if email already exists
+        // Validations
+        // 1. Check Email
         const existingUser = await User.findOne({ email });
-        if (existingUser) {
-            return res.status(400).json({ success: false, message: 'User with this email already exists' });
-        }
+        if (existingUser) return res.status(400).json({ success: false, message: 'User with this email already exists' });
+
         const existingEmployee = await Employee.findOne({ email });
-        if (existingEmployee) {
-            return res.status(400).json({ success: false, message: 'Employee with this email already exists' });
+        if (existingEmployee) return res.status(400).json({ success: false, message: 'Employee with this email already exists' });
+
+        // 2. Check Phone
+        const existingPhone = await Employee.findOne({ phone });
+        if (existingPhone) return res.status(400).json({ success: false, message: 'Employee with this phone number already exists' });
+
+        // 3. Resolve References (Department, Designation, Location) for Legacy String & Valid ID check
+        // We expect IDs from frontend now, but let's handle if they send strings (unlikely if we update FE)
+        // Assume IDs.
+
+        const deptObj = await Department.findById(department);
+        if (!deptObj) return res.status(400).json({ success: false, message: 'Invalid Department ID' });
+
+        const desigObj = await Designation.findById(designation);
+        if (!desigObj) return res.status(400).json({ success: false, message: 'Invalid Designation ID' });
+
+        let locObj = null;
+        if (location) {
+            locObj = await Location.findById(location);
+            if (!locObj) return res.status(400).json({ success: false, message: 'Invalid Location ID' });
         }
 
-        // Logic: Statutory Eligibility based on Salary
-        // PF Mandatory if Salary <= 15000
+        // 4. Validate Reporting Manager
+        if (reportingManager) {
+            const manager = await User.findById(reportingManager);
+            if (!manager) return res.status(400).json({ success: false, message: 'Reporting Manager not found' });
+            if (manager.status !== 'active') return res.status(400).json({ success: false, message: 'Reporting Manager is not active' });
+        }
+
+        // 5. Statutory Validation
         const isPfEligible = Number(salary) <= 15000;
-        // ESI Mandatory if Salary <= 21000
         const isEsiEligible = Number(salary) <= 21000;
 
-        // Validation: If Eligible, numbers should be provided (Frontend should enforce, Backend double check)
-        if (isPfEligible && !uan) {
-            // Depending on strictness, we might error or just warn. Let's warn but allow creation if missing for now, 
-            // as some might not have UAN yet generated. But requirement says "UAN... required if eligible".
-            // Let's enforce it strictly for quality.
-            if (!uan) return res.status(400).json({ success: false, message: 'UAN is required for PF eligible employees (Salary <= 15000)' });
-        }
-        if (isEsiEligible && !esiNumber) {
-            if (!esiNumber) return res.status(400).json({ success: false, message: 'ESI Number is required for ESI eligible employees (Salary <= 21000)' });
+        if (isPfEligible && !uan) return res.status(400).json({ success: false, message: 'UAN is required for PF eligible employees (Salary <= 15000)' });
+        if (isEsiEligible && !esiNumber) return res.status(400).json({ success: false, message: 'ESI Number is required for ESI eligible employees (Salary <= 21000)' });
+
+        // Auto-calculate Confirmation Date if not provided
+        let finalConfirmationDate = confirmationDate;
+        if (!finalConfirmationDate && joinDate && probationPeriod) {
+            const join = new Date(joinDate);
+            join.setDate(join.getDate() + Number(probationPeriod));
+            finalConfirmationDate = join;
         }
 
-        // Check if phone already exists
-        const existingPhone = await Employee.findOne({ phone });
-        if (existingPhone) {
-            return res.status(400).json({ success: false, message: 'Employee with this phone number already exists' });
-        }
-
-        // Validate Password Length if provided
-        if (password && password.length < 8) {
-            return res.status(400).json({ success: false, message: 'Password must be at least 8 characters long' });
-        }
-
-        // Use provided password or generate temporary one
+        // Generate Password
+        if (password && password.length < 8) return res.status(400).json({ success: false, message: 'Password must be at least 8 characters long' });
         const tempPassword = password || Math.random().toString(36).slice(-8);
 
-        // Create user first
+        // Create User
         createdUser = await User.create({
             name: `${firstName} ${lastName}`,
             email,
@@ -200,17 +226,39 @@ exports.createEmployee = async (req, res) => {
             createdBy: req.user._id
         });
 
-        const profileCompletion = calculateProfileCompletion(req.body);
+        // 6. Calculate Profile Completion
+        const profileCompletion = calculateProfileCompletion({ ...req.body, location: locObj?.name });
 
-        // Create employee
+        // Create Employee
         const employee = await Employee.create({
             userId: createdUser._id,
             firstName, lastName, email, phone,
             dateOfBirth, gender,
             address, city, state, pinCode,
             emergencyContact,
-            department, designation, employmentType,
+
+            // New Structure
+            jobInfo: {
+                department: deptObj._id,
+                designation: desigObj._id,
+                location: locObj?._id,
+                reportingManager: reportingManager || null // User ID
+                // Note: user cannot report to self here strictly because they are just being created
+            },
+            employmentDetails: {
+                employmentType,
+                employmentStatus: employmentStatus || 'Active',
+                joiningDate: joinDate || Date.now(),
+                probationPeriod: probationPeriod || 0,
+                confirmationDate: finalConfirmationDate
+            },
+
+            // Legacy Fields (Populate with Names for backward compat)
+            department: deptObj.name,
+            designation: desigObj.name,
+            employmentType: employmentType, // String matches
             joinDate: joinDate || Date.now(),
+
             salary,
             bankAccount, panCard, aadharCard,
             uan, pfNumber, esiNumber,
@@ -220,7 +268,6 @@ exports.createEmployee = async (req, res) => {
             createdBy: req.user._id
         });
 
-        // Send Email
         sendOnboardingEmail(email, tempPassword);
 
         res.status(201).json({
@@ -231,6 +278,7 @@ exports.createEmployee = async (req, res) => {
                 generatedPassword: tempPassword
             }
         });
+
     } catch (error) {
         console.error('Create employee error:', error);
         if (createdUser) await User.findByIdAndDelete(createdUser._id).catch(e => console.error(e));
@@ -256,7 +304,7 @@ exports.updateEmployee = async (req, res) => {
             });
         }
 
-        // If employee role, check if updating own data and restrict fields
+        // If employee role, check if accessing own data
         if (req.user.role === 'employee') {
             if (employee.userId.toString() !== req.user._id.toString()) {
                 return res.status(403).json({
@@ -267,18 +315,83 @@ exports.updateEmployee = async (req, res) => {
 
             // Allow only specific fields for employee
             const allowedFields = ['phone', 'address', 'city', 'state', 'pinCode', 'emergencyContact', 'bankAccount'];
-            const updateData = {};
+
             allowedFields.forEach(field => {
                 if (req.body[field] !== undefined) {
-                    updateData[field] = req.body[field];
+                    employee[field] = req.body[field];
                 }
             });
 
-            Object.assign(employee, updateData);
         } else {
             // Admin and HR can update all fields except employeeCode
-            const { employeeCode, ...updateData } = req.body;
-            Object.assign(employee, updateData);
+            const {
+                employeeCode,
+                jobInfo,
+                employmentDetails,
+                ...otherUpdates
+            } = req.body;
+
+            // 1. Handle Nested Job Info
+            if (jobInfo) {
+                // If reportingManager is being updated, validate it
+                if (jobInfo.reportingManager) {
+                    // Prevent self-reporting
+                    if (jobInfo.reportingManager === employee._id.toString()) {
+                        return res.status(400).json({ success: false, message: 'Employee cannot report to themselves' });
+                    }
+                    if (jobInfo.reportingManager === employee.userId.toString()) { // Check User ID match too just in case
+                        return res.status(400).json({ success: false, message: 'Employee cannot report to themselves (User ID match)' });
+                    }
+
+                    // Check if manager exists and is active
+                    // Ideally check against Employee or User. Model says ref: 'User'.
+                    const manager = await User.findById(jobInfo.reportingManager);
+                    if (!manager) return res.status(400).json({ success: false, message: 'Reporting Manager not found' });
+                    if (manager.status !== 'active') return res.status(400).json({ success: false, message: 'Reporting Manager is not active' });
+                }
+
+                // Merge jobInfo
+                employee.jobInfo = {
+                    ...employee.jobInfo,
+                    ...jobInfo
+                };
+
+                // Sync Legacy Fields (Fetch names if IDs changed)
+                if (jobInfo.department) {
+                    const dept = await Department.findById(jobInfo.department);
+                    if (dept) employee.department = dept.name;
+                }
+                if (jobInfo.designation) {
+                    const desig = await Designation.findById(jobInfo.designation);
+                    if (desig) employee.designation = desig.name;
+                }
+            }
+
+            // 2. Handle Nested Employment Details
+            if (employmentDetails) {
+                employee.employmentDetails = {
+                    ...employee.employmentDetails,
+                    ...employmentDetails
+                };
+
+                // Sync Legacy
+                if (employmentDetails.employmentType) {
+                    employee.employmentType = employmentDetails.employmentType;
+                }
+                if (employmentDetails.joiningDate) {
+                    employee.joinDate = employmentDetails.joiningDate;
+                }
+            }
+
+            // 3. Update top-level fields
+            Object.keys(otherUpdates).forEach(key => {
+                employee[key] = otherUpdates[key];
+            });
+
+            // Recalculate Profile Completion
+            const completionData = { ...employee.toObject(), ...otherUpdates, ...employee.jobInfo, ...employee.employmentDetails };
+            // Note: location name might be missing here if only ID is in jobInfo, but it's an approximation.
+            employee.profileCompletion = calculateProfileCompletion(completionData);
         }
 
         await employee.save();

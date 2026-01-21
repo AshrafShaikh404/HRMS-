@@ -65,7 +65,8 @@ const Helpdesk = () => {
         priority: 'Medium'
     });
 
-    const isAdminOrHR = user.role === 'admin' || user.role === 'hr';
+    const roleName = typeof user.role === 'string' ? user.role : user.role?.name?.toLowerCase();
+    const isAdminOrHR = roleName === 'admin' || roleName === 'hr';
 
     useEffect(() => {
         fetchTickets();

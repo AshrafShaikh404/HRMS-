@@ -6,7 +6,8 @@ const {
     googleLogin,
     changePassword,
     getMe,
-    logout
+    logout,
+    getUsers
 } = require('../controllers/authController');
 const { protect } = require('../middleware/auth.middleware');
 const { authorize } = require('../middleware/authorize.middleware');
@@ -27,6 +28,7 @@ router.use(protect); // All routes below require authentication
 router.post('/register', authorize('admin'), registerValidation, validate, register);
 router.post('/change-password', changePasswordValidation, validate, changePassword);
 router.get('/me', getMe);
+router.get('/users', authorize('admin'), getUsers);
 router.post('/logout', logout);
 
 module.exports = router;

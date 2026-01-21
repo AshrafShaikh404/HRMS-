@@ -62,9 +62,14 @@ const Leaves = () => {
     useEffect(() => {
         fetchLeaves();
         fetchLeaveBalance();
+<<<<<<< HEAD
         fetchLeaves();
         fetchLeaveBalance();
         if (hasPermission('manage_leaves')) {
+=======
+        const role = typeof user.role === 'string' ? user.role : user.role?.name?.toLowerCase();
+        if (role === 'admin' || role === 'hr') {
+>>>>>>> 9fc0e80dc2cb38e7a503881861f4fa2812597cbc
             fetchPendingLeaves();
         }
     }, [user]);
@@ -381,7 +386,11 @@ const Leaves = () => {
                     <Typography variant="h5" fontWeight={600}>
                         My Leave History
                     </Typography>
+<<<<<<< HEAD
                     {hasPermission('manage_leaves') && (
+=======
+                    {['admin', 'hr'].includes(typeof user.role === 'string' ? user.role : user.role?.name?.toLowerCase()) && (
+>>>>>>> 9fc0e80dc2cb38e7a503881861f4fa2812597cbc
                         <Box sx={{ display: 'flex', gap: 1 }}>
                             <Button
                                 variant="outlined"

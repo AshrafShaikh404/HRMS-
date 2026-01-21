@@ -76,6 +76,8 @@ export const attendanceAPI = {
     getRecords: (params) => api.get('/attendance', { params }),
     manualEntry: (data) => api.post('/attendance/manual-entry', data),
     getReport: (params) => api.get('/attendance/report', { params }),
+    bulkEntry: (data) => api.post('/attendance/bulk', data),
+    toggleLock: (data) => api.post('/attendance/lock', data),
     exportCSV: (params) => api.get('/attendance/export/csv', { params, responseType: 'blob' }),
     exportPDF: (params) => api.get('/attendance/export/pdf', { params, responseType: 'blob' }),
 };
@@ -143,6 +145,39 @@ export const recruitmentAPI = {
     submitApplication: (formData) => api.post('/recruitment/apply', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
     }),
+};
+
+// Role & Permission APIs
+export const roleAPI = {
+    getRoles: () => api.get('/roles'),
+    createRole: (data) => api.post('/roles', data),
+    updateRole: (id, data) => api.put(`/roles/${id}`, data),
+    getPermissions: () => api.get('/roles/permissions'),
+    assignRole: (userId, roleId) => api.post('/roles/assign', { userId, roleId }),
+};
+
+// Department APIs
+export const departmentAPI = {
+    getAll: () => api.get('/departments'),
+    create: (data) => api.post('/departments', data),
+    update: (id, data) => api.put(`/departments/${id}`, data),
+    delete: (id) => api.delete(`/departments/${id}`),
+};
+
+// Designation APIs
+export const designationAPI = {
+    getAll: (departmentId) => api.get('/designations', { params: { departmentId } }),
+    create: (data) => api.post('/designations', data),
+    update: (id, data) => api.put(`/designations/${id}`, data),
+    delete: (id) => api.delete(`/designations/${id}`),
+};
+
+// Location APIs
+export const locationAPI = {
+    getAll: () => api.get('/locations'),
+    create: (data) => api.post('/locations', data),
+    update: (id, data) => api.put(`/locations/${id}`, data),
+    delete: (id) => api.delete(`/locations/${id}`),
 };
 
 export default api;

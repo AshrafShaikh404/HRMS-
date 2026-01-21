@@ -26,7 +26,8 @@ exports.register = async (req, res) => {
             name,
             email,
             passwordHash: password,
-            role: role || 'employee',
+            passwordHash: password,
+            role: role || (await require('../models/Role').findOne({ name: 'Employee' }))._id,
             status: status || 'active',
             createdBy: req.user?._id || null
 
@@ -65,7 +66,14 @@ exports.login = async (req, res) => {
         console.log(`Login attempt: ${email}`);
 
         // Find user and include password
-        const user = await User.findOne({ email }).select('+passwordHash');
+        const user = await User.findOne({ email })
+            .select('+passwordHash')
+            .populate({
+                path: 'role',
+                populate: {
+                    path: 'permissions'
+                }
+            });
 
         if (!user) {
             console.warn(`Login failed: user not found for email=${email}`);
@@ -162,7 +170,10 @@ exports.googleLogin = async (req, res) => {
         console.log(`Google Login attempt: ${email}`);
 
         // Check if user exists
-        let user = await User.findOne({ email });
+        let user = await User.findOne({ email }).populate({
+            path: 'role',
+            populate: { path: 'permissions' }
+        });
 
         if (user) {
             // Check if user is active
@@ -177,11 +188,14 @@ exports.googleLogin = async (req, res) => {
             console.log(`Creating new user via Google Login: ${email}`);
             const randomPassword = crypto.randomBytes(16).toString('hex');
 
+            // Default role is Employee. Fetch it first.
+            const employeeRole = await require('../models/Role').findOne({ name: 'Employee' });
+
             user = await User.create({
                 name: name || 'Google User',
                 email: email,
-                passwordHash: randomPassword, // Secure random password
-                role: 'employee', // Default role
+                passwordHash: randomPassword,
+                role: employeeRole._id,
                 status: 'active'
             });
 
@@ -216,8 +230,13 @@ exports.googleLogin = async (req, res) => {
                 console.log(`Created employee record for ${email}`);
             } catch (empError) {
                 console.error("Error creating employee record:", empError);
-                // Continue even if employee creation fails, though dashboard might 404
             }
+
+            // Re-fetch with population
+            user = await User.findById(user._id).populate({
+                path: 'role',
+                populate: { path: 'permissions' }
+            });
         }
 
         // Generate JWT
@@ -296,11 +315,15 @@ exports.changePassword = async (req, res) => {
 // @access  Private
 exports.getMe = async (req, res) => {
     try {
-        const user = await User.findById(req.user._id);
+        const user = await User.findById(req.user._id).populate({
+            path: 'role',
+            populate: { path: 'permissions' }
+        });
 
-        // Get employee details if role is employee
+        // Get employee details if role is employee or hr
+        const roleName = user.role?.name?.toLowerCase();
         let employeeDetails = null;
-        if (user.role === 'employee' || user.role === 'hr') {
+        if (roleName === 'employee' || roleName === 'hr') {
             employeeDetails = await Employee.findOne({ userId: user._id });
         }
 
@@ -319,6 +342,25 @@ exports.getMe = async (req, res) => {
         res.status(500).json({
             success: false,
             message: 'Error fetching user data',
+            error: error.message
+        });
+    }
+};
+
+// @desc    Get all users (for Admin)
+// @route   GET /api/v1/auth/users
+// @access  Private (Admin)
+exports.getUsers = async (req, res) => {
+    try {
+        const users = await User.find().populate('role');
+        res.status(200).json({
+            success: true,
+            data: users
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: 'Error fetching users',
             error: error.message
         });
     }

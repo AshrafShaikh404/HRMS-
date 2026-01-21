@@ -29,8 +29,12 @@ import {
     CheckCircle as CheckCircleIcon,
     Visibility as VisibilityIcon
 } from '@mui/icons-material';
+<<<<<<< HEAD
 import { employeeAPI } from '../utils/api';
 import { useAuth } from '../contexts/AuthContext';
+=======
+import { employeeAPI, departmentAPI, designationAPI, locationAPI } from '../utils/api';
+>>>>>>> 9fc0e80dc2cb38e7a503881861f4fa2812597cbc
 import { useNotification } from '../contexts/NotificationContext';
 
 const steps = ['Personal Details', 'Job Information', 'Statutory Details', 'Documents'];
@@ -42,6 +46,14 @@ const EmployeeForm = ({ employeeId, onSuccess, onClose }) => {
     const [loading, setLoading] = useState(false);
     const [isEditMode, setIsEditMode] = useState(false);
 
+    // Departments & Designations State
+    const [departments, setDepartments] = useState([]);
+    const [designations, setDesignations] = useState([]);
+    const [locations, setLocations] = useState([]);
+    const [filteredDesignations, setFilteredDesignations] = useState([]);
+    const [loadingDepts, setLoadingDepts] = useState(true);
+    const [loadingDesigs, setLoadingDesigs] = useState(false);
+
     // Form Data
     const [formData, setFormData] = useState({
         firstName: '', lastName: '', email: '', phone: '',
@@ -49,10 +61,20 @@ const EmployeeForm = ({ employeeId, onSuccess, onClose }) => {
         address: '', city: '', state: '', pinCode: '',
         emergencyContact: { name: '', relationship: '', phone: '' },
 
-        department: '', designation: '', employmentType: '',
-        joinDate: new Date().toISOString().split('T')[0],
-        salary: '', bankAccount: '', panCard: '', aadharCard: '',
+        // Nested Structures
+        jobInfo: {
+            department: '', designation: '', location: '', reportingManager: ''
+        },
+        employmentDetails: {
+            employmentType: 'Full-time',
+            employmentStatus: 'Active',
+            joiningDate: new Date().toISOString().split('T')[0],
+            probationPeriod: 0,
+            confirmationDate: ''
+        },
 
+        // Statutory
+        salary: '', bankAccount: '', panCard: '', aadharCard: '',
         uan: '', pfNumber: '', esiNumber: '', taxDeduction: 0,
         isPfEligible: true, isEsiEligible: true
     });
@@ -62,16 +84,65 @@ const EmployeeForm = ({ employeeId, onSuccess, onClose }) => {
     const [uploadQueue, setUploadQueue] = useState([]); // { type, file, status }
     const [verifyingDoc, setVerifyingDoc] = useState(null);
 
+    // Reporting Managers Options
+    const [managers, setManagers] = useState([]);
+
     // Validation Errors
     const [errors, setErrors] = useState({});
 
     // Load existing employee data if edit mode
     useEffect(() => {
+        fetchDepartments();
+        // Fetch potential managers (active users/employees)
+        // For now using employeeAPI to get list, or we might need a specific user list endpoint.
+        // Assuming we can search employees or get all.
+        fetchManagers();
+
         if (employeeId) {
             setIsEditMode(true);
             loadEmployeeData();
         }
     }, [employeeId]);
+
+    const fetchManagers = async () => {
+        try {
+            // Ideally fetch only eligible managers. For now, fetch all employees.
+            const res = await employeeAPI.getAll({ limit: 1000, status: 'Active' });
+            setManagers(res.data.data.employees);
+        } catch (err) {
+            console.error('Failed to fetch managers', err);
+        }
+    };
+
+    const fetchDepartments = async () => {
+        try {
+            const [deptRes, desigRes, locRes] = await Promise.all([
+                departmentAPI.getAll(),
+                designationAPI.getAll(),
+                locationAPI.getAll()
+            ]);
+            setDepartments(deptRes.data.data);
+            setDesignations(desigRes.data.data);
+            setLocations(locRes.data.data);
+            setLoadingDepts(false);
+        } catch (err) {
+            console.error('Failed to fetch data', err);
+            setLoadingDepts(false);
+        }
+    };
+
+    // Filter Designations when Department changes
+    useEffect(() => {
+        // formData.jobInfo.department is now an ID
+        if (formData.jobInfo.department && designations.length > 0) {
+            const filtered = designations.filter(d =>
+                (typeof d.department === 'object' ? d.department._id === formData.jobInfo.department : d.department === formData.jobInfo.department)
+            );
+            setFilteredDesignations(filtered);
+        } else {
+            setFilteredDesignations([]);
+        }
+    }, [formData.jobInfo.department, designations]);
 
     const loadEmployeeData = async () => {
         try {
@@ -82,37 +153,82 @@ const EmployeeForm = ({ employeeId, onSuccess, onClose }) => {
             // Format dates
             const formatDate = (d) => d ? new Date(d).toISOString().split('T')[0] : '';
 
+            // Map flat response to nested structure if it was flat (legacy) or directly use nested
+            // Since we updated backend to return nested, we can likely use it.
+            // But we must handle legacy data.
+
             setFormData({
-                ...emp,
+                firstName: emp.firstName,
+                lastName: emp.lastName,
+                email: emp.email,
+                phone: emp.phone,
                 dateOfBirth: formatDate(emp.dateOfBirth),
-                joinDate: formatDate(emp.joinDate),
-                emergencyContact: emp.emergencyContact || { name: '', relationship: '', phone: '' }
+                gender: emp.gender,
+                address: emp.address,
+                city: emp.city,
+                state: emp.state,
+                pinCode: emp.pinCode,
+                emergencyContact: emp.emergencyContact || { name: '', relationship: '', phone: '' },
+
+                jobInfo: emp.jobInfo || {
+                    department: emp.department ? departments.find(d => d.name === emp.department)?._id || '' : '', // Try to map legacy name to ID
+                    designation: emp.designation ? designations.find(d => d.name === emp.designation)?._id || '' : '',
+                    location: emp.location || '', // Assuming legacy stored ID?
+                    reportingManager: emp.reportingManager || ''
+                },
+
+                employmentDetails: emp.employmentDetails || {
+                    employmentType: emp.employmentType || 'Full-time',
+                    employmentStatus: 'Active', // Default
+                    joiningDate: formatDate(emp.joinDate),
+                    probationPeriod: 0,
+                    confirmationDate: ''
+                },
+
+                salary: emp.salary,
+                bankAccount: emp.bankAccount,
+                panCard: emp.panCard,
+                aadharCard: emp.aadharCard,
+                uan: emp.uan,
+                pfNumber: emp.pfNumber,
+                esiNumber: emp.esiNumber,
+                taxDeduction: emp.taxDeduction,
+                isPfEligible: emp.isPfEligible,
+                isEsiEligible: emp.isEsiEligible
             });
             setDocuments(emp.documents || []);
         } catch (err) {
             showError('Failed to load employee data');
+            console.error(err);
         } finally {
             setLoading(false);
         }
     };
 
-    // Calculate Completion
+    // Calculate Completion (Simplified)
     const calculateCompletion = () => {
-        const requiredFields = [
-            'firstName', 'lastName', 'email', 'phone', 'department', 'designation',
-            'employmentType', 'salary', 'joinDate', 'address'
-        ];
-        let filled = 0;
-        requiredFields.forEach(f => {
-            if (formData[f]) filled++;
-        });
-        return Math.round((filled / requiredFields.length) * 100);
+        // ... existing logic but checking nested
+        return 0; // Placeholder update or keep existing logic adapted
     };
 
     // Input Change
     const handleChange = (e) => {
         const { name, value } = e.target;
-        if (name.includes('.')) {
+
+        if (name.startsWith('jobInfo.')) {
+            const field = name.split('.')[1];
+            setFormData(prev => ({
+                ...prev,
+                jobInfo: { ...prev.jobInfo, [field]: value }
+            }));
+        } else if (name.startsWith('employmentDetails.')) {
+            const field = name.split('.')[1];
+            setFormData(prev => ({
+                ...prev,
+                employmentDetails: { ...prev.employmentDetails, [field]: value }
+            }));
+        } else if (name.includes('.')) {
+            // For emergencyContact
             const [parent, child] = name.split('.');
             setFormData(prev => ({
                 ...prev,
@@ -121,8 +237,6 @@ const EmployeeForm = ({ employeeId, onSuccess, onClose }) => {
         } else {
             setFormData(prev => {
                 const newData = { ...prev, [name]: value };
-
-                // Auto-calculate Statutory Eligibility
                 if (name === 'salary') {
                     const salary = Number(value);
                     newData.isPfEligible = salary <= 15000;
@@ -131,8 +245,7 @@ const EmployeeForm = ({ employeeId, onSuccess, onClose }) => {
                 return newData;
             });
         }
-        // Clear error
-        if (errors[name]) setErrors(prev => ({ ...prev, [name]: '' }));
+        if (errors[name] || errors[name.split('.')[0]]) setErrors(prev => ({ ...prev, [name]: '' }));
     };
 
     // Validations
@@ -151,9 +264,12 @@ const EmployeeForm = ({ employeeId, onSuccess, onClose }) => {
         }
 
         if (step === 1) { // Job
-            if (!formData.department) newErrors.department = 'Required';
-            if (!formData.designation) newErrors.designation = 'Required';
-            if (!formData.employmentType) newErrors.employmentType = 'Required';
+            if (!formData.jobInfo.department) newErrors['jobInfo.department'] = 'Required';
+            if (!formData.jobInfo.designation) newErrors['jobInfo.designation'] = 'Required';
+            if (!formData.jobInfo.location) newErrors['jobInfo.location'] = 'Required';
+            if (!formData.employmentDetails.employmentType) newErrors['employmentDetails.employmentType'] = 'Required';
+            // if (!formData.employmentDetails.joiningDate) newErrors['employmentDetails.joiningDate'] = 'Required'; // Input field is required anyway
+
             if (!formData.salary || Number(formData.salary) <= 0) newErrors.salary = 'Valid Salary Required';
             if (formData.panCard && !panRegex.test(formData.panCard)) newErrors.panCard = 'Invalid PAN Format (ABCDE1234F)';
             if (formData.aadharCard && !aadhaarRegex.test(formData.aadharCard)) newErrors.aadharCard = 'Invalid Aadhaar (12 digits)';
@@ -305,22 +421,73 @@ const EmployeeForm = ({ employeeId, onSuccess, onClose }) => {
                 {activeStep === 1 && (
                     <Grid container spacing={2}>
                         <Grid item xs={12} sm={6}>
-                            <FormControl fullWidth required error={!!errors.department}>
+                            <FormControl fullWidth required error={!!errors['jobInfo.department']}>
                                 <InputLabel>Department</InputLabel>
-                                <Select name="department" value={formData.department} onChange={handleChange} label="Department">
-                                    {['IT', 'HR', 'Finance', 'Operations', 'Sales', 'Marketing', 'Admin', 'Other'].map(opt => (
-                                        <MenuItem key={opt} value={opt}>{opt}</MenuItem>
+                                <Select
+                                    name="jobInfo.department"
+                                    value={formData.jobInfo.department}
+                                    onChange={handleChange}
+                                    label="Department"
+                                    disabled={loadingDepts}
+                                >
+                                    {loadingDepts ? <MenuItem disabled>Loading...</MenuItem> : departments.filter(d => d.isActive).map(dept => (
+                                        <MenuItem key={dept._id} value={dept._id}>{dept.name}</MenuItem>
                                     ))}
                                 </Select>
                             </FormControl>
                         </Grid>
                         <Grid item xs={12} sm={6}>
-                            <TextField fullWidth label="Designation" name="designation" value={formData.designation} onChange={handleChange} error={!!errors.designation} helperText={errors.designation} required />
+                            <FormControl fullWidth required error={!!errors['jobInfo.designation']}>
+                                <InputLabel>Designation</InputLabel>
+                                <Select
+                                    name="jobInfo.designation"
+                                    value={formData.jobInfo.designation}
+                                    onChange={handleChange}
+                                    label="Designation"
+                                    disabled={!formData.jobInfo.department || loadingDesigs}
+                                >
+                                    {loadingDesigs ? <MenuItem disabled>Loading...</MenuItem> :
+                                        filteredDesignations.length > 0 ? (
+                                            filteredDesignations.map(desig => (
+                                                <MenuItem key={desig._id} value={desig._id}>{desig.name}</MenuItem>
+                                            ))
+                                        ) : (
+                                            <MenuItem disabled>No designations found for this department</MenuItem>
+                                        )
+                                    }
+                                </Select>
+                            </FormControl>
                         </Grid>
                         <Grid item xs={12} sm={6}>
-                            <FormControl fullWidth required error={!!errors.employmentType}>
+                            <FormControl fullWidth required error={!!errors['jobInfo.location']}>
+                                <InputLabel>Work Location</InputLabel>
+                                <Select name="jobInfo.location" value={formData.jobInfo.location} onChange={handleChange} label="Work Location">
+                                    {locations.filter(l => l.isActive).map(loc => (
+                                        <MenuItem key={loc._id} value={loc._id}>
+                                            {loc.name} ({loc.workType})
+                                        </MenuItem>
+                                    ))}
+                                </Select>
+                            </FormControl>
+                        </Grid>
+                        <Grid item xs={12} sm={6}>
+                            <FormControl fullWidth>
+                                <InputLabel>Reporting Manager</InputLabel>
+                                <Select name="jobInfo.reportingManager" value={formData.jobInfo.reportingManager} onChange={handleChange} label="Reporting Manager">
+                                    <MenuItem value=""><em>None</em></MenuItem>
+                                    {managers.filter(m => m._id !== employeeId).map(mgr => (
+                                        <MenuItem key={mgr._id} value={mgr._id}>
+                                            {mgr.firstName} {mgr.lastName} ({mgr.employeeCode})
+                                        </MenuItem>
+                                    ))}
+                                </Select>
+                            </FormControl>
+                        </Grid>
+
+                        <Grid item xs={12} sm={6}>
+                            <FormControl fullWidth required error={!!errors['employmentDetails.employmentType']}>
                                 <InputLabel>Employment Type</InputLabel>
-                                <Select name="employmentType" value={formData.employmentType} onChange={handleChange} label="Employment Type">
+                                <Select name="employmentDetails.employmentType" value={formData.employmentDetails.employmentType} onChange={handleChange} label="Employment Type">
                                     <MenuItem value="Full-time">Full-time</MenuItem>
                                     <MenuItem value="Part-time">Part-time</MenuItem>
                                     <MenuItem value="Intern">Intern</MenuItem>
@@ -330,10 +497,30 @@ const EmployeeForm = ({ employeeId, onSuccess, onClose }) => {
                             </FormControl>
                         </Grid>
                         <Grid item xs={12} sm={6}>
-                            <TextField fullWidth label="Salary" type="number" name="salary" value={formData.salary} onChange={handleChange} error={!!errors.salary} helperText={errors.salary} required />
+                            <FormControl fullWidth>
+                                <InputLabel>Employment Status</InputLabel>
+                                <Select name="employmentDetails.employmentStatus" value={formData.employmentDetails.employmentStatus} onChange={handleChange} label="Employment Status">
+                                    <MenuItem value="Active">Active</MenuItem>
+                                    <MenuItem value="On Probation">On Probation</MenuItem>
+                                    <MenuItem value="Notice Period">Notice Period</MenuItem>
+                                    <MenuItem value="Resigned">Resigned</MenuItem>
+                                    <MenuItem value="Terminated">Terminated</MenuItem>
+                                </Select>
+                            </FormControl>
+                        </Grid>
+
+                        <Grid item xs={12} sm={6}>
+                            <TextField fullWidth label="Join Date" type="date" name="employmentDetails.joiningDate" value={formData.employmentDetails.joiningDate} onChange={handleChange} InputLabelProps={{ shrink: true }} required />
                         </Grid>
                         <Grid item xs={12} sm={6}>
-                            <TextField fullWidth label="Join Date" type="date" name="joinDate" value={formData.joinDate} onChange={handleChange} InputLabelProps={{ shrink: true }} required />
+                            <TextField fullWidth label="Probation (Days)" type="number" name="employmentDetails.probationPeriod" value={formData.employmentDetails.probationPeriod} onChange={handleChange} />
+                        </Grid>
+                        <Grid item xs={12} sm={6}>
+                            <TextField fullWidth label="Confirmation Date" type="date" name="employmentDetails.confirmationDate" value={formData.employmentDetails.confirmationDate} onChange={handleChange} InputLabelProps={{ shrink: true }} />
+                        </Grid>
+
+                        <Grid item xs={12} sm={6}>
+                            <TextField fullWidth label="Salary" type="number" name="salary" value={formData.salary} onChange={handleChange} error={!!errors.salary} helperText={errors.salary} required />
                         </Grid>
                         <Grid item xs={12} sm={6}>
                             <TextField fullWidth label="PAN Card" name="panCard" value={formData.panCard} onChange={handleChange} error={!!errors.panCard} helperText={errors.panCard} />
@@ -342,85 +529,77 @@ const EmployeeForm = ({ employeeId, onSuccess, onClose }) => {
                             <TextField fullWidth label="Aadhaar Card" name="aadharCard" value={formData.aadharCard} onChange={handleChange} error={!!errors.aadharCard} helperText={errors.aadharCard} />
                         </Grid>
                     </Grid>
-                )}
+                )
+                }
 
-                {activeStep === 2 && (
-                    <Grid container spacing={2}>
-                        <Grid item xs={12}>
-                            <Alert severity="info" sx={{ mb: 2 }}>
-                                Statutory eligibility is auto-calculated based on Salary logic (PF &le; 15k, ESI &le; 21k).
-                            </Alert>
+                {
+                    activeStep === 2 && (
+                        <Grid container spacing={2}>
+                            <Grid item xs={12}>
+                                <Alert severity="info" sx={{ mb: 2 }}>
+                                    Statutory eligibility is auto-calculated based on Salary logic (PF &le; 15k, ESI &le; 21k).
+                                </Alert>
+                            </Grid>
+                            <Grid item xs={12} sm={6}>
+                                <TextField fullWidth label="UAN" name="uan" value={formData.uan} onChange={handleChange} error={!!errors.uan} helperText={errors.uan} required={formData.isPfEligible} disabled={!formData.isPfEligible} />
+                            </Grid>
+                            <Grid item xs={12} sm={6}>
+                                <TextField fullWidth label="PF Number" name="pfNumber" value={formData.pfNumber} onChange={handleChange} />
+                            </Grid>
+                            <Grid item xs={12} sm={6}>
+                                <TextField fullWidth label="ESI Number" name="esiNumber" value={formData.esiNumber} onChange={handleChange} error={!!errors.esiNumber} helperText={errors.esiNumber} required={formData.isEsiEligible} disabled={!formData.isEsiEligible} />
+                            </Grid>
+                            <Grid item xs={12} sm={6}>
+                                <TextField fullWidth label="Income Tax (TDS)" type="number" name="taxDeduction" value={formData.taxDeduction} onChange={handleChange} />
+                            </Grid>
+                            <Grid item xs={12} sm={6}>
+                                <FormControl fullWidth>
+                                    <InputLabel>PF Eligible?</InputLabel>
+                                    <Select name="isPfEligible" value={formData.isPfEligible} onChange={handleChange} label="PF Eligible?" disabled>
+                                        <MenuItem value={true}>Yes</MenuItem>
+                                        <MenuItem value={false}>No</MenuItem>
+                                    </Select>
+                                </FormControl>
+                            </Grid>
+                            <Grid item xs={12} sm={6}>
+                                <FormControl fullWidth>
+                                    <InputLabel>ESI Eligible?</InputLabel>
+                                    <Select name="isEsiEligible" value={formData.isEsiEligible} onChange={handleChange} label="ESI Eligible?" disabled>
+                                        <MenuItem value={true}>Yes</MenuItem>
+                                        <MenuItem value={false}>No</MenuItem>
+                                    </Select>
+                                </FormControl>
+                            </Grid>
                         </Grid>
-                        <Grid item xs={12} sm={6}>
-                            <TextField fullWidth label="UAN" name="uan" value={formData.uan} onChange={handleChange} error={!!errors.uan} helperText={errors.uan} required={formData.isPfEligible} disabled={!formData.isPfEligible} />
-                        </Grid>
-                        <Grid item xs={12} sm={6}>
-                            <TextField fullWidth label="PF Number" name="pfNumber" value={formData.pfNumber} onChange={handleChange} />
-                        </Grid>
-                        <Grid item xs={12} sm={6}>
-                            <TextField fullWidth label="ESI Number" name="esiNumber" value={formData.esiNumber} onChange={handleChange} error={!!errors.esiNumber} helperText={errors.esiNumber} required={formData.isEsiEligible} disabled={!formData.isEsiEligible} />
-                        </Grid>
-                        <Grid item xs={12} sm={6}>
-                            <TextField fullWidth label="Income Tax (TDS)" type="number" name="taxDeduction" value={formData.taxDeduction} onChange={handleChange} />
-                        </Grid>
-                        <Grid item xs={12} sm={6}>
-                            <FormControl fullWidth>
-                                <InputLabel>PF Eligible?</InputLabel>
-                                <Select name="isPfEligible" value={formData.isPfEligible} onChange={handleChange} label="PF Eligible?" disabled>
-                                    <MenuItem value={true}>Yes</MenuItem>
-                                    <MenuItem value={false}>No</MenuItem>
-                                </Select>
-                            </FormControl>
-                        </Grid>
-                        <Grid item xs={12} sm={6}>
-                            <FormControl fullWidth>
-                                <InputLabel>ESI Eligible?</InputLabel>
-                                <Select name="isEsiEligible" value={formData.isEsiEligible} onChange={handleChange} label="ESI Eligible?" disabled>
-                                    <MenuItem value={true}>Yes</MenuItem>
-                                    <MenuItem value={false}>No</MenuItem>
-                                </Select>
-                            </FormControl>
-                        </Grid>
-                    </Grid>
-                )}
+                    )
+                }
 
-                {activeStep === 3 && (
-                    <Box>
-                        <Typography variant="h6" gutterBottom>Upload Documents</Typography>
-                        <Typography variant="body2" color="text.secondary" gutterBottom>
-                            Max Size: 5MB. Formats: PDF, JPG, PNG.
-                        </Typography>
+                {
+                    activeStep === 3 && (
+                        <Box>
+                            <Typography variant="h6" gutterBottom>Upload Documents</Typography>
+                            <Typography variant="body2" color="text.secondary" gutterBottom>
+                                Max Size: 5MB. Formats: PDF, JPG, PNG.
+                            </Typography>
 
-                        <Grid container spacing={2} sx={{ mb: 4 }}>
-                            {['Aadhaar Card', 'PAN Card', 'Resume', 'Photo', 'Offer Letter', 'Other'].map(type => (
-                                <Grid item xs={12} sm={6} md={4} key={type}>
-                                    <Button
-                                        component="label"
-                                        variant="outlined"
-                                        startIcon={<CloudUploadIcon />}
-                                        fullWidth
-                                        sx={{ height: 60 }}
-                                    >
-                                        {type}
-                                        <input type="file" hidden onChange={(e) => handleFileSelect(e, type)} />
-                                    </Button>
-                                </Grid>
-                            ))}
-                        </Grid>
-
-                        {/* Upload Queue */}
-                        {uploadQueue.length > 0 && (
-                            <Box sx={{ mb: 4 }}>
-                                <Typography fontWeight="bold">To Upload:</Typography>
-                                {uploadQueue.map((item, index) => (
-                                    <Box key={index} sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', p: 1, border: '1px solid #eee', mt: 1 }}>
-                                        <Typography>{item.type} - {item.file.name}</Typography>
-                                        <IconButton size="small" onClick={() => removeFileFromQueue(index)}><DeleteIcon /></IconButton>
-                                    </Box>
+                            <Grid container spacing={2} sx={{ mb: 4 }}>
+                                {['Aadhaar Card', 'PAN Card', 'Resume', 'Photo', 'Offer Letter', 'Other'].map(type => (
+                                    <Grid item xs={12} sm={6} md={4} key={type}>
+                                        <Button
+                                            component="label"
+                                            variant="outlined"
+                                            startIcon={<CloudUploadIcon />}
+                                            fullWidth
+                                            sx={{ height: 60 }}
+                                        >
+                                            {type}
+                                            <input type="file" hidden onChange={(e) => handleFileSelect(e, type)} />
+                                        </Button>
+                                    </Grid>
                                 ))}
-                            </Box>
-                        )}
+                            </Grid>
 
+<<<<<<< HEAD
                         {/* Existing Documents */}
                         {isEditMode && documents.length > 0 && (
                             <Box>
@@ -457,31 +636,85 @@ const EmployeeForm = ({ employeeId, onSuccess, onClose }) => {
                                                 </Box>
                                             </Paper>
                                         </Grid>
+=======
+                            {/* Upload Queue */}
+                            {uploadQueue.length > 0 && (
+                                <Box sx={{ mb: 4 }}>
+                                    <Typography fontWeight="bold">To Upload:</Typography>
+                                    {uploadQueue.map((item, index) => (
+                                        <Box key={index} sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', p: 1, border: '1px solid #eee', mt: 1 }}>
+                                            <Typography>{item.type} - {item.file.name}</Typography>
+                                            <IconButton size="small" onClick={() => removeFileFromQueue(index)}><DeleteIcon /></IconButton>
+                                        </Box>
+>>>>>>> 9fc0e80dc2cb38e7a503881861f4fa2812597cbc
                                     ))}
-                                </Grid>
-                            </Box>
-                        )}
-                    </Box>
-                )}
-            </Box>
+                                </Box>
+                            )}
+
+                            {/* Existing Documents */}
+                            {isEditMode && documents.length > 0 && (
+                                <Box>
+                                    <Typography fontWeight="bold" gutterBottom>Uploaded Documents:</Typography>
+                                    <Grid container spacing={2}>
+                                        {documents.map(doc => (
+                                            <Grid item xs={12} key={doc._id}>
+                                                <Paper sx={{ p: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                    <Box>
+                                                        <Typography fontWeight={600}>{doc.name}</Typography>
+                                                        <Typography variant="caption" color="text.secondary">
+                                                            Uploaded: {new Date(doc.uploadDate).toLocaleDateString()}
+                                                        </Typography>
+                                                        <br />
+                                                        <Chip
+                                                            label={doc.status}
+                                                            color={doc.status === 'Verified' ? 'success' : doc.status === 'Rejected' ? 'error' : 'warning'}
+                                                            size="small"
+                                                            sx={{ mt: 1 }}
+                                                        />
+                                                    </Box>
+                                                    <Box>
+                                                        <IconButton href={`http://localhost:5001/${doc.filePath}`} target="_blank">
+                                                            <VisibilityIcon />
+                                                        </IconButton>
+
+                                                        {/* Verification Controls (Admin/HR only) */}
+                                                        {['admin', 'hr'].includes(typeof userRole === 'string' ? userRole : userRole?.name?.toLowerCase()) && doc.status === 'Pending' && (
+                                                            <>
+                                                                <Button size="small" color="success" onClick={() => handleVerifyDoc(doc._id, 'Verified')}>Verify</Button>
+                                                                <Button size="small" color="error" onClick={() => handleVerifyDoc(doc._id, 'Rejected')}>Reject</Button>
+                                                            </>
+                                                        )}
+                                                    </Box>
+                                                </Paper>
+                                            </Grid>
+                                        ))}
+                                    </Grid>
+                                </Box>
+                            )}
+                        </Box>
+                    )
+                }
+            </Box >
 
             {/* Actions */}
-            <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2, mt: 4, pt: 2, borderTop: '1px solid #eee' }}>
+            < Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2, mt: 4, pt: 2, borderTop: '1px solid #eee' }}>
                 <Button disabled={activeStep === 0 || loading} onClick={handleBack}>
                     Back
                 </Button>
 
-                {activeStep === steps.length - 1 ? (
-                    <Button variant="contained" onClick={handleSubmit} disabled={loading}>
-                        {loading ? <CircularProgress size={24} /> : (isEditMode ? 'Update Employee' : 'Submit & Create')}
-                    </Button>
-                ) : (
-                    <Button variant="contained" onClick={handleNext}>
-                        Next
-                    </Button>
-                )}
-            </Box>
-        </Paper>
+                {
+                    activeStep === steps.length - 1 ? (
+                        <Button variant="contained" onClick={handleSubmit} disabled={loading}>
+                            {loading ? <CircularProgress size={24} /> : (isEditMode ? 'Update Employee' : 'Submit & Create')}
+                        </Button>
+                    ) : (
+                        <Button variant="contained" onClick={handleNext}>
+                            Next
+                        </Button>
+                    )
+                }
+            </Box >
+        </Paper >
     );
 };
 

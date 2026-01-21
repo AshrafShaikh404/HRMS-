@@ -192,6 +192,7 @@ exports.getAttendance = async (req, res) => {
 
         const attendance = await Attendance.find(query)
             .populate('employeeId', 'firstName lastName employeeCode')
+            .populate('markedBy', 'firstName lastName')
             .skip(skip)
             .limit(parseInt(limit))
             .sort({ date: -1 });
@@ -208,6 +209,9 @@ exports.getAttendance = async (req, res) => {
             leaveDays: allAttendance.filter(a => a.status === 'leave').length,
             attendancePercentage: allAttendance.length > 0
                 ? ((allAttendance.filter(a => a.status === 'present' || a.status === 'leave').length / allAttendance.length) * 100).toFixed(2)
+                : 0,
+            avgWorkingHours: allAttendance.length > 0
+                ? (allAttendance.reduce((sum, a) => sum + (a.workedHours || 0), 0) / allAttendance.length).toFixed(2)
                 : 0
         };
 
@@ -234,7 +238,7 @@ exports.getAttendance = async (req, res) => {
     }
 };
 
-// @desc    Manual attendance entry
+// @desc    Manual attendance entry (Admin Override)
 // @route   POST /api/v1/attendance/manual-entry
 // @access  Private (Admin, HR)
 exports.manualEntry = async (req, res) => {
@@ -248,7 +252,7 @@ exports.manualEntry = async (req, res) => {
             });
         }
 
-        // Check if attendance already exists
+        // Check locks
         const attendanceDate = new Date(date);
         attendanceDate.setHours(0, 0, 0, 0);
         const nextDay = new Date(attendanceDate);
@@ -259,13 +263,30 @@ exports.manualEntry = async (req, res) => {
             date: { $gte: attendanceDate, $lt: nextDay }
         });
 
+        if (attendance && attendance.isLocked) {
+            return res.status(400).json({
+                success: false,
+                message: 'Attendance for this date is locked.'
+            });
+        }
+
         if (attendance) {
             // Update existing
-            if (checkInTime) attendance.checkInTime = new Date(checkInTime);
-            if (checkOutTime) attendance.checkOutTime = new Date(checkOutTime);
+            if (checkInTime !== undefined) attendance.checkInTime = checkInTime ? new Date(checkInTime) : null;
+            if (checkOutTime !== undefined) attendance.checkOutTime = checkOutTime ? new Date(checkOutTime) : null;
             if (status) attendance.status = status;
             if (remarks) attendance.remarks = remarks;
             attendance.updatedBy = req.user._id;
+            attendance.markedBy = req.user._id; // Set markedBy on update too
+
+            // Re-calculate hours if times present
+            if (attendance.checkInTime && attendance.checkOutTime) {
+                const diffMs = attendance.checkOutTime - attendance.checkInTime;
+                attendance.workedHours = parseFloat((diffMs / (1000 * 60 * 60)).toFixed(2));
+            } else {
+                attendance.workedHours = 0; // Reset if time removed
+            }
+
         } else {
             // Create new
             attendance = new Attendance({
@@ -275,8 +296,13 @@ exports.manualEntry = async (req, res) => {
                 checkOutTime: checkOutTime ? new Date(checkOutTime) : null,
                 status: status || 'present',
                 remarks: remarks || reason,
-                updatedBy: req.user._id
+                updatedBy: req.user._id,
+                markedBy: req.user._id
             });
+            if (attendance.checkInTime && attendance.checkOutTime) {
+                const diffMs = attendance.checkOutTime - attendance.checkInTime;
+                attendance.workedHours = parseFloat((diffMs / (1000 * 60 * 60)).toFixed(2));
+            }
         }
 
         await attendance.save();
@@ -293,6 +319,109 @@ exports.manualEntry = async (req, res) => {
             message: 'Error creating/updating attendance',
             error: error.message
         });
+    }
+};
+
+// @desc    Bulk attendance marking
+// @route   POST /api/v1/attendance/bulk
+// @access  Private (Admin, HR)
+exports.bulkAttendance = async (req, res) => {
+    try {
+        const { employeeIds, date, status, remarks } = req.body;
+
+        if (!employeeIds || !Array.isArray(employeeIds) || employeeIds.length === 0 || !date) {
+            return res.status(400).json({ success: false, message: 'Invalid payload' });
+        }
+
+        const attendanceDate = new Date(date);
+        attendanceDate.setHours(0, 0, 0, 0);
+
+        // Check if locked - Check any existing record for this date (assuming daily lock applies globally or per record)
+        // Implementation choice: Lock is per record. But maybe we assume if one is locked, admin knows. 
+        // Or cleaner: skip locked ones or fail. Let's fail if any is locked to be safe, or just update unlocked.
+        // Let's update all unlocked.
+
+        let updatedCount = 0;
+        let lockedCount = 0;
+
+        for (const empId of employeeIds) {
+            const nextDay = new Date(attendanceDate);
+            nextDay.setDate(nextDay.getDate() + 1);
+
+            let record = await Attendance.findOne({
+                employeeId: empId,
+                date: { $gte: attendanceDate, $lt: nextDay }
+            });
+
+            if (record && record.isLocked) {
+                lockedCount++;
+                continue;
+            }
+
+            if (record) {
+                record.status = status;
+                if (remarks) record.remarks = remarks;
+                record.updatedBy = req.user._id;
+                record.markedBy = req.user._id; // Set markedBy on update too
+                await record.save();
+                updatedCount++;
+            } else {
+                await Attendance.create({
+                    employeeId: empId,
+                    date: attendanceDate,
+                    status: status,
+                    remarks: remarks,
+                    markedBy: req.user._id,
+                    updatedBy: req.user._id
+                });
+                updatedCount++;
+            }
+        }
+
+        res.status(200).json({
+            success: true,
+            message: `Bulk update complete. Updated: ${updatedCount}, Skipped (Locked): ${lockedCount}`
+        });
+
+    } catch (error) {
+        console.error('Bulk attendance error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error processing bulk attendance',
+            error: error.message
+        });
+    }
+};
+
+// @desc    Toggle Lock
+// @route   POST /api/v1/attendance/lock
+// @access  Private (Admin)
+exports.toggleLock = async (req, res) => {
+    try {
+        const { date, lock } = req.body; // date (day) or month/year? Requirement: "per date/month"
+        // Let's support date range or single date.
+        // Simplified: Single Date for now as per "per date" UI usually.
+
+        if (!date) return res.status(400).json({ success: false, message: 'Date required' });
+
+        const attendanceDate = new Date(date);
+        attendanceDate.setHours(0, 0, 0, 0);
+        const nextDay = new Date(attendanceDate);
+        nextDay.setDate(nextDay.getDate() + 1);
+
+        const result = await Attendance.updateMany(
+            { date: { $gte: attendanceDate, $lt: nextDay } },
+            { $set: { isLocked: lock } }
+        );
+
+        res.status(200).json({
+            success: true,
+            message: `Attendance ${lock ? 'locked' : 'unlocked'} for ${attendanceDate.toLocaleDateString()}. Records updated: ${result.modifiedCount}`
+        });
+
+    } catch (error) {
+        console.error('Lock error:', error);
+        res.status(500).json({ success: false, message: 'Error toggling lock', error: error.message });
     }
 };
 

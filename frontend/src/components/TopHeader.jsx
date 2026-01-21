@@ -107,7 +107,7 @@ function TopHeader({ onMenuClick, isMobile, onLogout, onViewProfile, onEditProfi
                                 {user?.name}
                             </Typography>
                             <Typography variant="caption" color="text.secondary">
-                                {user?.role || 'Admin'}
+                                {typeof user?.role === 'string' ? user?.role : user?.role?.name || 'User'}
                             </Typography>
                         </Box>
                     </Box>
