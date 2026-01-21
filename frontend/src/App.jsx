@@ -1,16 +1,15 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { useState, useEffect } from 'react';
 import { ThemeProvider } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import theme from './theme';
 import Login from './pages/Login';
 import DashboardLayout from './components/DashboardLayout';
+import ProtectedRoute from './components/ProtectedRoute';
 import Dashboard from './pages/Dashboard';
 import Employees from './pages/Employees';
 import Attendance from './pages/Attendance';
 import Leaves from './pages/Leaves';
 import Payroll from './pages/Payroll';
-import Profile from './pages/Profile';
 import Helpdesk from './pages/Helpdesk';
 import RoleManagement from './pages/RoleManagement';
 import UserRoleAssignment from './pages/UserRoleAssignment';
@@ -22,37 +21,104 @@ import MyLeaves from './pages/MyLeaves';
 import LeaveApprovals from './pages/LeaveApprovals';
 
 import { NotificationProvider } from './contexts/NotificationContext';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
 
-function App() {
-    const [isAuthenticated, setIsAuthenticated] = useState(false);
-    const [user, setUser] = useState(null);
-
-    useEffect(() => {
-        const token = localStorage.getItem('token');
-        const userData = localStorage.getItem('user');
-
-        if (token && userData) {
-            setIsAuthenticated(true);
-            setUser(JSON.parse(userData));
-        }
-    }, []);
-
-    const handleLogin = (token, userData) => {
-        localStorage.setItem('token', token);
-        localStorage.setItem('user', JSON.stringify(userData));
-        setIsAuthenticated(true);
-        setUser(userData);
-    };
-
-    const handleLogout = () => {
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
-        setIsAuthenticated(false);
-        setUser(null);
-    };
+// Separation of concerns: AppRoutes handles the routing logic using the context
+const AppRoutes = () => {
+    const { isAuthenticated } = useAuth();
 
     return (
+        <Routes>
+            <Route
+                path="/login"
+                element={
+                    isAuthenticated ?
+                        <Navigate to="/dashboard" replace /> :
+                        <Login />
+                }
+            />
+
+            {/* Protected Routes */}
+            <Route
+                path="/*"
+                element={
+                    isAuthenticated ? (
+                        <DashboardLayout>
+                            <Routes>
+                                <Route
+                                    path="/dashboard"
+                                    element={
+                                        <ProtectedRoute requiredPermissions={['view_dashboard_admin', 'view_dashboard_hr', 'view_dashboard_employee']}>
+                                            <Dashboard />
+                                        </ProtectedRoute>
+                                    }
+                                />
+                                <Route
+                                    path="/employees"
+                                    element={
+                                        <ProtectedRoute requiredPermissions={['view_employees']}>
+                                            <Employees />
+                                        </ProtectedRoute>
+                                    }
+                                />
+                                <Route
+                                    path="/attendance"
+                                    element={
+                                        <ProtectedRoute requiredPermissions={['view_attendance_all', 'view_attendance_own']}>
+                                            <Attendance />
+                                        </ProtectedRoute>
+                                    }
+                                />
+                                <Route
+                                    path="/leaves"
+                                    element={
+                                        <ProtectedRoute requiredPermissions={['view_leaves_all', 'view_leaves_own']}>
+                                            <Leaves />
+                                        </ProtectedRoute>
+                                    }
+                                />
+                                <Route
+                                    path="/payroll"
+                                    element={
+                                        <ProtectedRoute requiredPermissions={['view_payroll_all', 'view_payroll_own']}>
+                                            <Payroll />
+                                        </ProtectedRoute>
+                                    }
+                                />
+                                <Route
+                                    path="/helpdesk"
+                                    element={
+                                        <ProtectedRoute requiredPermissions={['view_tickets_all', 'view_tickets_own']}>
+                                            <Helpdesk />
+                                        </ProtectedRoute>
+                                    }
+                                />
+
+                                <Route path="/" element={<Navigate to="/dashboard" replace />} />
+                            </Routes>
+                        </DashboardLayout>
+                    ) : (
+                        <Navigate to="/login" replace />
+                    )
+                }
+            />
+        </Routes>
+    );
+};
+
+function App() {
+    return (
         <NotificationProvider>
+<<<<<<< HEAD
+            <AuthProvider>
+                <ThemeProvider theme={theme}>
+                    <CssBaseline />
+                    <Router>
+                        <AppRoutes />
+                    </Router>
+                </ThemeProvider>
+            </AuthProvider>
+=======
             <ThemeProvider theme={theme}>
                 <CssBaseline />
                 <Router>
@@ -100,6 +166,7 @@ function App() {
                     </Routes>
                 </Router>
             </ThemeProvider>
+>>>>>>> 9fc0e80dc2cb38e7a503881861f4fa2812597cbc
         </NotificationProvider>
     );
 }

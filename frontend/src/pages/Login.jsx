@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { authAPI } from '../utils/api';
+import { useAuth } from '../contexts/AuthContext';
 import {
     Box,
     Card,
@@ -22,7 +23,8 @@ import {
 import { auth, provider } from '../firebase';
 import { signInWithPopup } from 'firebase/auth';
 
-function Login({ onLogin }) {
+const Login = () => {
+    const { login } = useAuth();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
@@ -37,8 +39,7 @@ function Login({ onLogin }) {
         try {
             const response = await authAPI.login(email, password);
             const { token, user } = response.data;
-
-            onLogin(token, user);
+            login(token, user);
         } catch (err) {
             setError(err.response?.data?.message || 'Login failed. Please try again.');
         } finally {
@@ -55,7 +56,7 @@ function Login({ onLogin }) {
 
             const response = await authAPI.googleLogin(idToken);
             const { token, user } = response.data;
-            onLogin(token, user);
+            login(token, user);
         } catch (err) {
             console.error("Google Login Error:", err);
             setError(err.response?.data?.message || err.message || 'Google Login failed');

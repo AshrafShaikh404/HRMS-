@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNotification } from '../contexts/NotificationContext';
+import { useAuth } from '../contexts/AuthContext';
 import { employeeAPI } from '../utils/api';
 import {
     Box,
@@ -38,7 +39,8 @@ import {
 } from '@mui/icons-material';
 import EmployeeForm from '../components/EmployeeForm';
 
-function Employees({ user }) {
+const Employees = () => {
+    const { user, hasPermission } = useAuth();
     const { showSuccess, showError } = useNotification();
     const [employees, setEmployees] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -141,7 +143,11 @@ function Employees({ user }) {
                         Manage your organization's employees
                     </Typography>
                 </Box>
+<<<<<<< HEAD
+                {hasPermission('manage_employees') && (
+=======
                 {['admin', 'hr'].includes(typeof user.role === 'string' ? user.role : user.role?.name?.toLowerCase()) && (
+>>>>>>> 9fc0e80dc2cb38e7a503881861f4fa2812597cbc
                     <Button
                         variant="contained"
                         startIcon={<AddIcon />}
@@ -207,7 +213,11 @@ function Employees({ user }) {
                             <TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }}>Department</TableCell>
                             <TableCell sx={{ display: { xs: 'none', lg: 'table-cell' } }}>Designation</TableCell>
                             <TableCell>Status</TableCell>
+<<<<<<< HEAD
+                            {hasPermission('manage_employees') && <TableCell>Actions</TableCell>}
+=======
                             {['admin', 'hr'].includes(typeof user.role === 'string' ? user.role : user.role?.name?.toLowerCase()) && <TableCell>Actions</TableCell>}
+>>>>>>> 9fc0e80dc2cb38e7a503881861f4fa2812597cbc
                         </TableRow>
                     </TableHead>
                     <TableBody>
@@ -227,7 +237,11 @@ function Employees({ user }) {
                                         size="small"
                                     />
                                 </TableCell>
+<<<<<<< HEAD
+                                {hasPermission('manage_employees') && (
+=======
                                 {['admin', 'hr'].includes(typeof user.role === 'string' ? user.role : user.role?.name?.toLowerCase()) && (
+>>>>>>> 9fc0e80dc2cb38e7a503881861f4fa2812597cbc
                                     <TableCell>
                                         <IconButton
                                             color="primary"
@@ -275,7 +289,6 @@ function Employees({ user }) {
                         employeeId={selectedEmployeeId}
                         onSuccess={handleFormSuccess}
                         onClose={() => setShowFormModal(false)}
-                        userRole={user.role}
                     />
                 </DialogContent>
             </Dialog>

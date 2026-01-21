@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNotification } from '../contexts/NotificationContext';
-import { helpdeskAPI, employeeAPI } from '../utils/api';
+import { useAuth } from '../contexts/AuthContext';
+import { helpdeskAPI } from '../utils/api';
 import {
     Box,
     Typography,
@@ -43,7 +44,8 @@ import {
     CheckCircle as ResolveIcon,
 } from '@mui/icons-material';
 
-function Helpdesk({ user }) {
+const Helpdesk = () => {
+    const { user } = useAuth();
     const { showSuccess, showError } = useNotification();
     const [tickets, setTickets] = useState([]);
     const [employees, setEmployees] = useState([]);

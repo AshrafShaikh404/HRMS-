@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNotification } from '../contexts/NotificationContext';
+import { useAuth } from '../contexts/AuthContext';
 import { attendanceAPI, employeeAPI } from '../utils/api';
 import { handleExport, generateFilename } from '../utils/exportHelper';
 import {
@@ -49,7 +50,8 @@ import AttendanceWidget from '../components/dashboard/AttendanceWidget';
 import AttendanceStats from '../components/AttendanceStats';
 import AttendanceInsights from '../components/AttendanceInsights';
 
-function Attendance({ user }) {
+const Attendance = () => {
+    const { user } = useAuth();
     const { showSuccess, showError } = useNotification();
     const [attendanceRecords, setAttendanceRecords] = useState([]);
     const [summary, setSummary] = useState(null);
