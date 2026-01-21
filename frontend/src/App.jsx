@@ -12,6 +12,11 @@ import Leaves from './pages/Leaves';
 import Payroll from './pages/Payroll';
 import Profile from './pages/Profile';
 import Helpdesk from './pages/Helpdesk';
+import RoleManagement from './pages/RoleManagement';
+import UserRoleAssignment from './pages/UserRoleAssignment';
+import Departments from './pages/Departments';
+import Designations from './pages/Designations';
+import Locations from './pages/Locations';
 
 import { NotificationProvider } from './contexts/NotificationContext';
 
@@ -72,6 +77,11 @@ function App() {
                                             <Route path="/leaves" element={<Leaves user={user} />} />
                                             <Route path="/payroll" element={<Payroll user={user} />} />
                                             <Route path="/helpdesk" element={<Helpdesk user={user} />} />
+                                            <Route path="/roles" element={<RoleManagement user={user} />} />
+                                            <Route path="/user-roles" element={<UserRoleAssignment user={user} />} />
+                                            <Route path="/departments" element={<Departments user={user} />} />
+                                            <Route path="/designations" element={<Designations user={user} />} />
+                                            <Route path="/locations" element={<Locations user={user} />} />
 
                                             <Route path="/" element={<Navigate to="/dashboard" replace />} />
                                         </Routes>

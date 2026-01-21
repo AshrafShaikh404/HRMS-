@@ -6,6 +6,8 @@ const {
     checkOut,
     getAttendance,
     manualEntry,
+    bulkAttendance,
+    toggleLock,
     generateReport,
     exportAttendanceCSV,
     exportAttendancePDF
@@ -26,6 +28,8 @@ router.get('/', getAttendance);
 
 // Manual entry (Admin/HR only)
 router.post('/manual-entry', authorize('admin', 'hr'), manualEntry);
+router.post('/bulk', authorize('admin', 'hr'), bulkAttendance);
+router.post('/lock', authorize('admin', 'hr'), toggleLock);
 
 // Generate report (Admin/HR only)
 router.get('/report', authorize('admin', 'hr'), generateReport);

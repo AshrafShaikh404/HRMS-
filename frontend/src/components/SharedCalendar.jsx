@@ -65,7 +65,8 @@ const SharedCalendar = ({ user, height = 'calc(100vh - 100px)', embedded = false
     };
 
     const handleDateClick = (arg) => {
-        if (!['admin', 'hr'].includes(user.role)) return;
+        const role = typeof user.role === 'string' ? user.role : user.role?.name?.toLowerCase();
+        if (!['admin', 'hr'].includes(role)) return;
         setSelectedEvent({ start: arg.date, end: arg.date });
         setModalOpen(true);
     };
@@ -166,7 +167,7 @@ const SharedCalendar = ({ user, height = 'calc(100vh - 100px)', embedded = false
                         Sync
                     </Button>
 
-                    {['admin', 'hr'].includes(user.role) && (
+                    {['admin', 'hr'].includes(typeof user.role === 'string' ? user.role : user.role?.name?.toLowerCase()) && (
                         <Button
                             variant="contained"
                             startIcon={<AddIcon />}
@@ -250,7 +251,7 @@ const SharedCalendar = ({ user, height = 'calc(100vh - 100px)', embedded = false
                                 week: 'Week',
                                 day: 'Day',
                             }}
-                            editable={['admin', 'hr'].includes(user.role)}
+                            editable={['admin', 'hr'].includes(typeof user.role === 'string' ? user.role : user.role?.name?.toLowerCase())}
                             selectable={true}
                             selectMirror={true}
                             dayMaxEvents={true}
@@ -291,7 +292,7 @@ const SharedCalendar = ({ user, height = 'calc(100vh - 100px)', embedded = false
                     fetchEvents();
                     setModalOpen(false);
                 }}
-                readOnly={!['admin', 'hr'].includes(user.role)}
+                readOnly={!['admin', 'hr'].includes(typeof user.role === 'string' ? user.role : user.role?.name?.toLowerCase())}
             />
         </Box>
     );

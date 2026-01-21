@@ -32,6 +32,14 @@ const attendanceSchema = new mongoose.Schema({
     updatedBy: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User'
+    },
+    markedBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User'
+    },
+    isLocked: {
+        type: Boolean,
+        default: false
     }
 }, {
     timestamps: true

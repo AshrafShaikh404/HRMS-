@@ -1,7 +1,397 @@
-const Leave = require('../models/Leave');
+const LeaveType = require('../models/LeaveType');
+const LeavePolicy = require('../models/LeavePolicy');
+const LeaveApplication = require('../models/LeaveApplication');
 const Employee = require('../models/Employee');
-const CalendarEvent = require('../models/CalendarEvent'); // Import CalendarEvent
+const User = require('../models/User');
 const Attendance = require('../models/Attendance');
+const CalendarEvent = require('../models/CalendarEvent');
+const mongoose = require('mongoose');
+
+// --- Leave Types Management ---
+exports.createLeaveType = async (req, res) => {
+    try {
+        const leaveType = await LeaveType.create(req.body);
+        res.status(201).json({ success: true, data: leaveType });
+    } catch (error) {
+        res.status(400).json({ success: false, message: error.message });
+    }
+};
+
+exports.getLeaveTypes = async (req, res) => {
+    try {
+        const types = await LeaveType.find({ isActive: true });
+        res.status(200).json({ success: true, data: types });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+exports.updateLeaveType = async (req, res) => {
+    try {
+        const leaveType = await LeaveType.findByIdAndUpdate(
+            req.params.id,
+            req.body,
+            { new: true, runValidators: true }
+        );
+        if (!leaveType) return res.status(404).json({ success: false, message: 'Leave type not found' });
+        res.status(200).json({ success: true, data: leaveType });
+    } catch (error) {
+        res.status(400).json({ success: false, message: error.message });
+    }
+};
+
+exports.deleteLeaveType = async (req, res) => {
+    try {
+        const leaveType = await LeaveType.findByIdAndUpdate(
+            req.params.id,
+            { isActive: false },
+            { new: true }
+        );
+        if (!leaveType) return res.status(404).json({ success: false, message: 'Leave type not found' });
+        res.status(200).json({ success: true, message: 'Leave type deactivated' });
+    } catch (error) {
+        res.status(400).json({ success: false, message: error.message });
+    }
+};
+
+// --- Leave Policies Management ---
+exports.createLeavePolicy = async (req, res) => {
+    try {
+        const policy = await LeavePolicy.create(req.body);
+        res.status(201).json({ success: true, data: policy });
+    } catch (error) {
+        res.status(400).json({ success: false, message: error.message });
+    }
+};
+
+exports.getLeavePolicies = async (req, res) => {
+    try {
+        const policies = await LeavePolicy.find({ isActive: true }).populate('leaveTypes.leaveType');
+        res.status(200).json({ success: true, data: policies });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+exports.updateLeavePolicy = async (req, res) => {
+    try {
+        const policy = await LeavePolicy.findByIdAndUpdate(
+            req.params.id,
+            req.body,
+            { new: true, runValidators: true }
+        ).populate('leaveTypes.leaveType');
+        if (!policy) return res.status(404).json({ success: false, message: 'Policy not found' });
+        res.status(200).json({ success: true, data: policy });
+    } catch (error) {
+        res.status(400).json({ success: false, message: error.message });
+    }
+};
+
+// --- Leave Application ---
+exports.applyLeave = async (req, res) => {
+    try {
+        const { leaveType, startDate, endDate, reason, halfDay, halfDaySession } = req.body;
+
+        // Get employee
+        const employee = await Employee.findOne({ userId: req.user._id });
+        if (!employee) {
+            return res.status(404).json({ success: false, message: 'Employee profile not found' });
+        }
+
+        // Calculate Duration
+        const start = new Date(startDate);
+        const end = new Date(endDate);
+
+        let totalDays;
+        if (halfDay) {
+            totalDays = 0.5;
+            if (start.getTime() !== end.getTime()) {
+                return res.status(400).json({ success: false, message: 'Half day leave must be on a single date' });
+            }
+        } else {
+            const diffTime = Math.abs(end - start);
+            totalDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+        }
+
+        // Validate Leave Type exists
+        const typeExists = await LeaveType.findById(leaveType);
+        if (!typeExists) {
+            return res.status(404).json({ success: false, message: 'Invalid Leave Type' });
+        }
+
+        // Check Balance (Phase 3 will have full implementation)
+        // For now: Basic check using first available policy
+        const policies = await LeavePolicy.find({ isActive: true }).populate('leaveTypes.leaveType');
+        if (policies.length > 0) {
+            const policy = policies[0];
+            const policyItem = policy.leaveTypes.find(lt => lt.leaveType._id.toString() === leaveType);
+
+            if (policyItem) {
+                // Calculate used days
+                const used = await LeaveApplication.aggregate([
+                    {
+                        $match: {
+                            employeeId: employee._id,
+                            leaveType: new mongoose.Types.ObjectId(leaveType),
+                            status: 'Approved'
+                        }
+                    },
+                    { $group: { _id: null, total: { $sum: '$totalDays' } } }
+                ]);
+
+                const usedDays = used.length ? used[0].total : 0;
+                const available = policyItem.quota - usedDays;
+
+                if (available < totalDays) {
+                    return res.status(400).json({
+                        success: false,
+                        message: `Insufficient leave balance. Available: ${available} days, Requested: ${totalDays} days`
+                    });
+                }
+            }
+        }
+
+        // Create Application
+        const application = await LeaveApplication.create({
+            employeeId: employee._id,
+            leaveType,
+            startDate,
+            endDate,
+            totalDays,
+            reason,
+            halfDay,
+            halfDaySession
+        });
+
+        const populated = await LeaveApplication.findById(application._id).populate('leaveType');
+
+        res.status(201).json({
+            success: true,
+            message: 'Leave application submitted successfully',
+            data: populated
+        });
+
+    } catch (error) {
+        console.error('Apply leave error:', error);
+        res.status(400).json({ success: false, message: error.message });
+    }
+};
+
+exports.getLeaveHistory = async (req, res) => {
+    try {
+        let query = {};
+
+        if (req.user.role.name === 'Employee' || req.user.role.name === 'employee') {
+            const employee = await Employee.findOne({ userId: req.user._id });
+            if (!employee) {
+                return res.status(404).json({ success: false, message: 'Employee profile not found' });
+            }
+            query.employeeId = employee._id;
+        } else if (req.query.employeeId) {
+            query.employeeId = req.query.employeeId;
+        }
+
+        if (req.query.status) {
+            query.status = req.query.status;
+        }
+
+        const history = await LeaveApplication.find(query)
+            .populate('leaveType')
+            .populate('employeeId', 'firstName lastName employeeCode')
+            .populate('approvedBy', 'name')
+            .sort({ createdAt: -1 });
+
+        res.status(200).json({ success: true, data: history });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+exports.getPendingApprovals = async (req, res) => {
+    try {
+        const pending = await LeaveApplication.find({ status: 'Pending' })
+            .populate('employeeId', 'firstName lastName employeeCode')
+            .populate('leaveType')
+            .sort({ createdAt: -1 });
+
+        res.status(200).json({ success: true, data: pending, count: pending.length });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+exports.updateLeaveStatus = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { status, rejectionReason } = req.body;
+
+        if (!['Approved', 'Rejected'].includes(status)) {
+            return res.status(400).json({ success: false, message: 'Invalid status' });
+        }
+
+        const application = await LeaveApplication.findById(id).populate('employeeId').populate('leaveType');
+        if (!application) {
+            return res.status(404).json({ success: false, message: 'Application not found' });
+        }
+
+        if (application.status !== 'Pending') {
+            return res.status(400).json({ success: false, message: `Leave is already ${application.status}` });
+        }
+
+        application.status = status;
+        application.approvedBy = req.user._id;
+        application.approvedAt = new Date();
+        if (status === 'Rejected') {
+            application.rejectionReason = rejectionReason;
+        }
+        await application.save();
+
+        // If approved and affectsAttendance, mark attendance
+        if (status === 'Approved' && application.leaveType.affectsAttendance) {
+            const fromDate = new Date(application.startDate);
+            const toDate = new Date(application.endDate);
+
+            for (let date = new Date(fromDate); date <= toDate; date.setDate(date.getDate() + 1)) {
+                const attendanceDate = new Date(date);
+                attendanceDate.setHours(0, 0, 0, 0);
+
+                await Attendance.findOneAndUpdate(
+                    {
+                        employeeId: application.employeeId._id,
+                        date: attendanceDate
+                    },
+                    {
+                        employeeId: application.employeeId._id,
+                        date: attendanceDate,
+                        status: 'leave',
+                        remarks: `${application.leaveType.name} approved`,
+                        updatedBy: req.user._id
+                    },
+                    { upsert: true, new: true }
+                );
+            }
+
+            // Create Calendar Event
+            try {
+                await CalendarEvent.create({
+                    title: `Leave: ${application.employeeId.firstName} ${application.employeeId.lastName}`,
+                    description: `Leave Type: ${application.leaveType.name}\nReason: ${application.reason}`,
+                    eventType: 'LEAVE',
+                    start: application.startDate,
+                    end: application.endDate,
+                    allDay: true,
+                    participants: [application.employeeId._id],
+                    visibility: 'TEAM',
+                    creator: req.user._id,
+                    source: 'HRMS'
+                });
+            } catch (calError) {
+                console.error('Failed to create calendar event:', calError);
+            }
+        }
+
+        res.status(200).json({ success: true, message: `Leave ${status.toLowerCase()} successfully`, data: application });
+    } catch (error) {
+        console.error('Update leave status error:', error);
+        res.status(400).json({ success: false, message: error.message });
+    }
+};
+
+exports.getLeaveBalance = async (req, res) => {
+    try {
+        const employee = await Employee.findOne({ userId: req.user._id });
+        if (!employee) {
+            return res.status(404).json({ success: false, message: 'Employee profile not found' });
+        }
+
+        const policies = await LeavePolicy.find({ isActive: true }).populate('leaveTypes.leaveType');
+        if (!policies.length) {
+            return res.status(200).json({ success: true, data: [] });
+        }
+
+        const policy = policies[0];
+        const balance = [];
+
+        for (const item of policy.leaveTypes) {
+            const used = await LeaveApplication.aggregate([
+                {
+                    $match: {
+                        employeeId: employee._id,
+                        leaveType: item.leaveType._id,
+                        status: 'Approved'
+                    }
+                },
+                { $group: { _id: null, total: { $sum: '$totalDays' } } }
+            ]);
+
+            const usedDays = used.length ? used[0].total : 0;
+
+            balance.push({
+                leaveType: item.leaveType,
+                quota: item.quota,
+                used: usedDays,
+                available: item.quota - usedDays
+            });
+        }
+
+        res.status(200).json({ success: true, data: balance });
+    } catch (error) {
+        console.error("Balance Error", error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+exports.cancelLeave = async (req, res) => {
+    try {
+        const application = await LeaveApplication.findById(req.params.id).populate('leaveType');
+        if (!application) {
+            return res.status(404).json({ success: false, message: 'Leave application not found' });
+        }
+
+        // Check authorization
+        const employee = await Employee.findOne({ userId: req.user._id });
+        const roleName = req.user.role.name || req.user.role;
+
+        if ((roleName === 'Employee' || roleName === 'employee') && employee) {
+            if (application.employeeId.toString() !== employee._id.toString()) {
+                return res.status(403).json({ success: false, message: 'Not authorized' });
+            }
+            if (application.status !== 'Pending') {
+                return res.status(400).json({ success: false, message: 'Can only cancel pending leaves' });
+            }
+        }
+
+        const originalStatus = application.status;
+        application.status = 'Cancelled';
+        await application.save();
+
+        // Remove attendance if was approved
+        if (originalStatus === 'Approved' && application.leaveType.affectsAttendance) {
+            await Attendance.deleteMany({
+                employeeId: application.employeeId,
+                date: { $gte: application.startDate, $lte: application.endDate },
+                status: 'leave'
+            });
+
+            try {
+                await CalendarEvent.deleteOne({
+                    eventType: 'LEAVE',
+                    participants: application.employeeId,
+                    start: application.startDate,
+                    end: application.endDate,
+                    source: 'HRMS'
+                });
+            } catch (calError) {
+                console.error('Failed to remove calendar event:', calError);
+            }
+        }
+
+        res.status(200).json({ success: true, message: 'Leave cancelled successfully' });
+    } catch (error) {
+        console.error('Cancel leave error:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
 
 // @desc    Get leave balance
 // @route   GET /api/v1/leaves/balance

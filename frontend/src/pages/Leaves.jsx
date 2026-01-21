@@ -60,7 +60,8 @@ function Leaves({ user }) {
     useEffect(() => {
         fetchLeaves();
         fetchLeaveBalance();
-        if (user.role === 'admin' || user.role === 'hr') {
+        const role = typeof user.role === 'string' ? user.role : user.role?.name?.toLowerCase();
+        if (role === 'admin' || role === 'hr') {
             fetchPendingLeaves();
         }
     }, [user]);
@@ -375,7 +376,7 @@ function Leaves({ user }) {
                     <Typography variant="h5" fontWeight={600}>
                         My Leave History
                     </Typography>
-                    {(user.role === 'admin' || user.role === 'hr') && (
+                    {['admin', 'hr'].includes(typeof user.role === 'string' ? user.role : user.role?.name?.toLowerCase()) && (
                         <Box sx={{ display: 'flex', gap: 1 }}>
                             <Button
                                 variant="outlined"

@@ -114,7 +114,12 @@ function Profile({ user }) {
                                         {employee?.designation || 'N/A'}
                                     </Typography>
                                     <Chip
-                                        label={userData?.role?.toUpperCase() || 'EMPLOYEE'}
+                                        label={
+                                            (typeof userData?.role === 'string'
+                                                ? userData.role
+                                                : userData?.role?.name || 'Employee'
+                                            ).toUpperCase()
+                                        }
                                         color="primary"
                                         size="small"
                                         sx={{ mt: 1 }}

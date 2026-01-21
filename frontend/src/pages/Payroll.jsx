@@ -51,7 +51,8 @@ function Payroll({ user }) {
 
     useEffect(() => {
         fetchPayslips();
-        if (user.role === 'admin' || user.role === 'hr') {
+        const role = typeof user.role === 'string' ? user.role : user.role?.name?.toLowerCase();
+        if (role === 'admin' || role === 'hr') {
             fetchEmployees();
         }
     }, [selectedMonth, selectedYear]);
@@ -67,7 +68,8 @@ function Payroll({ user }) {
 
     const fetchPayslips = async () => {
         try {
-            if (user.role === 'admin' || user.role === 'hr') {
+            const role = typeof user.role === 'string' ? user.role : user.role?.name?.toLowerCase();
+            if (role === 'admin' || role === 'hr') {
                 const response = await payrollAPI.getPayslips(selectedMonth, selectedYear);
                 setPayslips(response.data.data);
             } else {
@@ -165,7 +167,7 @@ function Payroll({ user }) {
                         Manage employee salary and payslips
                     </Typography>
                 </Box>
-                {(user.role === 'admin' || user.role === 'hr') && (
+                {['admin', 'hr'].includes(typeof user.role === 'string' ? user.role : user.role?.name?.toLowerCase()) && (
                     <Button
                         variant="contained"
                         startIcon={<SettingsIcon />}
@@ -218,7 +220,7 @@ function Payroll({ user }) {
                 >
                     Refresh
                 </Button>
-                {(user.role === 'admin' || user.role === 'hr') && (
+                {['admin', 'hr'].includes(typeof user.role === 'string' ? user.role : user.role?.name?.toLowerCase()) && (
                     <>
                         <Button
                             variant="outlined"
@@ -249,7 +251,7 @@ function Payroll({ user }) {
                 <Table sx={{ minWidth: 650 }}>
                     <TableHead>
                         <TableRow>
-                            {(user.role === 'admin' || user.role === 'hr') && <TableCell>Employee</TableCell>}
+                            {['admin', 'hr'].includes(typeof user.role === 'string' ? user.role : user.role?.name?.toLowerCase()) && <TableCell>Employee</TableCell>}
                             <TableCell>Month/Year</TableCell>
                             <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>Working Days</TableCell>
                             <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>Present Days</TableCell>
@@ -265,7 +267,7 @@ function Payroll({ user }) {
                     <TableBody>
                         {payslips.map((payslip) => (
                             <TableRow key={payslip._id} hover>
-                                {(user.role === 'admin' || user.role === 'hr') && (
+                                {['admin', 'hr'].includes(typeof user.role === 'string' ? user.role : user.role?.name?.toLowerCase()) && (
                                     <TableCell>
                                         <Typography fontWeight={600}>
                                             {payslip.employeeId?.firstName} {payslip.employeeId?.lastName}

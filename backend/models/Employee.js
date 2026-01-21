@@ -58,26 +58,63 @@ const employeeSchema = new mongoose.Schema({
         phone: String
     },
 
-    // Job Information
-    department: {
-        type: String,
-        required: [true, 'Department is required'],
-        enum: ['IT', 'HR', 'Finance', 'Operations', 'Sales', 'Marketing', 'Admin', 'Other']
+    // Employment Details (New Structure)
+    employmentDetails: {
+        employmentType: {
+            type: String,
+            enum: ['Full-time', 'Part-time', 'Contract', 'Intern', 'Consultant'],
+            default: 'Full-time'
+        },
+        employmentStatus: {
+            type: String,
+            enum: ['Active', 'On Probation', 'Notice Period', 'Resigned', 'Terminated'],
+            default: 'Active'
+        },
+        joiningDate: {
+            type: Date,
+            default: Date.now
+        },
+        probationPeriod: {
+            type: Number, // in days
+            default: 0
+        },
+        confirmationDate: {
+            type: Date
+        },
+        exitDate: {
+            type: Date
+        }
     },
-    designation: {
-        type: String,
-        required: [true, 'Designation is required']
+
+    // Job Information (New Structure)
+    jobInfo: {
+        department: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Department'
+        },
+        designation: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Designation'
+        },
+        location: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Location'
+        },
+        reportingManager: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'User'
+        },
+        workSchedule: {
+            type: String // Placeholder for Phase 3.1
+        }
     },
-    employmentType: {
-        type: String,
-        required: [true, 'Employment type is required'],
-        enum: ['Full-time', 'Part-time', 'Intern', 'Contract', 'Consultant']
-    },
-    joinDate: {
-        type: Date,
-        required: [true, 'Join date is required'],
-        default: Date.now
-    },
+
+    // Legacy Fields (Kept for backward compatibility - will be populated via hooks/controller)
+    department: { type: String },
+    designation: { type: String },
+    employmentType: { type: String },
+    joinDate: { type: Date },
+
     salary: {
         type: Number,
         required: [true, 'Salary is required'],
@@ -167,11 +204,41 @@ employeeSchema.virtual('fullName').get(function () {
 });
 
 // Auto-generate employee code before saving
-employeeSchema.pre('save', function (next) {
-    if (!this.isNew || this.employeeCode) return next();
+employeeSchema.pre('save', async function (next) {
+    // 1. Generate Employee Code
+    if (this.isNew && !this.employeeCode) {
+        const year = new Date().getFullYear();
+        this.employeeCode = `EMP-${year}-${Date.now()}`;
+    }
 
-    const year = new Date().getFullYear();
-    this.employeeCode = `EMP-${year}-${Date.now()}`;
+    // 2. Sync Legacy Fields (Fallback Mapping)
+    if (this.jobInfo) {
+        if (this.jobInfo.department) {
+            // If populated, take name, else if it's an ID, we might not have the name handy easily without a populate. 
+            // Ideally controller should set this, but let's try to handle it.
+            // For now, if modification happened to jobInfo, we should try to sync.
+            // But fetching DB inside pre-save for every save is expensive.
+            // Strategy: The controller is expected to pass the Names if needed, 
+            // but let's at least map the simple ones if we can, or relies on controller.
+            // Actually, the user requirement says "Keep them temporarily as virtuals or fallback mapping".
+            // If we rely on controller, we don't need logic here. 
+            // Let's implement a basic sync if the nested values are present and are strings (names) or if we can derive them.
+            // Since they are Refs (ObjectIds), we can't easily get the Name synchronously here without a query.
+            // So we will rely on the CONTROLLER to populate the legacy string fields for now, 
+            // OR we change legacy fields to be populated via populate().
+        }
+    }
+
+    // However, let's at least sync the dates/types which are simple values
+    if (this.employmentDetails) {
+        if (this.employmentDetails.employmentType) {
+            this.employmentType = this.employmentDetails.employmentType;
+        }
+        if (this.employmentDetails.joiningDate) {
+            this.joinDate = this.employmentDetails.joiningDate;
+        }
+    }
+
     next();
 });
 

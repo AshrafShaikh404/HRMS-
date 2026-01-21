@@ -1,4 +1,5 @@
 // Role-based authorization middleware
+// Role-based authorization middleware
 exports.authorize = (...roles) => {
     return (req, res, next) => {
         if (!req.user) {
@@ -8,14 +9,19 @@ exports.authorize = (...roles) => {
             });
         }
 
-        // Convert user role to lowercase for case-insensitive comparison
-        const userRole = req.user.role?.toLowerCase();
+        // Handle both string role (legacy) and object role (new)
+        let userRole = req.user.role;
+        if (typeof userRole === 'object' && userRole !== null) {
+            userRole = userRole.name;
+        }
+
+        userRole = userRole?.toLowerCase();
         const allowedRoles = roles.map(role => role.toLowerCase());
 
         if (!allowedRoles.includes(userRole)) {
             return res.status(403).json({
                 success: false,
-                message: `Role '${req.user.role}' is not authorized to access this route`
+                message: `Role '${userRole}' is not authorized to access this route`
             });
         }
 
@@ -27,7 +33,12 @@ exports.authorize = (...roles) => {
 exports.canAccessEmployee = (req, res, next) => {
     const requestedEmployeeId = req.params.id;
     const currentUser = req.user;
-    const userRole = currentUser.role?.toLowerCase();
+
+    let userRole = currentUser.role;
+    if (typeof userRole === 'object' && userRole !== null) {
+        userRole = userRole.name;
+    }
+    userRole = userRole?.toLowerCase();
 
     // Admin and HR can access all employee data
     if (userRole === 'admin' || userRole === 'hr') {

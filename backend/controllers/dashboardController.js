@@ -46,6 +46,26 @@ exports.getAdminDashboard = async (req, res) => {
             }
         ]);
 
+        // Last 7 days attendance trend
+        const last7Days = [];
+        for (let i = 6; i >= 0; i--) {
+            const date = new Date();
+            date.setDate(date.getDate() - i);
+            date.setHours(0, 0, 0, 0);
+            const nextDay = new Date(date);
+            nextDay.setDate(nextDay.getDate() + 1);
+
+            const dayAttendance = await Attendance.find({
+                date: { $gte: date, $lt: nextDay },
+                status: 'present'
+            });
+
+            last7Days.push({
+                date: date.toISOString().split('T')[0],
+                count: dayAttendance.length
+            });
+        }
+
         // Recent activities (last 5 employees added)
         const recentActivities = await Employee.find()
             .sort({ createdAt: -1 })
@@ -72,6 +92,7 @@ exports.getAdminDashboard = async (req, res) => {
                 },
                 pendingLeaves,
                 departmentBreakdown,
+                attendanceTrend: last7Days,
                 recentActivities: recentActivities.map(e => ({
                     name: `${e.firstName} ${e.lastName}`,
                     department: e.department,

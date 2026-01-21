@@ -141,7 +141,7 @@ function Employees({ user }) {
                         Manage your organization's employees
                     </Typography>
                 </Box>
-                {(user.role === 'admin' || user.role === 'hr') && (
+                {['admin', 'hr'].includes(typeof user.role === 'string' ? user.role : user.role?.name?.toLowerCase()) && (
                     <Button
                         variant="contained"
                         startIcon={<AddIcon />}
@@ -207,7 +207,7 @@ function Employees({ user }) {
                             <TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }}>Department</TableCell>
                             <TableCell sx={{ display: { xs: 'none', lg: 'table-cell' } }}>Designation</TableCell>
                             <TableCell>Status</TableCell>
-                            {(user.role === 'admin' || user.role === 'hr') && <TableCell>Actions</TableCell>}
+                            {['admin', 'hr'].includes(typeof user.role === 'string' ? user.role : user.role?.name?.toLowerCase()) && <TableCell>Actions</TableCell>}
                         </TableRow>
                     </TableHead>
                     <TableBody>
@@ -227,7 +227,7 @@ function Employees({ user }) {
                                         size="small"
                                     />
                                 </TableCell>
-                                {(user.role === 'admin' || user.role === 'hr') && (
+                                {['admin', 'hr'].includes(typeof user.role === 'string' ? user.role : user.role?.name?.toLowerCase()) && (
                                     <TableCell>
                                         <IconButton
                                             color="primary"

@@ -14,6 +14,7 @@ import {
     Toolbar,
     IconButton,
     alpha,
+    Collapse,
 } from '@mui/material';
 import TopHeader from './TopHeader';
 import {
@@ -28,9 +29,16 @@ import {
     SupportAgent as SupportIcon,
     CalendarToday as CalendarIcon,
     Work as WorkIcon,
+    Security as SecurityIcon,
+    Badge as BadgeIcon,
+    Business as BusinessIcon,
+    Category as CategoryIcon,
+    ExpandLess,
+    ExpandMore,
+    Place as LocationIcon,
 } from '@mui/icons-material';
 import { useState } from 'react';
-import Logo from '../assets/Admin.webp';
+// import Logo from '../assets/Admin.webp'; // Removed missing asset
 
 const DRAWER_WIDTH = 260;
 
@@ -43,32 +51,80 @@ function DashboardLayout({ user, onLogout, children }) {
     const isActive = (path) => location.pathname === path;
 
     const navItems = [
-        { path: '/dashboard', label: 'Dashboard', icon: <DashboardIcon />, roles: ['admin', 'hr', 'employee'] },
-        { path: '/profile', label: 'My Profile', icon: <ProfileIcon />, roles: ['employee'] },
-        { path: '/employees', label: 'Employees', icon: <PeopleIcon />, roles: ['admin', 'hr'] },
-        { path: '/attendance', label: 'Attendance', icon: <AttendanceIcon />, roles: ['admin', 'hr', 'employee'] },
-        { path: '/leaves', label: 'Leaves', icon: <LeavesIcon />, roles: ['admin', 'hr', 'employee'] },
-        { path: '/payroll', label: 'Payroll', icon: <PayrollIcon />, roles: ['admin', 'hr', 'employee'] },
-
-        { path: '/helpdesk', label: 'Helpdesk', icon: <SupportIcon />, roles: ['admin', 'hr', 'employee'] },
+        { path: '/dashboard', label: 'Dashboard', icon: <DashboardIcon />, permission: 'view_dashboard' },
+        { path: '/profile', label: 'My Profile', icon: <ProfileIcon /> }, // Always visible
+        { path: '/employees', label: 'Employees', icon: <PeopleIcon />, permission: 'view_employees' },
+        { path: '/attendance', label: 'Attendance', icon: <AttendanceIcon />, permission: 'view_attendance' },
+        { path: '/leaves', label: 'Leaves', icon: <LeavesIcon />, permission: 'view_leaves' },
+        { path: '/payroll', label: 'Payroll', icon: <PayrollIcon />, permission: 'view_payroll' },
+        { path: '/helpdesk', label: 'Helpdesk', icon: <SupportIcon />, permission: 'view_helpdesk' },
+        {
+            label: 'Access Control',
+            icon: <SecurityIcon />,
+            permission: 'manage_access_control',
+            children: [
+                { path: '/roles', label: 'Roles', icon: <SecurityIcon /> },
+                { path: '/user-roles', label: 'User Roles', icon: <PeopleIcon /> },
+            ]
+        },
+        {
+            label: 'Organization',
+            icon: <BusinessIcon />, // Need to import BusinessIcon
+            permission: 'manage_departments', // Both depts and designations fall under this high level or we use manage_designations check inside.
+            // But usually menu item permission controls visibility.
+            // Let's assume manage_departments covers visibility of "Organization", and we check inner permissions.
+            // Actually, we should probably check if user has EITHER manage_departments OR manage_designations to show "Organization".
+            // For now, let's keep it simple: Organization visible if manage_departments (which Admins have).
+            children: [
+                { path: '/departments', label: 'Departments', icon: <CategoryIcon /> },
+                { path: '/designations', label: 'Designations', icon: <BadgeIcon /> },
+                { path: '/locations', label: 'Work Locations', icon: <LocationIcon /> },
+            ]
+        },
     ];
 
-    const visibleNavItems = navItems.filter(item => item.roles.includes(user.role));
+    const hasPermission = (permission) => {
+        if (!permission) return true;
+
+        const role = user.role;
+        const roleName = typeof role === 'string' ? role : role?.name;
+
+        // Admin bypass
+        if (roleName?.toLowerCase() === 'admin') return true;
+
+        // For legacy string roles (hr, employee), mapped to basic permissions
+        if (typeof role === 'string') {
+            if (role === 'hr') {
+                return ['view_dashboard', 'view_employees', 'view_attendance', 'view_leaves', 'view_payroll', 'view_helpdesk'].includes(permission);
+            }
+            if (role === 'employee') {
+                return ['view_dashboard', 'view_attendance', 'view_leaves', 'view_helpdesk'].includes(permission);
+            }
+            return false;
+        }
+
+        // For new object roles
+        const permissions = role?.permissions || [];
+        return permissions.some(p => p.name === permission);
+    };
+
+    const visibleNavItems = navItems.filter(item => hasPermission(item.permission));
 
     const handleDrawerToggle = () => {
         setMobileOpen(!mobileOpen);
+    };
+
+    const [openSubmenu, setOpenSubmenu] = useState('');
+
+    const handleSubmenuToggle = (label) => {
+        setOpenSubmenu(openSubmenu === label ? '' : label);
     };
 
     const drawerContent = (
         <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
             {/* Header */}
             <Box sx={{ p: 3, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1.5 }}>
-                <Box
-                    component="img"
-                    src={Logo} // Use imported Logo
-                    alt="Logo"
-                    sx={{ height: 32, objectFit: 'contain' }}
-                />
+                <BusinessIcon sx={{ fontSize: 32, color: 'primary.main' }} />
                 <Typography variant="h5" color="text.primary" fontWeight={800} sx={{ letterSpacing: -0.5 }}>
                     AsVHR
                 </Typography>
@@ -77,42 +133,90 @@ function DashboardLayout({ user, onLogout, children }) {
             {/* Navigation */}
             <List sx={{ flex: 1, px: 2, py: 2 }}>
                 {visibleNavItems.map((item) => (
-                    <ListItem key={item.path} disablePadding sx={{ mb: 1, px: 2 }}>
-                        <ListItemButton
-                            component={Link}
-                            to={item.path}
-                            onClick={() => isMobile && setMobileOpen(false)}
-                            sx={{
-                                borderRadius: 2,
-                                py: 1.5,
-                                backgroundColor: isActive(item.path) ? (theme) => alpha(theme.palette.primary.main, 0.08) : 'transparent',
-                                color: isActive(item.path) ? 'primary.main' : 'text.secondary',
-                                '&:hover': {
-                                    backgroundColor: isActive(item.path)
-                                        ? (theme) => alpha(theme.palette.primary.main, 0.12)
-                                        : (theme) => alpha(theme.palette.text.primary, 0.04),
-                                    color: isActive(item.path) ? 'primary.main' : 'text.primary',
-                                },
-                                '& .MuiListItemIcon-root': {
-                                    color: isActive(item.path) ? 'primary.main' : 'inherit',
-                                },
-                            }}
-                        >
-                            <ListItemIcon sx={{
-                                color: 'inherit',
-                                minWidth: 40
-                            }}>
-                                {item.icon}
-                            </ListItemIcon>
-                            <ListItemText
-                                primary={item.label}
-                                primaryTypographyProps={{
-                                    fontWeight: isActive(item.path) ? 600 : 500,
-                                    fontSize: '0.9rem'
+                    <Box key={item.label}>
+                        <ListItem disablePadding sx={{ mb: 0.5, px: 1 }}>
+                            <ListItemButton
+                                component={item.path ? Link : 'div'}
+                                to={item.path}
+                                onClick={() => {
+                                    if (item.children) {
+                                        handleSubmenuToggle(item.label);
+                                    } else if (isMobile) {
+                                        setMobileOpen(false);
+                                    }
                                 }}
-                            />
-                        </ListItemButton>
-                    </ListItem>
+                                sx={{
+                                    borderRadius: 2,
+                                    py: 1.25,
+                                    backgroundColor: item.path && isActive(item.path) ? (theme) => alpha(theme.palette.primary.main, 0.08) : 'transparent',
+                                    color: item.path && isActive(item.path) ? 'primary.main' : 'text.secondary',
+                                    '&:hover': {
+                                        backgroundColor: item.path && isActive(item.path)
+                                            ? (theme) => alpha(theme.palette.primary.main, 0.12)
+                                            : (theme) => alpha(theme.palette.text.primary, 0.04),
+                                        color: item.path && isActive(item.path) ? 'primary.main' : 'text.primary',
+                                    },
+                                    '& .MuiListItemIcon-root': {
+                                        color: item.path && isActive(item.path) ? 'primary.main' : 'inherit',
+                                    },
+                                }}
+                            >
+                                <ListItemIcon sx={{
+                                    color: 'inherit',
+                                    minWidth: 40
+                                }}>
+                                    {item.icon}
+                                </ListItemIcon>
+                                <ListItemText
+                                    primary={item.label}
+                                    primaryTypographyProps={{
+                                        fontWeight: item.path && isActive(item.path) ? 600 : 500,
+                                        fontSize: '0.875rem'
+                                    }}
+                                />
+                                {item.children && (openSubmenu === item.label ? <ExpandLess /> : <ExpandMore />)}
+                            </ListItemButton>
+                        </ListItem>
+
+                        {item.children && (
+                            <Collapse in={openSubmenu === item.label} timeout="auto" unmountOnExit>
+                                <List component="div" disablePadding sx={{ pl: 3 }}>
+                                    {item.children.map((child) => (
+                                        <ListItem key={child.path} disablePadding sx={{ mb: 0.5 }}>
+                                            <ListItemButton
+                                                component={Link}
+                                                to={child.path}
+                                                onClick={() => isMobile && setMobileOpen(false)}
+                                                sx={{
+                                                    borderRadius: 2,
+                                                    py: 1,
+                                                    backgroundColor: isActive(child.path) ? (theme) => alpha(theme.palette.primary.main, 0.08) : 'transparent',
+                                                    color: isActive(child.path) ? 'primary.main' : 'text.secondary',
+                                                    '&:hover': {
+                                                        backgroundColor: isActive(child.path)
+                                                            ? (theme) => alpha(theme.palette.primary.main, 0.12)
+                                                            : (theme) => alpha(theme.palette.text.primary, 0.04),
+                                                        color: isActive(child.path) ? 'primary.main' : 'text.primary',
+                                                    },
+                                                }}
+                                            >
+                                                <ListItemIcon sx={{ color: 'inherit', minWidth: 32 }}>
+                                                    {child.icon}
+                                                </ListItemIcon>
+                                                <ListItemText
+                                                    primary={child.label}
+                                                    primaryTypographyProps={{
+                                                        fontSize: '0.825rem',
+                                                        fontWeight: isActive(child.path) ? 600 : 400
+                                                    }}
+                                                />
+                                            </ListItemButton>
+                                        </ListItem>
+                                    ))}
+                                </List>
+                            </Collapse>
+                        )}
+                    </Box>
                 ))}
             </List>
 
