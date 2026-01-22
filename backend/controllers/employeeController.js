@@ -543,3 +543,35 @@ exports.verifyDocument = async (req, res) => {
         });
     }
 };
+
+// @desc    Get my employee profile
+// @route   GET /api/v1/employees/me
+// @access  Private
+exports.getMyProfile = async (req, res) => {
+    try {
+        const employee = await Employee.findOne({ userId: req.user._id })
+            .populate('jobInfo.department')
+            .populate('jobInfo.designation')
+            .populate('jobInfo.location')
+            .populate('jobInfo.reportingManager');
+
+        if (!employee) {
+            return res.status(404).json({
+                success: false,
+                message: 'Employee profile not found. Please contact HR.'
+            });
+        }
+
+        res.status(200).json({
+            success: true,
+            data: employee
+        });
+    } catch (error) {
+        console.error('Get my profile error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error fetching employee profile',
+            error: error.message
+        });
+    }
+};

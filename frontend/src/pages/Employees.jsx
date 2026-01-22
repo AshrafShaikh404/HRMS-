@@ -143,11 +143,7 @@ const Employees = () => {
                         Manage your organization's employees
                     </Typography>
                 </Box>
-<<<<<<< HEAD
                 {hasPermission('manage_employees') && (
-=======
-                {['admin', 'hr'].includes(typeof user.role === 'string' ? user.role : user.role?.name?.toLowerCase()) && (
->>>>>>> 9fc0e80dc2cb38e7a503881861f4fa2812597cbc
                     <Button
                         variant="contained"
                         startIcon={<AddIcon />}
@@ -213,13 +209,9 @@ const Employees = () => {
                             <TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }}>Department</TableCell>
                             <TableCell sx={{ display: { xs: 'none', lg: 'table-cell' } }}>Designation</TableCell>
                             <TableCell>Status</TableCell>
-<<<<<<< HEAD
                             {hasPermission('manage_employees') && <TableCell>Actions</TableCell>}
-=======
-                            {['admin', 'hr'].includes(typeof user.role === 'string' ? user.role : user.role?.name?.toLowerCase()) && <TableCell>Actions</TableCell>}
->>>>>>> 9fc0e80dc2cb38e7a503881861f4fa2812597cbc
-                        </TableRow>
-                    </TableHead>
+                        </TableRow >
+                    </TableHead >
                     <TableBody>
                         {filteredEmployees.map((emp) => (
                             <TableRow key={emp._id} hover>
@@ -237,11 +229,7 @@ const Employees = () => {
                                         size="small"
                                     />
                                 </TableCell>
-<<<<<<< HEAD
                                 {hasPermission('manage_employees') && (
-=======
-                                {['admin', 'hr'].includes(typeof user.role === 'string' ? user.role : user.role?.name?.toLowerCase()) && (
->>>>>>> 9fc0e80dc2cb38e7a503881861f4fa2812597cbc
                                     <TableCell>
                                         <IconButton
                                             color="primary"
@@ -259,21 +247,24 @@ const Employees = () => {
                                             <DeleteIcon />
                                         </IconButton>
                                     </TableCell>
-                                )}
-                            </TableRow>
+                                )
+                                }
+                            </TableRow >
                         ))}
-                    </TableBody>
-                </Table>
+                    </TableBody >
+                </Table >
 
-                {filteredEmployees.length === 0 && (
-                    <Box sx={{ p: 4, textAlign: 'center' }}>
-                        <Typography color="text.secondary">No employees found</Typography>
-                    </Box>
-                )}
-            </TableContainer>
+                {
+                    filteredEmployees.length === 0 && (
+                        <Box sx={{ p: 4, textAlign: 'center' }}>
+                            <Typography color="text.secondary">No employees found</Typography>
+                        </Box>
+                    )
+                }
+            </TableContainer >
 
             {/* Employee Form Dialog */}
-            <Dialog
+            < Dialog
                 open={showFormModal}
                 onClose={() => setShowFormModal(false)}
                 maxWidth="md"
@@ -291,7 +282,7 @@ const Employees = () => {
                         onClose={() => setShowFormModal(false)}
                     />
                 </DialogContent>
-            </Dialog>
+            </Dialog >
         </Box >
     );
 }

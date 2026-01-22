@@ -12,8 +12,7 @@ const roleSchema = new mongoose.Schema({
         trim: true
     },
     permissions: [{
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Permission'
+        type: String
     }],
     isSystem: {
         type: Boolean,

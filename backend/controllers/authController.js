@@ -120,6 +120,8 @@ exports.login = async (req, res) => {
         // Generate token
         const token = generateToken(user._id);
 
+        const roleName = user.role.name.toLowerCase();
+
         res.status(200).json({
             success: true,
             message: 'Login successful',
@@ -128,10 +130,8 @@ exports.login = async (req, res) => {
                 _id: user._id,
                 name: user.name,
                 email: user.email,
-                name: user.name,
-                email: user.email,
                 role: user.role,
-                permissions: PERMISSIONS[user.role] || []
+                permissions: PERMISSIONS[roleName] || []
             },
             expiresIn: process.env.JWT_EXPIRE || '7d'
         });
@@ -246,6 +246,8 @@ exports.googleLogin = async (req, res) => {
         user.lastLogin = new Date();
         await user.save();
 
+        const roleName = user.role.name ? user.role.name.toLowerCase() : 'employee';
+
         res.status(200).json({
             success: true,
             message: 'Google Login successful',
@@ -255,10 +257,8 @@ exports.googleLogin = async (req, res) => {
                 name: user.name,
                 email: user.email,
                 role: user.role,
-                email: user.email,
-                role: user.role,
                 picture,
-                permissions: PERMISSIONS[user.role] || []
+                permissions: PERMISSIONS[roleName] || []
             }
         });
 
@@ -381,6 +381,45 @@ exports.logout = async (req, res) => {
         res.status(500).json({
             success: false,
             message: 'Error logging out',
+            error: error.message
+        });
+    }
+};
+
+// @desc    Get current user
+// @route   GET /api/v1/auth/me
+// @access  Private
+exports.getMe = async (req, res) => {
+    try {
+        const user = await User.findById(req.user._id).populate('role');
+
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: 'User not found'
+            });
+        }
+
+        const roleName = user.role?.name ? user.role.name.toLowerCase() : 'employee';
+
+        res.status(200).json({
+            success: true,
+            data: {
+                user: {
+                    _id: user._id,
+                    name: user.name,
+                    email: user.email,
+                    role: user.role,
+                    status: user.status,
+                    permissions: PERMISSIONS[roleName] || []
+                }
+            }
+        });
+    } catch (error) {
+        console.error('Get me error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error fetching user data',
             error: error.message
         });
     }

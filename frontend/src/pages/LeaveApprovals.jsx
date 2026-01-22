@@ -44,8 +44,11 @@ function LeaveApprovals() {
         setLoading(true);
         try {
             const response = await leaveAPI.getPendingApprovals();
-            setPendingLeaves(response.data.data);
+            // Ensure data is array safely
+            const data = response.data?.data;
+            setPendingLeaves(Array.isArray(data) ? data : []);
         } catch (error) {
+            console.error('Error fetching pending approvals:', error);
             showError('Failed to fetch pending approvals');
         } finally {
             setLoading(false);
@@ -109,7 +112,7 @@ function LeaveApprovals() {
                             Pending Approvals
                         </Typography>
                         <Typography variant="h3" fontWeight="700" color="warning.main">
-                            {pendingLeaves.length}
+                            {pendingLeaves?.length || 0}
                         </Typography>
                     </Card>
                 </Grid>
@@ -131,7 +134,7 @@ function LeaveApprovals() {
                             </TableRow>
                         </TableHead>
                         <TableBody>
-                            {pendingLeaves.length === 0 ? (
+                            {!pendingLeaves || pendingLeaves.length === 0 ? (
                                 <TableRow>
                                     <TableCell colSpan={7} align="center" sx={{ py: 5, color: 'text.secondary' }}>
                                         No pending leave approvals
@@ -152,8 +155,8 @@ function LeaveApprovals() {
                                         </TableCell>
                                         <TableCell>
                                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                                <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: leave.leaveType?.color }} />
-                                                {leave.leaveType?.name}
+                                                <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: leave.leaveType?.color || 'text.disabled' }} />
+                                                {leave.leaveType?.name || 'Unknown Type'}
                                             </Box>
                                         </TableCell>
                                         <TableCell>{new Date(leave.startDate).toLocaleDateString()}</TableCell>

@@ -6,13 +6,16 @@ const {
     getPayslips,
     getPayslip,
     getPayrollReports,
-    updatePayrollStatus,
+    approvePayroll,
+    lockPayroll,
+    downloadPayslip,
     exportPayrollCSV,
     exportPayrollPDF
 } = require('../controllers/payrollController');
 
 const { protect } = require('../middleware/auth.middleware');
 const { authorize } = require('../middleware/authorize.middleware');
+const { checkPermission } = require('../middleware/checkPermission');
 
 // All routes require authentication
 router.use(protect);
@@ -29,8 +32,12 @@ router.get('/payslip/:employeeId/:month/:year', getPayslip);
 // Get payroll reports (Admin/HR only)
 router.get('/reports', authorize('admin', 'hr'), getPayrollReports);
 
-// Update payroll status (Admin/HR only)
-router.put('/:id/status', authorize('admin', 'hr'), updatePayrollStatus);
+// Approval Workflow
+router.put('/:id/approve', protect, checkPermission('approve_payroll'), approvePayroll);
+router.put('/:id/lock', protect, checkPermission('approve_payroll'), lockPayroll);
+
+// Download
+router.get('/:id/download', protect, checkPermission('view_payroll_own'), downloadPayslip);
 
 // Export routes (Admin/HR only)
 router.get('/export/csv', authorize('admin', 'hr'), exportPayrollCSV);

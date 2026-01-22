@@ -19,6 +19,11 @@ import Locations from './pages/Locations';
 import LeaveSettings from './pages/LeaveSettings';
 import MyLeaves from './pages/MyLeaves';
 import LeaveApprovals from './pages/LeaveApprovals';
+import LeaveCalendar from './pages/LeaveCalendar';
+import MyPayslips from './pages/MyPayslips';
+import Profile from './pages/Profile';
+import Goals from './pages/Goals';
+import ReviewCycleSettings from './pages/ReviewCycleSettings';
 
 import { NotificationProvider } from './contexts/NotificationContext';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
@@ -54,6 +59,14 @@ const AppRoutes = () => {
                                     }
                                 />
                                 <Route
+                                    path="/profile"
+                                    element={
+                                        <ProtectedRoute requiredPermissions={['view_profile']}>
+                                            <Profile />
+                                        </ProtectedRoute>
+                                    }
+                                />
+                                <Route
                                     path="/employees"
                                     element={
                                         <ProtectedRoute requiredPermissions={['view_employees']}>
@@ -80,8 +93,16 @@ const AppRoutes = () => {
                                 <Route
                                     path="/payroll"
                                     element={
-                                        <ProtectedRoute requiredPermissions={['view_payroll_all', 'view_payroll_own']}>
+                                        <ProtectedRoute requiredPermissions={['view_payroll_all']}>
                                             <Payroll />
+                                        </ProtectedRoute>
+                                    }
+                                />
+                                <Route
+                                    path="/my-payslips"
+                                    element={
+                                        <ProtectedRoute requiredPermissions={['view_payroll_own']}>
+                                            <MyPayslips />
                                         </ProtectedRoute>
                                     }
                                 />
@@ -90,6 +111,97 @@ const AppRoutes = () => {
                                     element={
                                         <ProtectedRoute requiredPermissions={['view_tickets_all', 'view_tickets_own']}>
                                             <Helpdesk />
+                                        </ProtectedRoute>
+                                    }
+                                />
+                                {/* Admin/HR Routes */}
+                                <Route
+                                    path="/roles"
+                                    element={
+                                        <ProtectedRoute requiredPermissions={['manage_users']}>
+                                            <RoleManagement />
+                                        </ProtectedRoute>
+                                    }
+                                />
+                                <Route
+                                    path="/user-roles"
+                                    element={
+                                        <ProtectedRoute requiredPermissions={['manage_users']}>
+                                            <UserRoleAssignment />
+                                        </ProtectedRoute>
+                                    }
+                                />
+                                <Route
+                                    path="/departments"
+                                    element={
+                                        <ProtectedRoute requiredPermissions={['manage_employees']}>
+                                            <Departments />
+                                        </ProtectedRoute>
+                                    }
+                                />
+                                <Route
+                                    path="/designations"
+                                    element={
+                                        <ProtectedRoute requiredPermissions={['manage_employees']}>
+                                            <Designations />
+                                        </ProtectedRoute>
+                                    }
+                                />
+                                <Route
+                                    path="/locations"
+                                    element={
+                                        <ProtectedRoute requiredPermissions={['manage_employees']}>
+                                            <Locations />
+                                        </ProtectedRoute>
+                                    }
+                                />
+                                <Route
+                                    path="/leave-settings"
+                                    element={
+                                        <ProtectedRoute requiredPermissions={['manage_leaves']}>
+                                            <LeaveSettings />
+                                        </ProtectedRoute>
+                                    }
+                                />
+                                <Route
+                                    path="/my-leaves"
+                                    element={
+                                        <ProtectedRoute requiredPermissions={['view_leaves_own']}>
+                                            <MyLeaves />
+                                        </ProtectedRoute>
+                                    }
+                                />
+                                <Route
+                                    path="/leave-approvals"
+                                    element={
+                                        <ProtectedRoute requiredPermissions={['manage_leaves']}>
+                                            <LeaveApprovals />
+                                        </ProtectedRoute>
+                                    }
+                                />
+                                <Route
+                                    path="/leave-calendar"
+                                    element={
+                                        <ProtectedRoute requiredPermissions={['view_leaves_all', 'view_leaves_own']}>
+                                            <LeaveCalendar />
+                                        </ProtectedRoute>
+                                    }
+                                />
+
+
+                                <Route
+                                    path="/goals"
+                                    element={
+                                        <ProtectedRoute requiredPermissions={['manage_employees']}>
+                                            <Goals />
+                                        </ProtectedRoute>
+                                    }
+                                />
+                                <Route
+                                    path="/review-cycles"
+                                    element={
+                                        <ProtectedRoute requiredPermissions={['manage_employees']}>
+                                            <ReviewCycleSettings />
                                         </ProtectedRoute>
                                     }
                                 />
@@ -109,7 +221,6 @@ const AppRoutes = () => {
 function App() {
     return (
         <NotificationProvider>
-<<<<<<< HEAD
             <AuthProvider>
                 <ThemeProvider theme={theme}>
                     <CssBaseline />
@@ -118,55 +229,6 @@ function App() {
                     </Router>
                 </ThemeProvider>
             </AuthProvider>
-=======
-            <ThemeProvider theme={theme}>
-                <CssBaseline />
-                <Router>
-                    <Routes>
-                        <Route
-                            path="/login"
-                            element={
-                                isAuthenticated ?
-                                    <Navigate to="/dashboard" replace /> :
-                                    <Login onLogin={handleLogin} />
-                            }
-                        />
-
-                        {/* Protected Routes */}
-                        <Route
-                            path="/*"
-                            element={
-                                isAuthenticated ? (
-                                    <DashboardLayout user={user} onLogout={handleLogout}>
-                                        <Routes>
-                                            <Route path="/dashboard" element={<Dashboard user={user} />} />
-                                            <Route path="/profile" element={<Profile user={user} />} />
-                                            <Route path="/employees" element={<Employees user={user} />} />
-                                            <Route path="/attendance" element={<Attendance user={user} />} />
-                                            <Route path="/leaves" element={<Leaves user={user} />} />
-                                            <Route path="/payroll" element={<Payroll user={user} />} />
-                                            <Route path="/helpdesk" element={<Helpdesk user={user} />} />
-                                            <Route path="/roles" element={<RoleManagement user={user} />} />
-                                            <Route path="/user-roles" element={<UserRoleAssignment user={user} />} />
-                                            <Route path="/departments" element={<Departments user={user} />} />
-                                            <Route path="/designations" element={<Designations user={user} />} />
-                                            <Route path="/locations" element={<Locations user={user} />} />
-                                            <Route path="/leave-settings" element={<LeaveSettings user={user} />} />
-                                            <Route path="/my-leaves" element={<MyLeaves user={user} />} />
-                                            <Route path="/leave-approvals" element={<LeaveApprovals user={user} />} />
-
-                                            <Route path="/" element={<Navigate to="/dashboard" replace />} />
-                                        </Routes>
-                                    </DashboardLayout>
-                                ) : (
-                                    <Navigate to="/login" replace />
-                                )
-                            }
-                        />
-                    </Routes>
-                </Router>
-            </ThemeProvider>
->>>>>>> 9fc0e80dc2cb38e7a503881861f4fa2812597cbc
         </NotificationProvider>
     );
 }

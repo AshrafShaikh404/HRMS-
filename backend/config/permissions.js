@@ -23,6 +23,7 @@ const PERMISSIONS = {
         'view_leaves_all',
         'view_payroll_own', // HR uses own payroll too?
         'view_payroll_all', // Can view others
+        'approve_payroll',
         'manage_tickets',
         'view_tickets_all',
         'view_holidays'
@@ -40,6 +41,7 @@ const PERMISSIONS = {
         'view_leaves_all',
         'manage_payroll',
         'view_payroll_all',
+        'approve_payroll',
         'manage_tickets',
         'view_tickets_all',
         'manage_settings',

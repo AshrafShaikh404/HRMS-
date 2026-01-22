@@ -37,8 +37,11 @@ router.post('/policies', authorize('admin', 'hr'), createLeavePolicy);
 router.get('/policies', getLeavePolicies);
 router.put('/policies/:id', authorize('admin', 'hr'), updateLeavePolicy);
 
+const { initializeBalances } = require('../controllers/leaveBalanceController');
+
 // Leave Balance
 router.get('/balance', getLeaveBalance);
+router.post('/balance/initialize', authorize('admin'), initializeBalances);
 
 // Apply for leave
 router.post('/apply', applyLeave);

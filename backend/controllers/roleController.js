@@ -58,7 +58,7 @@ exports.createRole = async (req, res) => {
             permissions
         });
 
-        const populatedRole = await Role.findById(role._id).populate('permissions');
+        const populatedRole = await Role.findById(role._id);
 
         res.status(201).json({
             success: true,
@@ -112,7 +112,7 @@ exports.updateRole = async (req, res) => {
 
         await role.save();
 
-        const updatedRole = await Role.findById(role._id).populate('permissions');
+        const updatedRole = await Role.findById(role._id);
 
         res.status(200).json({
             success: true,

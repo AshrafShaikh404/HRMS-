@@ -29,12 +29,8 @@ import {
     CheckCircle as CheckCircleIcon,
     Visibility as VisibilityIcon
 } from '@mui/icons-material';
-<<<<<<< HEAD
-import { employeeAPI } from '../utils/api';
-import { useAuth } from '../contexts/AuthContext';
-=======
 import { employeeAPI, departmentAPI, designationAPI, locationAPI } from '../utils/api';
->>>>>>> 9fc0e80dc2cb38e7a503881861f4fa2812597cbc
+import { useAuth } from '../contexts/AuthContext';
 import { useNotification } from '../contexts/NotificationContext';
 
 const steps = ['Personal Details', 'Job Information', 'Statutory Details', 'Documents'];
@@ -599,44 +595,6 @@ const EmployeeForm = ({ employeeId, onSuccess, onClose }) => {
                                 ))}
                             </Grid>
 
-<<<<<<< HEAD
-                        {/* Existing Documents */}
-                        {isEditMode && documents.length > 0 && (
-                            <Box>
-                                <Typography fontWeight="bold" gutterBottom>Uploaded Documents:</Typography>
-                                <Grid container spacing={2}>
-                                    {documents.map(doc => (
-                                        <Grid item xs={12} key={doc._id}>
-                                            <Paper sx={{ p: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                                <Box>
-                                                    <Typography fontWeight={600}>{doc.name}</Typography>
-                                                    <Typography variant="caption" color="text.secondary">
-                                                        Uploaded: {new Date(doc.uploadDate).toLocaleDateString()}
-                                                    </Typography>
-                                                    <br />
-                                                    <Chip
-                                                        label={doc.status}
-                                                        color={doc.status === 'Verified' ? 'success' : doc.status === 'Rejected' ? 'error' : 'warning'}
-                                                        size="small"
-                                                        sx={{ mt: 1 }}
-                                                    />
-                                                </Box>
-                                                <Box>
-                                                    <IconButton href={`http://localhost:5001/${doc.filePath}`} target="_blank">
-                                                        <VisibilityIcon />
-                                                    </IconButton>
-
-                                                    {/* Verification Controls (Permission based) */}
-                                                    {hasPermission('manage_employees') && doc.status === 'Pending' && (
-                                                        <>
-                                                            <Button size="small" color="success" onClick={() => handleVerifyDoc(doc._id, 'Verified')}>Verify</Button>
-                                                            <Button size="small" color="error" onClick={() => handleVerifyDoc(doc._id, 'Rejected')}>Reject</Button>
-                                                        </>
-                                                    )}
-                                                </Box>
-                                            </Paper>
-                                        </Grid>
-=======
                             {/* Upload Queue */}
                             {uploadQueue.length > 0 && (
                                 <Box sx={{ mb: 4 }}>
@@ -646,14 +604,13 @@ const EmployeeForm = ({ employeeId, onSuccess, onClose }) => {
                                             <Typography>{item.type} - {item.file.name}</Typography>
                                             <IconButton size="small" onClick={() => removeFileFromQueue(index)}><DeleteIcon /></IconButton>
                                         </Box>
->>>>>>> 9fc0e80dc2cb38e7a503881861f4fa2812597cbc
                                     ))}
                                 </Box>
                             )}
 
                             {/* Existing Documents */}
                             {isEditMode && documents.length > 0 && (
-                                <Box>
+                                <Box sx={{ mt: 3 }}>
                                     <Typography fontWeight="bold" gutterBottom>Uploaded Documents:</Typography>
                                     <Grid container spacing={2}>
                                         {documents.map(doc => (
@@ -677,8 +634,8 @@ const EmployeeForm = ({ employeeId, onSuccess, onClose }) => {
                                                             <VisibilityIcon />
                                                         </IconButton>
 
-                                                        {/* Verification Controls (Admin/HR only) */}
-                                                        {['admin', 'hr'].includes(typeof userRole === 'string' ? userRole : userRole?.name?.toLowerCase()) && doc.status === 'Pending' && (
+                                                        {/* Verification Controls (Permission based) */}
+                                                        {hasPermission('manage_employees') && doc.status === 'Pending' && (
                                                             <>
                                                                 <Button size="small" color="success" onClick={() => handleVerifyDoc(doc._id, 'Verified')}>Verify</Button>
                                                                 <Button size="small" color="error" onClick={() => handleVerifyDoc(doc._id, 'Rejected')}>Reject</Button>
@@ -691,12 +648,11 @@ const EmployeeForm = ({ employeeId, onSuccess, onClose }) => {
                                     </Grid>
                                 </Box>
                             )}
-                        </Box>
+                        </Box >
                     )
                 }
             </Box >
 
-            {/* Actions */}
             < Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2, mt: 4, pt: 2, borderTop: '1px solid #eee' }}>
                 <Button disabled={activeStep === 0 || loading} onClick={handleBack}>
                     Back

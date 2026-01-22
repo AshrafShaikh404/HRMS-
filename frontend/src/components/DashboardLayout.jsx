@@ -24,6 +24,7 @@ import {
     AccessTime as AttendanceIcon,
     BeachAccess as LeavesIcon,
     Payments as PayrollIcon,
+    AccountBalanceWallet as PaymentsIcon, // Added for My Payslips
     Person as ProfileIcon,
     Logout as LogoutIcon,
     Menu as MenuIcon,
@@ -39,17 +40,12 @@ import {
     Place as LocationIcon,
 } from '@mui/icons-material';
 import { useState } from 'react';
-<<<<<<< HEAD
 import { useAuth } from '../contexts/AuthContext';
-import Logo from '../assets/Admin.webp';
-=======
-// import Logo from '../assets/Admin.webp'; // Removed missing asset
->>>>>>> 9fc0e80dc2cb38e7a503881861f4fa2812597cbc
 
 const DRAWER_WIDTH = 260;
 
 function DashboardLayout({ children }) {
-    const { user, logout, hasAnyPermission } = useAuth();
+    const { user, logout, hasAnyPermission, hasPermission } = useAuth();
     const location = useLocation();
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('md'));
@@ -71,116 +67,84 @@ function DashboardLayout({ children }) {
 
     const isActive = (path) => location.pathname === path;
 
-    const navItems = [
-<<<<<<< HEAD
-        {
-            path: '/dashboard',
-            label: 'Dashboard',
-            icon: <DashboardIcon />,
-            requiredPermissions: ['view_dashboard_admin', 'view_dashboard_hr', 'view_dashboard_employee']
-        },
-        {
-            path: '/employees',
-            label: 'Employees',
-            icon: <PeopleIcon />,
-            requiredPermissions: ['view_employees']
-        },
-        {
-            path: '/attendance',
-            label: 'Attendance',
-            icon: <AttendanceIcon />,
-            requiredPermissions: ['view_attendance_all', 'view_attendance_own']
-        },
-        {
-            path: '/leaves',
-            label: 'Leaves',
-            icon: <LeavesIcon />,
-            requiredPermissions: ['view_leaves_all', 'view_leaves_own']
-        },
-        {
-            path: '/payroll',
-            label: 'Payroll',
-            icon: <PayrollIcon />,
-            requiredPermissions: ['view_payroll_all', 'view_payroll_own']
-        },
-        {
-            path: '/helpdesk',
-            label: 'Helpdesk',
-            icon: <SupportIcon />,
-            requiredPermissions: ['view_tickets_all', 'view_tickets_own']
-        },
-    ];
+    // Helper to check permissions for nav items that might use 'permission' string or 'requiredPermissions' array
+    const checkPermission = (item) => {
+        // If no permission required, show it
+        if (!item.permission && !item.requiredPermissions) return true;
 
-    const visibleNavItems = navItems.filter(item => hasAnyPermission(item.requiredPermissions));
-=======
-        { path: '/dashboard', label: 'Dashboard', icon: <DashboardIcon />, permission: 'view_dashboard' },
-        { path: '/profile', label: 'My Profile', icon: <ProfileIcon /> }, // Always visible
-        { path: '/employees', label: 'Employees', icon: <PeopleIcon />, permission: 'view_employees' },
-        { path: '/attendance', label: 'Attendance', icon: <AttendanceIcon />, permission: 'view_attendance' },
+        // If array of permissions (AuthContext style)
+        if (item.requiredPermissions) {
+            return hasAnyPermission(item.requiredPermissions);
+        }
+
+        // If single permission string
+        if (item.permission) {
+            return hasPermission(item.permission) || hasAnyPermission([item.permission]);
+        }
+
+        return false;
+    };
+
+    const navItems = [
+        { path: '/dashboard', label: 'Dashboard', icon: <DashboardIcon />, requiredPermissions: ['view_dashboard_admin', 'view_dashboard_hr', 'view_dashboard_employee'] },
+        { path: '/profile', label: 'My Profile', icon: <ProfileIcon />, requiredPermissions: ['view_profile'] },
+        { path: '/employees', label: 'Employees', icon: <PeopleIcon />, requiredPermissions: ['view_employees'] },
+        { path: '/attendance', label: 'Attendance', icon: <AttendanceIcon />, requiredPermissions: ['view_attendance_all', 'view_attendance_own'] },
         {
             label: 'Leave Management',
             icon: <LeavesIcon />,
-            permission: 'view_leave_balance',
+            // Aggregate permission: Show if user can view any leave related page
+            requiredPermissions: ['view_leaves_all', 'view_leaves_own', 'manage_leaves'],
             children: [
-                { path: '/my-leaves', label: 'My Leaves', icon: <CalendarIcon /> },
-                { path: '/leave-approvals', label: 'Approvals', icon: <WorkIcon />, permission: 'approve_leave' },
-                { path: '/leave-settings', label: 'Settings', icon: <CategoryIcon />, permission: 'manage_leave_types' },
+                { path: '/my-leaves', label: 'My Leaves', icon: <CalendarIcon />, requiredPermissions: ['view_leaves_own'] },
+                { path: '/leaves', label: 'Calendar', icon: <LeavesIcon />, requiredPermissions: ['view_leaves_all', 'view_leaves_own'] }, // Points to old Leaves page for now
+                { path: '/leave-approvals', label: 'Approvals', icon: <WorkIcon />, requiredPermissions: ['manage_leaves'] },
+                { path: '/leave-settings', label: 'Settings', icon: <CategoryIcon />, requiredPermissions: ['manage_leaves'] },
             ]
         },
-        { path: '/payroll', label: 'Payroll', icon: <PayrollIcon />, permission: 'view_payroll' },
-        { path: '/helpdesk', label: 'Helpdesk', icon: <SupportIcon />, permission: 'view_helpdesk' },
+        { path: '/payroll', label: 'Payroll Management', icon: <PayrollIcon />, requiredPermissions: ['view_payroll_all', 'manage_payroll'] },
+        { path: '/my-payslips', label: 'My Payslips', icon: <PaymentsIcon />, requiredPermissions: ['view_payroll_own'] },
+        { path: '/helpdesk', label: 'Help Desk', icon: <SupportIcon />, requiredPermissions: ['view_tickets_all', 'view_tickets_own'] },
         {
             label: 'Access Control',
             icon: <SecurityIcon />,
-            permission: 'manage_access_control',
+            requiredPermissions: ['manage_users'],
             children: [
-                { path: '/roles', label: 'Roles', icon: <SecurityIcon /> },
-                { path: '/user-roles', label: 'User Roles', icon: <PeopleIcon /> },
+                { path: '/roles', label: 'Roles', icon: <SecurityIcon />, requiredPermissions: ['manage_users'] },
+                { path: '/user-roles', label: 'User Roles', icon: <PeopleIcon />, requiredPermissions: ['manage_users'] },
             ]
         },
         {
             label: 'Organization',
-            icon: <BusinessIcon />, // Need to import BusinessIcon
-            permission: 'manage_departments', // Both depts and designations fall under this high level or we use manage_designations check inside.
-            // But usually menu item permission controls visibility.
-            // Let's assume manage_departments covers visibility of "Organization", and we check inner permissions.
-            // Actually, we should probably check if user has EITHER manage_departments OR manage_designations to show "Organization".
-            // For now, let's keep it simple: Organization visible if manage_departments (which Admins have).
+            icon: <BusinessIcon />,
+            requiredPermissions: ['manage_employees'],
             children: [
-                { path: '/departments', label: 'Departments', icon: <CategoryIcon /> },
-                { path: '/designations', label: 'Designations', icon: <BadgeIcon /> },
-                { path: '/locations', label: 'Work Locations', icon: <LocationIcon /> },
+                { path: '/departments', label: 'Departments', icon: <CategoryIcon />, requiredPermissions: ['manage_employees'] },
+                { path: '/designations', label: 'Designations', icon: <BadgeIcon />, requiredPermissions: ['manage_employees'] },
+                { path: '/locations', label: 'Work Locations', icon: <LocationIcon />, requiredPermissions: ['manage_employees'] },
             ]
         },
     ];
 
-    const hasPermission = (permission) => {
-        if (!permission) return true;
+    // Filter items based on permissions
+    const visibleNavItems = navItems.filter(item => {
+        // If it has children, check if at least one child is visible (or if item itself has permission)
+        if (item.children) {
+            // First check if main item has permission
+            if (!checkPermission(item)) return false;
 
-        const role = user.role;
-        const roleName = typeof role === 'string' ? role : role?.name;
+            // Then filter children
+            const visibleChildren = item.children.filter(child => checkPermission(child));
 
-        // Admin bypass
-        if (roleName?.toLowerCase() === 'admin') return true;
+            // Note: We are mutating the item here to show only visible children. 
+            // In a pure function we'd map, but for this render it's okay or we can map.
+            item.visibleChildren = visibleChildren;
 
-        // For legacy string roles (hr, employee), mapped to basic permissions
-        if (typeof role === 'string') {
-            if (role === 'hr') {
-                return ['view_dashboard', 'view_employees', 'view_attendance', 'view_leaves', 'view_payroll', 'view_helpdesk'].includes(permission);
-            }
-            if (role === 'employee') {
-                return ['view_dashboard', 'view_attendance', 'view_leaves', 'view_helpdesk'].includes(permission);
-            }
-            return false;
+            return visibleChildren.length > 0;
         }
 
-        // For new object roles
-        const permissions = role?.permissions || [];
-        return permissions.some(p => p.name === permission);
-    };
-
-    const visibleNavItems = navItems.filter(item => hasPermission(item.permission));
->>>>>>> 9fc0e80dc2cb38e7a503881861f4fa2812597cbc
+        return checkPermission(item);
+    });
 
     const handleDrawerToggle = () => {
         setMobileOpen(!mobileOpen);
@@ -253,7 +217,7 @@ function DashboardLayout({ children }) {
                         {item.children && (
                             <Collapse in={openSubmenu === item.label} timeout="auto" unmountOnExit>
                                 <List component="div" disablePadding sx={{ pl: 3 }}>
-                                    {item.children.map((child) => (
+                                    {(item.visibleChildren || item.children).map((child) => (
                                         <ListItem key={child.path} disablePadding sx={{ mb: 0.5 }}>
                                             <ListItemButton
                                                 component={Link}
@@ -415,7 +379,7 @@ function DashboardLayout({ children }) {
                 onClose={() => setProfileOpen(false)}
                 mode={profileMode}
                 onModeChange={setProfileMode}
-                user={user} // Pass user if needed for initial optimists
+                user={user}
             />
         </Box>
     );

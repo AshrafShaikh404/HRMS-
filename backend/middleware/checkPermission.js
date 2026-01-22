@@ -16,10 +16,7 @@ exports.checkPermission = (requiredPermission) => {
 
             // If role is just an ID (not populated) or permissions missing
             if (!userRole || !userRole.permissions || !Array.isArray(userRole.permissions)) {
-                const userWithRole = await User.findById(req.user._id).populate({
-                    path: 'role',
-                    populate: { path: 'permissions' }
-                });
+                const userWithRole = await User.findById(req.user._id).populate('role');
                 if (!userWithRole || !userWithRole.role) {
                     return res.status(403).json({ success: false, message: 'Role not assigned' });
                 }
@@ -29,11 +26,14 @@ exports.checkPermission = (requiredPermission) => {
             }
 
             // Admin role bypass
-            if (userRole.name === 'Admin') {
+            if (userRole.name?.toLowerCase() === 'admin') {
                 return next();
             }
 
-            const hasPermission = userRole.permissions.some(p => p.name === requiredPermission);
+            const hasPermission = userRole.permissions.some(p => {
+                const permName = typeof p === 'string' ? p : p.name;
+                return permName === requiredPermission;
+            });
 
             if (!hasPermission) {
                 return res.status(403).json({

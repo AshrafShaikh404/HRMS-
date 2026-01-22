@@ -59,6 +59,7 @@ export const authAPI = {
 export const employeeAPI = {
     getAll: (params) => api.get('/employees', { params }),
     getById: (id) => api.get(`/employees/${id}`),
+    getMyProfile: () => api.get('/employees/me'),
     create: (data) => api.post('/employees', data),
     update: (id, data) => api.put(`/employees/${id}`, data),
     delete: (id) => api.delete(`/employees/${id}`),
@@ -105,6 +106,14 @@ export const payrollAPI = {
         api.get(`/payroll/payslip/${employeeId}/${month}/${year}`),
     getReports: (params) => api.get('/payroll/reports', { params }),
     updateStatus: (id, status) => api.put(`/payroll/${id}/status`, { status }),
+
+    // Approval Flow
+    approve: (id) => api.put(`/payroll/${id}/approve`),
+    lock: (id) => api.put(`/payroll/${id}/lock`),
+
+    // Download
+    download: (id) => api.get(`/payroll/${id}/download`, { responseType: 'blob' }),
+
     exportCSV: (params) => api.get('/payroll/export/csv', { params, responseType: 'blob' }),
     exportPDF: (params) => api.get('/payroll/export/pdf', { params, responseType: 'blob' }),
 };
@@ -178,6 +187,25 @@ export const locationAPI = {
     create: (data) => api.post('/locations', data),
     update: (id, data) => api.put(`/locations/${id}`, data),
     delete: (id) => api.delete(`/locations/${id}`),
+};
+
+// Goal APIs
+export const goalAPI = {
+    getAll: (params) => api.get('/goals', { params }),
+    getMyGoals: () => api.get('/goals/my'),
+    create: (data) => api.post('/goals', data),
+    update: (id, data) => api.put(`/goals/${id}`, data),
+    updateProgress: (id, progress, comment) =>
+        api.patch(`/goals/${id}/progress`, { progress, comment }), // Uses PATCH
+    delete: (id) => api.delete(`/goals/${id}`),
+};
+
+// Review Cycle APIs
+export const reviewCycleAPI = {
+    getAll: () => api.get('/review-cycles'),
+    create: (data) => api.post('/review-cycles', data),
+    update: (id, data) => api.put(`/review-cycles/${id}`, data),
+    delete: (id) => api.delete(`/review-cycles/${id}`),
 };
 
 export default api;

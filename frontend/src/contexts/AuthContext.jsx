@@ -54,15 +54,24 @@ export const AuthProvider = ({ children }) => {
     };
 
     const hasPermission = (permission) => {
-        if (!user || !user.permissions) return false;
-        // Admin override (optional, but good for safety)
-        // if (user.role === 'admin') return true; 
-        // Better to stick to explicit permissions
+        if (!user) return false;
+
+        // Admin override
+        const roleName = typeof user.role === 'string' ? user.role : user.role?.name;
+        if (roleName?.toLowerCase() === 'admin') return true;
+
+        if (!user.permissions) return false;
         return user.permissions.includes(permission);
     };
 
     const hasAnyPermission = (permissions) => {
-        if (!user || !user.permissions) return false;
+        if (!user) return false;
+
+        // Admin override
+        const roleName = typeof user.role === 'string' ? user.role : user.role?.name;
+        if (roleName?.toLowerCase() === 'admin') return true;
+
+        if (!user.permissions) return false;
         return permissions.some(p => user.permissions.includes(p));
     };
 

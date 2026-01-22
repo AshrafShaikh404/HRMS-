@@ -51,6 +51,10 @@ const payrollSchema = new mongoose.Schema({
         type: Number,
         default: 0
     },
+    unpaidLeaveDeduction: { // Loss of Pay
+        type: Number,
+        default: 0
+    },
     payableDays: {
         type: Number,
         required: true
@@ -75,7 +79,7 @@ const payrollSchema = new mongoose.Schema({
         required: true,
         min: 0
     },
-    deductions: { // Keeping for backward compatibility/sum
+    deductions: { // TOTAL Deductions including PF, Tax, LoP etc.
         type: Number,
         default: 0
     },
@@ -83,7 +87,7 @@ const payrollSchema = new mongoose.Schema({
     esiDeduction: { type: Number, default: 0 },
     professionalTax: { type: Number, default: 0 },
     incomeTax: { type: Number, default: 0 },
-    totalDeductions: { type: Number, default: 0 },
+    totalDeductions: { type: Number, default: 0 }, // Deprecated/Alias for deductions? Keeping both for safety
     netSalary: {
         type: Number,
         required: true,
@@ -92,7 +96,7 @@ const payrollSchema = new mongoose.Schema({
 
     status: {
         type: String,
-        enum: ['generated', 'approved', 'released', 'paid'],
+        enum: ['generated', 'approved', 'locked'],
         default: 'generated'
     },
     generatedAt: {

@@ -62,7 +62,7 @@ function MyLeaves({ user }) {
                 leaveAPI.getLeaveHistory(),
                 leaveAPI.getLeaveTypes()
             ]);
-            setBalance(balanceRes.data.data);
+            setBalance(balanceRes.data.data.balances || []);
             setHistory(historyRes.data.data);
             setLeaveTypes(typesRes.data.data);
         } catch (error) {
@@ -167,16 +167,16 @@ function MyLeaves({ user }) {
                             }}
                         >
                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-                                <Box sx={{ width: 12, height: 12, borderRadius: '50%', bgcolor: item.leaveType.color }} />
+                                <Box sx={{ width: 12, height: 12, borderRadius: '50%', bgcolor: item.leaveType?.color || 'grey' }} />
                                 <Typography variant="body2" color="text.secondary" fontWeight="500">
-                                    {item.leaveType.name}
+                                    {item.leaveType?.name || 'Unknown Type'}
                                 </Typography>
                             </Box>
                             <Typography variant="h3" fontWeight="700" color={item.available === 0 ? 'error.main' : 'primary.main'} sx={{ mb: 0.5 }}>
                                 {item.available}
                             </Typography>
                             <Typography variant="caption" color="text.secondary">
-                                of {item.quota} days available
+                                of {item.totalAccrued} days available
                             </Typography>
                             <Box sx={{ mt: 2, pt: 2, borderTop: '1px solid', borderColor: 'divider' }}>
                                 <Typography variant="caption" color="text.secondary">

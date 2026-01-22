@@ -11,7 +11,8 @@ const {
     updateEmployee,
     deleteEmployee,
     uploadDocument,
-    verifyDocument
+    verifyDocument,
+    getMyProfile
 } = require('../controllers/employeeController');
 
 const { protect } = require('../middleware/auth.middleware');
@@ -57,6 +58,9 @@ const upload = multer({
 
 // All routes require authentication
 router.use(protect);
+
+// Get my employee profile (for logged-in user)
+router.get('/me', getMyProfile);
 
 // Get all employees and create new employee
 router.route('/')

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useNotification } from '../contexts/NotificationContext';
 import { useAuth } from '../contexts/AuthContext';
 import { leaveAPI } from '../utils/api';
@@ -40,20 +41,23 @@ import {
     Event as EarnedIcon,
     FileDownload as DownloadIcon,
     PictureAsPdf as PdfIcon,
+    CalendarMonth as CalendarIcon
 } from '@mui/icons-material';
 import SharedCalendar from '../components/SharedCalendar';
 
 const Leaves = () => {
+    const navigate = useNavigate();
     const { user, hasPermission } = useAuth();
     const { showSuccess, showError } = useNotification();
     const [leaves, setLeaves] = useState([]);
-    const [leaveBalance, setLeaveBalance] = useState(null);
+    const [leaveBalance, setLeaveBalance] = useState([]); // Array now
     const [pendingLeaves, setPendingLeaves] = useState([]);
+    const [leaveTypes, setLeaveTypes] = useState([]); // New state
     const [loading, setLoading] = useState(true);
     const [exporting, setExporting] = useState(false);
     const [showApplyModal, setShowApplyModal] = useState(false);
     const [newLeave, setNewLeave] = useState({
-        leaveType: 'casual',
+        leaveType: '',
         fromDate: '',
         toDate: '',
         reason: '',
@@ -62,17 +66,24 @@ const Leaves = () => {
     useEffect(() => {
         fetchLeaves();
         fetchLeaveBalance();
-<<<<<<< HEAD
-        fetchLeaves();
-        fetchLeaveBalance();
+        fetchLeaveTypes();
         if (hasPermission('manage_leaves')) {
-=======
-        const role = typeof user.role === 'string' ? user.role : user.role?.name?.toLowerCase();
-        if (role === 'admin' || role === 'hr') {
->>>>>>> 9fc0e80dc2cb38e7a503881861f4fa2812597cbc
             fetchPendingLeaves();
         }
     }, [user]);
+
+    const fetchLeaveTypes = async () => {
+        try {
+            const response = await leaveAPI.getLeaveTypes();
+            setLeaveTypes(response.data.data);
+            if (response.data.data.length > 0) {
+                setNewLeave(prev => ({ ...prev, leaveType: response.data.data[0]._id }));
+            }
+        } catch (err) {
+            console.error('Error fetching leave types:', err);
+        }
+    };
+
 
     const fetchLeaves = async () => {
         try {
@@ -88,7 +99,9 @@ const Leaves = () => {
     const fetchLeaveBalance = async () => {
         try {
             const response = await leaveAPI.getBalance();
-            setLeaveBalance(response.data.data.balances);
+            // Handle both array (new) and legacy object structure if mixed
+            const balances = response.data.data.balances || [];
+            setLeaveBalance(balances);
         } catch (err) {
             console.error('Error fetching leave balance:', err);
         }
@@ -97,7 +110,9 @@ const Leaves = () => {
     const fetchPendingLeaves = async () => {
         try {
             const response = await leaveAPI.getPendingApprovals();
-            setPendingLeaves(response.data.data.pendingLeaves);
+            // Data is directly in response.data.data
+            const data = response.data.data;
+            setPendingLeaves(Array.isArray(data) ? data : []);
         } catch (err) {
             console.error('Error fetching pending leaves:', err);
         }
@@ -141,7 +156,8 @@ const Leaves = () => {
     };
 
     const getStatusColor = (status) => {
-        switch (status) {
+        const lowerStatus = status?.toLowerCase();
+        switch (lowerStatus) {
             case 'approved': return 'success';
             case 'pending': return 'warning';
             case 'rejected': return 'error';
@@ -221,98 +237,59 @@ const Leaves = () => {
                     </Typography>
                 </Box>
                 {hasPermission('apply_leave') && (
-                    <Button
-                        variant="contained"
-                        startIcon={<AddIcon />}
-                        onClick={() => setShowApplyModal(true)}
-                        sx={{ borderRadius: 2 }}
-                    >
-                        Apply for Leave
-                    </Button>
+                    <Box sx={{ display: 'flex', gap: 2 }}>
+                        <Button
+                            variant="outlined"
+                            startIcon={<CalendarIcon />}
+                            onClick={() => navigate('/leave-calendar')}
+                            sx={{ borderRadius: 2 }}
+                        >
+                            View Calendar
+                        </Button>
+                        <Button
+                            variant="contained"
+                            startIcon={<AddIcon />}
+                            onClick={() => setShowApplyModal(true)}
+                            sx={{ borderRadius: 2 }}
+                        >
+                            Apply for Leave
+                        </Button>
+                    </Box>
                 )}
             </Box>
 
             {/* Leave Balance */}
-            {leaveBalance && (
+            {/* Leave Balance */}
+            {leaveBalance.length > 0 && (
                 <Grid container spacing={3} sx={{ mb: 4 }}>
-                    <Grid item xs={12} sm={6} md={4}>
-                        <Card sx={{ height: '100%' }}>
-                            <CardContent>
-                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-                                    <CasualIcon color="primary" />
-                                    <Typography variant="h6" fontWeight={600}>
-                                        Casual Leave
-                                    </Typography>
-                                </Box>
-                                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                                    <Box>
-                                        <Typography variant="h3" fontWeight="bold" color="primary.main">
-                                            {leaveBalance.casualLeave.available}
+                    {leaveBalance.map((item) => (
+                        <Grid item xs={12} sm={6} md={4} key={item.leaveType?._id || Math.random()}>
+                            <Card sx={{ height: '100%' }}>
+                                <CardContent>
+                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+                                        <Box sx={{ width: 12, height: 12, borderRadius: '50%', bgcolor: item.leaveType?.color || '#3b82f6' }} />
+                                        <Typography variant="h6" fontWeight={600}>
+                                            {item.leaveType?.name || 'Unknown'}
                                         </Typography>
-                                        <Typography variant="body2" color="text.secondary">Available</Typography>
                                     </Box>
-                                    <Box sx={{ textAlign: 'right' }}>
-                                        <Typography variant="h5" color="text.secondary">
-                                            {leaveBalance.casualLeave.used}
-                                        </Typography>
-                                        <Typography variant="body2" color="text.secondary">Used</Typography>
+                                    <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                                        <Box>
+                                            <Typography variant="h3" fontWeight="bold" color={item.available > 0 ? 'primary.main' : 'error.main'}>
+                                                {item.available}
+                                            </Typography>
+                                            <Typography variant="body2" color="text.secondary">Available</Typography>
+                                        </Box>
+                                        <Box sx={{ textAlign: 'right' }}>
+                                            <Typography variant="h5" color="text.secondary">
+                                                {item.used}
+                                            </Typography>
+                                            <Typography variant="body2" color="text.secondary">Used</Typography>
+                                        </Box>
                                     </Box>
-                                </Box>
-                            </CardContent>
-                        </Card>
-                    </Grid>
-                    <Grid item xs={12} sm={6} md={4}>
-                        <Card sx={{ height: '100%' }}>
-                            <CardContent>
-                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-                                    <SickIcon color="error" />
-                                    <Typography variant="h6" fontWeight={600}>
-                                        Sick Leave
-                                    </Typography>
-                                </Box>
-                                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                                    <Box>
-                                        <Typography variant="h3" fontWeight="bold" color="error.main">
-                                            {leaveBalance.sickLeave.available}
-                                        </Typography>
-                                        <Typography variant="body2" color="text.secondary">Available</Typography>
-                                    </Box>
-                                    <Box sx={{ textAlign: 'right' }}>
-                                        <Typography variant="h5" color="text.secondary">
-                                            {leaveBalance.sickLeave.used}
-                                        </Typography>
-                                        <Typography variant="body2" color="text.secondary">Used</Typography>
-                                    </Box>
-                                </Box>
-                            </CardContent>
-                        </Card>
-                    </Grid>
-                    <Grid item xs={12} sm={6} md={4}>
-                        <Card sx={{ height: '100%' }}>
-                            <CardContent>
-                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-                                    <EarnedIcon color="success" />
-                                    <Typography variant="h6" fontWeight={600}>
-                                        Earned Leave
-                                    </Typography>
-                                </Box>
-                                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                                    <Box>
-                                        <Typography variant="h3" fontWeight="bold" color="success.main">
-                                            {leaveBalance.earnedLeave.available}
-                                        </Typography>
-                                        <Typography variant="body2" color="text.secondary">Available</Typography>
-                                    </Box>
-                                    <Box sx={{ textAlign: 'right' }}>
-                                        <Typography variant="h5" color="text.secondary">
-                                            {leaveBalance.earnedLeave.used}
-                                        </Typography>
-                                        <Typography variant="body2" color="text.secondary">Used</Typography>
-                                    </Box>
-                                </Box>
-                            </CardContent>
-                        </Card>
-                    </Grid>
+                                </CardContent>
+                            </Card>
+                        </Grid>
+                    ))}
                 </Grid>
             )}
 
@@ -340,15 +317,22 @@ const Leaves = () => {
                                     <TableRow key={leave._id} hover>
                                         <TableCell>{leave.employeeId?.firstName} {leave.employeeId?.lastName}</TableCell>
                                         <TableCell>
-                                            <Chip label={leave.leaveType} color={getLeaveTypeColor(leave.leaveType)} size="small" />
+                                            <Chip
+                                                label={leave.leaveType?.name || 'Unknown'}
+                                                size="small"
+                                                sx={{
+                                                    bgcolor: leave.leaveType?.color || '#e0e0e0',
+                                                    color: leave.leaveType?.color ? '#fff' : 'inherit'
+                                                }}
+                                            />
                                         </TableCell>
                                         <TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }}>
-                                            {new Date(leave.fromDate).toLocaleDateString()}
+                                            {new Date(leave.startDate).toLocaleDateString()}
                                         </TableCell>
                                         <TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }}>
-                                            {new Date(leave.toDate).toLocaleDateString()}
+                                            {new Date(leave.endDate).toLocaleDateString()}
                                         </TableCell>
-                                        <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>{leave.numberOfDays}</TableCell>
+                                        <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>{leave.totalDays}</TableCell>
                                         <TableCell sx={{ display: { xs: 'none', lg: 'table-cell' } }}>{leave.reason}</TableCell>
                                         <TableCell>
                                             <Box sx={{ display: 'flex', gap: 1 }}>
@@ -386,11 +370,7 @@ const Leaves = () => {
                     <Typography variant="h5" fontWeight={600}>
                         My Leave History
                     </Typography>
-<<<<<<< HEAD
                     {hasPermission('manage_leaves') && (
-=======
-                    {['admin', 'hr'].includes(typeof user.role === 'string' ? user.role : user.role?.name?.toLowerCase()) && (
->>>>>>> 9fc0e80dc2cb38e7a503881861f4fa2812597cbc
                         <Box sx={{ display: 'flex', gap: 1 }}>
                             <Button
                                 variant="outlined"
@@ -413,8 +393,9 @@ const Leaves = () => {
                                 Export PDF
                             </Button>
                         </Box>
-                    )}
-                </Box>
+                    )
+                    }
+                </Box >
                 <TableContainer component={Paper} sx={{ borderRadius: 2 }}>
                     <Table>
                         <TableHead>
@@ -432,15 +413,22 @@ const Leaves = () => {
                             {leaves.map((leave) => (
                                 <TableRow key={leave._id} hover>
                                     <TableCell>
-                                        <Chip label={leave.leaveType} color={getLeaveTypeColor(leave.leaveType)} size="small" />
+                                        <Chip
+                                            label={leave.leaveType?.name || 'Unknown'}
+                                            size="small"
+                                            sx={{
+                                                bgcolor: leave.leaveType?.color || '#e0e0e0',
+                                                color: leave.leaveType?.color ? '#fff' : 'inherit'
+                                            }}
+                                        />
                                     </TableCell>
                                     <TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }}>
-                                        {new Date(leave.fromDate).toLocaleDateString()}
+                                        {new Date(leave.startDate).toLocaleDateString()}
                                     </TableCell>
                                     <TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }}>
-                                        {new Date(leave.toDate).toLocaleDateString()}
+                                        {new Date(leave.endDate).toLocaleDateString()}
                                     </TableCell>
-                                    <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>{leave.numberOfDays}</TableCell>
+                                    <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>{leave.totalDays}</TableCell>
                                     <TableCell sx={{ display: { xs: 'none', lg: 'table-cell' } }}>{leave.reason}</TableCell>
                                     <TableCell>
                                         <Chip label={leave.status} color={getStatusColor(leave.status)} size="small" />
@@ -459,10 +447,10 @@ const Leaves = () => {
                         </Box>
                     )}
                 </TableContainer>
-            </Box>
+            </Box >
 
             {/* Apply Leave Dialog */}
-            <Dialog
+            < Dialog
                 open={showApplyModal}
                 onClose={() => setShowApplyModal(false)}
                 maxWidth="lg"
@@ -489,10 +477,11 @@ const Leaves = () => {
                                                 onChange={(e) => setNewLeave({ ...newLeave, leaveType: e.target.value })}
                                                 label="Leave Type"
                                             >
-                                                <MenuItem value="casual">Casual Leave</MenuItem>
-                                                <MenuItem value="sick">Sick Leave</MenuItem>
-                                                <MenuItem value="earned">Earned Leave</MenuItem>
-                                                <MenuItem value="unpaid">Unpaid Leave</MenuItem>
+                                                {leaveTypes.map((type) => (
+                                                    <MenuItem key={type._id} value={type._id}>
+                                                        {type.name}
+                                                    </MenuItem>
+                                                ))}
                                             </Select>
                                         </FormControl>
                                     </Grid>
@@ -552,8 +541,8 @@ const Leaves = () => {
                         </Button>
                     </DialogActions>
                 </form>
-            </Dialog>
-        </Box>
+            </Dialog >
+        </Box >
     );
 }
 

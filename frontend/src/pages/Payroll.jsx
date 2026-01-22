@@ -297,17 +297,77 @@ const Payroll = () => {
                                     />
                                 </TableCell>
                                 <TableCell align="right">
-                                    <IconButton
-                                        color="primary"
-                                        size="small"
-                                        title="Download Payslip"
-                                        onClick={() => {
-                                            // Trigger PDF generation for this specific payslip
-                                            showSuccess('Downloading payslip...');
-                                        }}
-                                    >
-                                        <DownloadIcon />
-                                    </IconButton>
+                                    <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
+                                        {/* Status Actions (Admin/HR) */}
+                                        {['admin', 'hr'].includes(typeof user.role === 'string' ? user.role : user.role?.name?.toLowerCase()) && (
+                                            <>
+                                                {payslip.status === 'generated' && (
+                                                    <Button
+                                                        size="small"
+                                                        color="success"
+                                                        variant="text"
+                                                        onClick={async () => {
+                                                            try {
+                                                                await payrollAPI.approve(payslip._id);
+                                                                showSuccess('Payroll approved');
+                                                                fetchPayslips();
+                                                            } catch (err) {
+                                                                showError('Failed to approve');
+                                                            }
+                                                        }}
+                                                    >
+                                                        Approve
+                                                    </Button>
+                                                )}
+                                                {payslip.status === 'approved' && (
+                                                    <Button
+                                                        size="small"
+                                                        color="secondary"
+                                                        variant="text"
+                                                        onClick={async () => {
+                                                            try {
+                                                                await payrollAPI.lock(payslip._id);
+                                                                showSuccess('Payroll locked');
+                                                                fetchPayslips();
+                                                            } catch (err) {
+                                                                showError('Failed to lock');
+                                                            }
+                                                        }}
+                                                    >
+                                                        Lock
+                                                    </Button>
+                                                )}
+                                            </>
+                                        )}
+
+                                        {/* Download (Locked only or for Admin) */}
+                                        {/* Employees see download only if locked? Usually they see it if they have access. 
+                                            But Admin should be able to download anytime? 
+                                            Let's allow download if permissions allow.
+                                        */}
+                                        <IconButton
+                                            color="primary"
+                                            size="small"
+                                            title="Download Payslip"
+                                            onClick={async () => {
+                                                try {
+                                                    const res = await payrollAPI.download(payslip._id);
+                                                    const url = window.URL.createObjectURL(new Blob([res.data]));
+                                                    const link = document.createElement('a');
+                                                    link.href = url;
+                                                    link.setAttribute('download', `Payslip_${payslip.employeeId?.employeeCode || 'EMP'}_${payslip.month}_${payslip.year}.pdf`);
+                                                    document.body.appendChild(link);
+                                                    link.click();
+                                                    link.remove();
+                                                } catch (err) {
+                                                    showError('Failed to download payslip');
+                                                    console.error(err);
+                                                }
+                                            }}
+                                        >
+                                            <DownloadIcon />
+                                        </IconButton>
+                                    </Box>
                                 </TableCell>
                             </TableRow>
                         ))}
