@@ -206,6 +206,35 @@ export const reviewCycleAPI = {
     create: (data) => api.post('/review-cycles', data),
     update: (id, data) => api.put(`/review-cycles/${id}`, data),
     delete: (id) => api.delete(`/review-cycles/${id}`),
+    getReviewCycles: () => api.get('/review-cycles'), // Alias for consistency
+};
+
+// Performance Review APIs
+export const performanceReviewAPI = {
+    // Initialize review for employee
+    initReview: (data) => api.post('/performance-reviews/init', data),
+    
+    // Get reviews based on role
+    getMyReview: () => api.get('/performance-reviews/my'),
+    getTeamReviews: (filters) => api.get('/performance-reviews/team', { params: filters }),
+    getAllReviews: (filters) => api.get('/performance-reviews/all', { params: filters }),
+    
+    // Submit reviews
+    submitSelfReview: (data) => api.patch('/performance-reviews/self', data),
+    submitManagerReview: (data) => api.patch('/performance-reviews/manager', data),
+    submitHRReview: (data) => api.patch('/performance-reviews/hr', data),
+    
+    // Finalize review
+    finalizeReview: (data) => api.patch('/performance-reviews/finalize', data),
+    
+    // Legacy endpoints (for backward compatibility)
+    get: (id) => api.get(`/performance-reviews/${id}`),
+    getAll: (params) => api.get('/performance-reviews', { params }),
+    create: (data) => api.post('/performance-reviews', data),
+    updateSelfReview: (id, data) => api.put(`/performance-reviews/${id}/self-review`, data),
+    updateManagerReview: (id, data) => api.put(`/performance-reviews/${id}/manager-review`, data),
+    updateHRReview: (id, data) => api.put(`/performance-reviews/${id}/hr-review`, data),
+    finalize: (id) => api.put(`/performance-reviews/${id}/finalize`),
 };
 
 export default api;

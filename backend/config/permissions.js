@@ -9,7 +9,9 @@ const PERMISSIONS = {
         'view_payroll_own',
         'create_ticket',
         'view_tickets_own',
-        'view_holidays'
+        'view_holidays',
+        'view_performance_review_own',
+        'submit_self_review'
     ],
     hr: [
         'view_dashboard_hr',
@@ -26,7 +28,22 @@ const PERMISSIONS = {
         'approve_payroll',
         'manage_tickets',
         'view_tickets_all',
-        'view_holidays'
+        'view_holidays',
+        'manage_performance_reviews',
+        'view_performance_reviews_all',
+        'conduct_hr_review',
+        'finalize_performance_reviews'
+    ],
+    manager: [
+        'view_dashboard_manager',
+        'view_profile',
+        'edit_profile',
+        'view_team',
+        'view_attendance_team',
+        'view_leaves_team',
+        'approve_leave_team',
+        'view_performance_reviews_team',
+        'conduct_manager_review'
     ],
     admin: [
         'view_dashboard_admin',
@@ -45,7 +62,11 @@ const PERMISSIONS = {
         'manage_tickets',
         'view_tickets_all',
         'manage_settings',
-        'view_holidays'
+        'view_holidays',
+        'manage_performance_reviews',
+        'view_performance_reviews_all',
+        'conduct_hr_review',
+        'finalize_performance_reviews'
     ]
 };
 

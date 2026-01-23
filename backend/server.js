@@ -46,6 +46,7 @@ app.use('/api/v1/designations', require('./routes/designation.routes'));
 app.use('/api/v1/locations', require('./routes/location.routes'));
 app.use('/api/v1/goals', require('./routes/goal.routes'));
 app.use('/api/v1/review-cycles', require('./routes/reviewCycle.routes'));
+app.use('/api/v1/performance-reviews', require('./routes/performanceReview.routes'));
 
 // Error handling middleware
 app.use((err, req, res, next) => {
