@@ -48,7 +48,14 @@ const ReviewCycleSettings = () => {
     const fetchCycles = async () => {
         try {
             const res = await reviewCycleAPI.getAll();
-            setCycles(res.data.data);
+            // Handle both { data: [...] } and [...] formats
+            const cyclesData = res.data.data || res.data || [];
+            if (Array.isArray(cyclesData)) {
+                setCycles(cyclesData);
+            } else {
+                console.error('Invalid cycles data format:', res.data);
+                setCycles([]);
+            }
         } catch (error) {
             showError('Failed to fetch review cycles');
         }
@@ -59,8 +66,8 @@ const ReviewCycleSettings = () => {
             setEditingCycle(cycle);
             setFormData({
                 name: cycle.name,
-                startDate: cycle.startDate.split('T')[0],
-                endDate: cycle.endDate.split('T')[0],
+                startDate: cycle.startDate ? cycle.startDate.split('T')[0] : '',
+                endDate: cycle.endDate ? cycle.endDate.split('T')[0] : '',
                 status: cycle.status,
                 selfReviewOpen: cycle.selfReviewOpen,
                 managerReviewOpen: cycle.managerReviewOpen,
@@ -123,7 +130,7 @@ const ReviewCycleSettings = () => {
                             <TableRow key={cycle._id}>
                                 <TableCell fontWeight="bold">{cycle.name}</TableCell>
                                 <TableCell>
-                                    {new Date(cycle.startDate).toLocaleDateString()} - {new Date(cycle.endDate).toLocaleDateString()}
+                                    {cycle.startDate ? new Date(cycle.startDate).toLocaleDateString() : 'N/A'} - {cycle.endDate ? new Date(cycle.endDate).toLocaleDateString() : 'N/A'}
                                 </TableCell>
                                 <TableCell>
                                     <Chip
