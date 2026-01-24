@@ -38,6 +38,9 @@ import {
     ExpandLess,
     ExpandMore,
     Place as LocationIcon,
+    TrendingUp as PerformanceIcon, // Added for PMS
+    Assessment as AssessmentIcon,
+    Settings as SettingsIcon,
 } from '@mui/icons-material';
 import { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
@@ -100,6 +103,18 @@ function DashboardLayout({ children }) {
                 { path: '/leaves', label: 'Calendar', icon: <LeavesIcon />, requiredPermissions: ['view_leaves_all', 'view_leaves_own'] }, // Points to old Leaves page for now
                 { path: '/leave-approvals', label: 'Approvals', icon: <WorkIcon />, requiredPermissions: ['manage_leaves'] },
                 { path: '/leave-settings', label: 'Settings', icon: <CategoryIcon />, requiredPermissions: ['manage_leaves'] },
+            ]
+        },
+        {
+            label: 'Performance',
+            icon: <PerformanceIcon />,
+            requiredPermissions: ['view_own_goals', 'manage_employees'],
+            children: [
+                { path: '/my-performance', label: 'My Performance', icon: <PerformanceIcon />, requiredPermissions: ['view_own_goals'] },
+                { path: '/goals', label: 'Goals', icon: <WorkIcon />, requiredPermissions: ['manage_employees', 'view_own_goals'] },
+                { path: '/team-reviews', label: 'Team Reviews', icon: <PeopleIcon />, requiredPermissions: ['manage_employees'] },
+                { path: '/all-reviews', label: 'All Reviews', icon: <AssessmentIcon />, requiredPermissions: ['manage_employees'] },
+                { path: '/review-cycles', label: 'Review Cycles', icon: <SettingsIcon />, requiredPermissions: ['manage_employees'] },
             ]
         },
         { path: '/payroll', label: 'Payroll Management', icon: <PayrollIcon />, requiredPermissions: ['view_payroll_all', 'manage_payroll'] },

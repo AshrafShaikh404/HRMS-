@@ -65,9 +65,18 @@ const Goals = () => {
                 employeeAPI.getAll(),
                 departmentAPI.getAll()
             ]);
-            setGoals(goalsRes.data.data);
-            setEmployees(empRes.data.data); // Assuming paginated, modify generic getAll if needed
-            setDepartments(deptRes.data.data);
+            const goalsData = goalsRes.data.data || goalsRes.data || [];
+            setGoals(Array.isArray(goalsData) ? goalsData : []);
+
+            // Handle { data: { employees: [...] } } structure
+            const empResponseData = empRes.data.data || empRes.data || {};
+            const empArray = Array.isArray(empResponseData)
+                ? empResponseData
+                : (empResponseData.employees || []);
+            setEmployees(Array.isArray(empArray) ? empArray : []);
+
+            const deptData = deptRes.data.data || deptRes.data || [];
+            setDepartments(Array.isArray(deptData) ? deptData : []);
         } catch (error) {
             console.error(error);
             showError('Failed to fetch data');
@@ -113,6 +122,7 @@ const Goals = () => {
         e.preventDefault();
         try {
             const payload = { ...formData };
+            if (!payload.departmentId) delete payload.departmentId; // Remove if empty string or null
             if (payload.assignedTo.length === 0 && payload.type === 'Individual') {
                 return showError('Please assign to at least one employee');
             }
@@ -307,14 +317,24 @@ const Goals = () => {
                                         multiple
                                         options={employees}
                                         getOptionLabel={(option) => `${option.firstName} ${option.lastName} (${option.employeeCode})`}
-                                        value={employees.filter(emp => formData.assignedTo.includes(emp._id || emp.userId?._id))} // Simplified matching
+                                        value={employees?.filter(emp => {
+                                            const uId = emp.userId?._id || emp.userId || emp._id;
+                                            return formData.assignedTo.includes(uId);
+                                        })} // Simplified matching
                                         // Note: Employee API returns employee profiles, but Goal needs User IDs usually. 
                                         // Assuming Employee model has a user reference or we map correctly.
                                         // Let's assume we store Employee ID or User ID. The server expects User ID in assignedTo.
                                         // We need to check if 'employees' state holds user data or employee profile data. 
                                         // Usually employeeAPI.getAll returns Employee profiles which have .userId (ref to User).
                                         onChange={(e, newValue) => {
-                                            setFormData({ ...formData, assignedTo: newValue.map(item => item.userId?._id || item._id) });
+                                            setFormData({
+                                                ...formData,
+                                                assignedTo: newValue.map(item => {
+                                                    // Handle userId being an object (populated) or string (ID)
+                                                    const userId = item.userId?._id || item.userId || item._id;
+                                                    return userId;
+                                                })
+                                            });
                                         }}
                                         renderInput={(params) => (
                                             <TextField {...params} label="Assign Employees" placeholder="Select employees" />

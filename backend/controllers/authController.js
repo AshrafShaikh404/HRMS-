@@ -26,7 +26,6 @@ exports.register = async (req, res) => {
             name,
             email,
             passwordHash: password,
-            passwordHash: password,
             role: role || (await require('../models/Role').findOne({ name: 'Employee' }))._id,
             status: status || 'active',
             createdBy: req.user?._id || null
@@ -40,10 +39,11 @@ exports.register = async (req, res) => {
                 _id: user._id,
                 name: user.name,
                 email: user.email,
-                email: user.email,
                 role: user.role,
                 status: user.status,
-                permissions: PERMISSIONS[user.role] || []
+                permissions: user.role && user.role.permissions && user.role.permissions.length > 0
+                    ? user.role.permissions.map(p => p.name || p)
+                    : (PERMISSIONS[user.role.name?.toLowerCase()] || [])
             }
         });
     } catch (error) {
@@ -131,7 +131,9 @@ exports.login = async (req, res) => {
                 name: user.name,
                 email: user.email,
                 role: user.role,
-                permissions: PERMISSIONS[roleName] || []
+                permissions: user.role && user.role.permissions && user.role.permissions.length > 0
+                    ? user.role.permissions.map(p => p.name || p)
+                    : (PERMISSIONS[roleName] || [])
             },
             expiresIn: process.env.JWT_EXPIRE || '7d'
         });
@@ -332,7 +334,9 @@ exports.getMe = async (req, res) => {
             data: {
                 user: {
                     ...user.toObject(),
-                    permissions: PERMISSIONS[user.role] || []
+                    permissions: user.role && user.role.permissions && user.role.permissions.length > 0
+                        ? user.role.permissions.map(p => p.name || p)
+                        : (PERMISSIONS[roleName] || [])
                 },
                 employee: employeeDetails
             }
@@ -346,7 +350,6 @@ exports.getMe = async (req, res) => {
         });
     }
 };
-
 // @desc    Get all users (for Admin)
 // @route   GET /api/v1/auth/users
 // @access  Private (Admin)
@@ -381,45 +384,6 @@ exports.logout = async (req, res) => {
         res.status(500).json({
             success: false,
             message: 'Error logging out',
-            error: error.message
-        });
-    }
-};
-
-// @desc    Get current user
-// @route   GET /api/v1/auth/me
-// @access  Private
-exports.getMe = async (req, res) => {
-    try {
-        const user = await User.findById(req.user._id).populate('role');
-
-        if (!user) {
-            return res.status(404).json({
-                success: false,
-                message: 'User not found'
-            });
-        }
-
-        const roleName = user.role?.name ? user.role.name.toLowerCase() : 'employee';
-
-        res.status(200).json({
-            success: true,
-            data: {
-                user: {
-                    _id: user._id,
-                    name: user.name,
-                    email: user.email,
-                    role: user.role,
-                    status: user.status,
-                    permissions: PERMISSIONS[roleName] || []
-                }
-            }
-        });
-    } catch (error) {
-        console.error('Get me error:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Error fetching user data',
             error: error.message
         });
     }

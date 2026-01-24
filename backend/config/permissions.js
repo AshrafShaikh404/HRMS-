@@ -11,7 +11,8 @@ const PERMISSIONS = {
         'view_tickets_own',
         'view_holidays',
         'view_performance_review_own',
-        'submit_self_review'
+        'submit_self_review',
+        'view_own_goals'
     ],
     hr: [
         'view_dashboard_hr',
@@ -32,7 +33,8 @@ const PERMISSIONS = {
         'manage_performance_reviews',
         'view_performance_reviews_all',
         'conduct_hr_review',
-        'finalize_performance_reviews'
+        'finalize_performance_reviews',
+        'view_own_goals'
     ],
     manager: [
         'view_dashboard_manager',

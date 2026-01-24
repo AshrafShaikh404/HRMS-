@@ -28,7 +28,7 @@ import {
     Select
 } from '@mui/material';
 import {
-    RateReviewIcon,
+    RateReview as RateReviewIcon,
     Send as SubmitIcon,
     Visibility as ViewIcon
 } from '@mui/icons-material';
@@ -98,7 +98,7 @@ const TeamReviews = () => {
     const handleSubmitManagerReview = async () => {
         try {
             setSubmitting(true);
-            
+
             const payload = {
                 reviewId: selectedReview._id,
                 goals: selectedReview.goals.map(goal => ({
@@ -216,7 +216,7 @@ const TeamReviews = () => {
                                     {review.employeeId?.firstName} {review.employeeId?.lastName}
                                 </TableCell>
                                 <TableCell>
-                                    <Chip 
+                                    <Chip
                                         label={review.status}
                                         color={getStatusColor(review.status)}
                                         size="small"
@@ -275,14 +275,14 @@ const TeamReviews = () => {
                                 <Typography variant="h6" gutterBottom>
                                     Goals & Feedback
                                 </Typography>
-                                
+
                                 {selectedReview.goals?.map((goal) => (
                                     <Card key={goal.goalId._id} sx={{ mb: 2 }}>
                                         <CardContent>
                                             <Typography variant="subtitle1" gutterBottom>
                                                 {goal.goalId.title}
                                             </Typography>
-                                            
+
                                             <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
                                                 {goal.goalId.description}
                                             </Typography>
@@ -292,12 +292,12 @@ const TeamReviews = () => {
                                                     <Typography variant="body2" gutterBottom>
                                                         Employee Progress: {goal.finalProgress}%
                                                     </Typography>
-                                                    <LinearProgress 
-                                                        variant="determinate" 
-                                                        value={goal.finalProgress} 
+                                                    <LinearProgress
+                                                        variant="determinate"
+                                                        value={goal.finalProgress}
                                                         sx={{ mb: 2 }}
                                                     />
-                                                    
+
                                                     <Typography variant="body2" gutterBottom>
                                                         Employee Comments:
                                                     </Typography>
@@ -307,12 +307,12 @@ const TeamReviews = () => {
                                                         </Typography>
                                                     </Box>
                                                 </Grid>
-                                                
+
                                                 <Grid item xs={12} md={6}>
                                                     <Typography variant="body2" gutterBottom>
                                                         Weightage: {goal.goalId.weightage}%
                                                     </Typography>
-                                                    
+
                                                     {canReview(selectedReview) && (
                                                         <TextField
                                                             fullWidth
@@ -325,7 +325,7 @@ const TeamReviews = () => {
                                                             size="small"
                                                         />
                                                     )}
-                                                    
+
                                                     {!canReview(selectedReview) && goal.managerComment && (
                                                         <Box sx={{ mt: 1, p: 2, bgcolor: 'grey.50', borderRadius: 1 }}>
                                                             <Typography variant="body2">
@@ -345,7 +345,7 @@ const TeamReviews = () => {
                                 <Typography variant="h6" gutterBottom>
                                     Manager Rating
                                 </Typography>
-                                
+
                                 {canReview(selectedReview) ? (
                                     <Box>
                                         <Typography variant="body2" gutterBottom>

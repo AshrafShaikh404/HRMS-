@@ -30,7 +30,7 @@ import {
 } from '@mui/material';
 import {
     CheckCircle as FinalizeIcon,
-    RateReviewIcon,
+    RateReview as RateReviewIcon,
     Visibility as ViewIcon,
     Edit as EditIcon
 } from '@mui/icons-material';

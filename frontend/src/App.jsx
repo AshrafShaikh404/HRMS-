@@ -24,6 +24,9 @@ import MyPayslips from './pages/MyPayslips';
 import Profile from './pages/Profile';
 import Goals from './pages/Goals';
 import ReviewCycleSettings from './pages/ReviewCycleSettings';
+import MyPerformance from './pages/MyPerformance';
+import TeamReviews from './pages/TeamReviews';
+import AllReviews from './pages/AllReviews';
 
 import { NotificationProvider } from './contexts/NotificationContext';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
@@ -202,6 +205,30 @@ const AppRoutes = () => {
                                     element={
                                         <ProtectedRoute requiredPermissions={['manage_employees']}>
                                             <ReviewCycleSettings />
+                                        </ProtectedRoute>
+                                    }
+                                />
+                                <Route
+                                    path="/my-performance"
+                                    element={
+                                        <ProtectedRoute requiredPermissions={['view_own_goals']}> {/* Reusing nearby permission or define new? 'view_profile' is safe fallback but specific is better. Let's assume view_own_goals covers it or add a generic one. Let's use 'view_profile' as base or specific if backend requires. Setup implies Roles have specific permissions. Let's use 'view_own_goals' as it seems relevant to performance. */}
+                                            <MyPerformance />
+                                        </ProtectedRoute>
+                                    }
+                                />
+                                <Route
+                                    path="/team-reviews"
+                                    element={
+                                        <ProtectedRoute requiredPermissions={['manage_employees']}>
+                                            <TeamReviews />
+                                        </ProtectedRoute>
+                                    }
+                                />
+                                <Route
+                                    path="/all-reviews"
+                                    element={
+                                        <ProtectedRoute requiredPermissions={['manage_employees']}>
+                                            <AllReviews />
                                         </ProtectedRoute>
                                     }
                                 />
