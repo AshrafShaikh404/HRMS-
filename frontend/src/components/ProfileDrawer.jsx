@@ -194,7 +194,7 @@ function ProfileDrawer({ open, onClose, mode = 'view', onModeChange }) {
                             {userData?.name || `${employee?.firstName} ${employee?.lastName}`}
                         </Typography>
                         <Chip
-                            label={userData?.role?.toUpperCase() || employee?.designation || 'EMPLOYEE'}
+                            label={(typeof userData?.role === 'string' ? userData.role : userData?.role?.name || employee?.designation || 'EMPLOYEE').toUpperCase()}
                             color="primary"
                             size="small"
                             sx={{ mt: 1, borderRadius: '8px' }}

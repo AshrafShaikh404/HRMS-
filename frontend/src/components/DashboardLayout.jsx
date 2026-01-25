@@ -90,7 +90,6 @@ function DashboardLayout({ children }) {
 
     const navItems = [
         { path: '/dashboard', label: 'Dashboard', icon: <DashboardIcon />, requiredPermissions: ['view_dashboard_admin', 'view_dashboard_hr', 'view_dashboard_employee'] },
-        { path: '/profile', label: 'My Profile', icon: <ProfileIcon />, requiredPermissions: ['view_profile'] },
         { path: '/employees', label: 'Employees', icon: <PeopleIcon />, requiredPermissions: ['view_employees'] },
         { path: '/attendance', label: 'Attendance', icon: <AttendanceIcon />, requiredPermissions: ['view_attendance_all', 'view_attendance_own'] },
         {

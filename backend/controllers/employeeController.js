@@ -3,6 +3,7 @@ const User = require('../models/User');
 const Department = require('../models/Department');
 const Designation = require('../models/Designation');
 const Location = require('../models/Location');
+const Role = require('../models/Role');
 
 // @desc    Get all employees with pagination and filters
 // @route   GET /api/v1/employees
@@ -102,15 +103,22 @@ exports.getEmployee = async (req, res) => {
 // Helper: Calculate Profile Completion
 const calculateProfileCompletion = (data) => {
     const fields = [
-        'firstName', 'lastName', 'email', 'phone', 'department', 'designation',
-        'employmentType', 'joinDate', 'salary', 'address', 'city', 'state',
-        'pinCode', 'emergencyContact', 'bankAccount', 'panCard', 'aadharCard'
+        'firstName', 'lastName', 'email', 'phone', 'salary', 'address', 'city', 'state',
+        'pinCode', 'bankAccount', 'panCard', 'aadharCard'
     ];
     let filled = 0;
     fields.forEach(f => {
         if (data[f]) filled++;
     });
-    return Math.round((filled / fields.length) * 100);
+
+    // Check nested
+    if (data.jobInfo?.department) filled++;
+    if (data.jobInfo?.designation) filled++;
+    if (data.employmentDetails?.employmentType) filled++;
+    if (data.employmentDetails?.joinDate || data.employmentDetails?.joiningDate) filled++;
+
+    const totalFields = fields.length + 4;
+    return Math.round((filled / totalFields) * 100);
 };
 
 // Helper: Mock Send Email
@@ -140,18 +148,11 @@ exports.createEmployee = async (req, res) => {
             pinCode,
             emergencyContact,
 
-            // Nested Job Info IDs or Objects
-            department, // Expecting ID now
-            designation, // Expecting ID now
-            location, // Expecting ID now
-            reportingManager,
+            // Nested Job Info
+            jobInfo = {},
 
             // Nested Employment Details
-            employmentType,
-            employmentStatus,
-            joinDate,
-            probationPeriod,
-            confirmationDate,
+            employmentDetails = {},
 
             salary,
             bankAccount,
@@ -161,6 +162,9 @@ exports.createEmployee = async (req, res) => {
             pfNumber,
             esiNumber
         } = req.body;
+
+        const { department, designation, location, reportingManager } = jobInfo;
+        const { employmentType, employmentStatus, joinDate, probationPeriod, confirmationDate } = employmentDetails;
 
         // Validations
         // 1. Check Email
@@ -216,12 +220,19 @@ exports.createEmployee = async (req, res) => {
         if (password && password.length < 8) return res.status(400).json({ success: false, message: 'Password must be at least 8 characters long' });
         const tempPassword = password || Math.random().toString(36).slice(-8);
 
+        // Find employee role ID (Case-insensitive)
+        const employeeRole = await Role.findOne({ name: { $regex: /^employee$/i } });
+        if (!employeeRole) {
+            console.error('CRITICAL: Employee role not found in database');
+            return res.status(500).json({ success: false, message: 'Employee role configuration missing' });
+        }
+
         // Create User
         createdUser = await User.create({
             name: `${firstName} ${lastName}`,
             email,
             passwordHash: tempPassword,
-            role: 'employee',
+            role: employeeRole._id,
             status: 'active',
             createdBy: req.user._id
         });
@@ -476,21 +487,35 @@ exports.uploadDocument = async (req, res) => {
             });
         }
 
-        // Add document to employee
-        employee.documents.push({
+        // Update employee with atomic $push to prevent race conditions
+        const userRoleName = req.user.role?.name?.toLowerCase();
+        const isAdminOrHR = userRoleName === 'admin' || userRoleName === 'hr';
+
+        const newDocument = {
             name: req.body.documentType || 'Document',
             type: req.file.mimetype,
             filePath: req.file.path,
-            uploadDate: new Date()
-        });
+            uploadDate: new Date(),
+            status: isAdminOrHR ? 'Verified' : 'Pending',
+            verifiedBy: isAdminOrHR ? req.user._id : undefined,
+            verifiedAt: isAdminOrHR ? new Date() : undefined
+        };
 
-        await employee.save();
+        const updatedEmployee = await Employee.findByIdAndUpdate(
+            req.params.id,
+            { $push: { documents: newDocument } },
+            { new: true, runValidators: true }
+        );
+
+        if (!updatedEmployee) {
+            return res.status(404).json({ success: false, message: 'Employee not found' });
+        }
 
         res.status(200).json({
             success: true,
             message: 'Document uploaded successfully',
             data: {
-                documentId: employee.documents[employee.documents.length - 1]._id,
+                documentId: updatedEmployee.documents[updatedEmployee.documents.length - 1]._id,
                 fileName: req.file.filename,
                 uploadedAt: new Date()
             }
