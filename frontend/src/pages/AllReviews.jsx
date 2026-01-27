@@ -62,12 +62,14 @@ const AllReviews = () => {
         try {
             setLoading(true);
             const response = await performanceReviewAPI.getAllReviews(filters);
-            if (response.success) {
-                setReviews(response.data);
+            // Axios response data is in .data
+            if (response.data.success) {
+                setReviews(response.data.data);
             } else {
-                showError(response.message || 'Failed to fetch reviews');
+                showError(response.data.message || 'Failed to fetch reviews');
             }
         } catch (error) {
+            console.error('Error fetching reviews:', error);
             showError('Error fetching reviews');
         } finally {
             setLoading(false);
@@ -77,8 +79,8 @@ const AllReviews = () => {
     const fetchReviewCycles = async () => {
         try {
             const response = await reviewCycleAPI.getReviewCycles();
-            if (response.success) {
-                setReviewCycles(response.data);
+            if (response.data.success) {
+                setReviewCycles(response.data.data);
             }
         } catch (error) {
             console.error('Error fetching review cycles:', error);
@@ -87,9 +89,9 @@ const AllReviews = () => {
 
     const fetchDepartments = async () => {
         try {
-            const response = await departmentAPI.getDepartments();
-            if (response.success) {
-                setDepartments(response.data);
+            const response = await departmentAPI.getAll();
+            if (response.data.success) {
+                setDepartments(response.data.data);
             }
         } catch (error) {
             console.error('Error fetching departments:', error);
@@ -165,8 +167,8 @@ const AllReviews = () => {
         }
     };
 
-    const canSubmitHR = (review) => review.status === 'Manager Reviewed';
-    const canFinalize = (review) => review.status === 'HR Reviewed';
+    const canSubmitHR = (review) => review?.status === 'Manager Reviewed';
+    const canFinalize = (review) => review?.status === 'HR Reviewed';
 
     if (loading) {
         return (
@@ -473,7 +475,7 @@ const AllReviews = () => {
                     <Button onClick={() => setOpenDialog(false)}>
                         Close
                     </Button>
-                    {canSubmitHR(selectedReview) && (
+                    {selectedReview && canSubmitHR(selectedReview) && (
                         <Button
                             variant="contained"
                             color="primary"
@@ -484,7 +486,7 @@ const AllReviews = () => {
                             {submitting ? 'Submitting...' : 'Submit HR Review'}
                         </Button>
                     )}
-                    {canFinalize(selectedReview) && (
+                    {selectedReview && canFinalize(selectedReview) && (
                         <Button
                             variant="contained"
                             color="success"

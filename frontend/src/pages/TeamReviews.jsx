@@ -57,12 +57,13 @@ const TeamReviews = () => {
         try {
             setLoading(true);
             const response = await performanceReviewAPI.getTeamReviews(filters);
-            if (response.success) {
-                setReviews(response.data);
+            if (response.data.success) {
+                setReviews(response.data.data);
             } else {
-                showError(response.message || 'Failed to fetch team reviews');
+                showError(response.data.message || 'Failed to fetch team reviews');
             }
         } catch (error) {
+            console.error('Error fetching team reviews:', error);
             showError('Error fetching team reviews');
         } finally {
             setLoading(false);
@@ -72,8 +73,8 @@ const TeamReviews = () => {
     const fetchReviewCycles = async () => {
         try {
             const response = await reviewCycleAPI.getReviewCycles();
-            if (response.success) {
-                setReviewCycles(response.data);
+            if (response.data.success) {
+                setReviewCycles(response.data.data);
             }
         } catch (error) {
             console.error('Error fetching review cycles:', error);
@@ -140,8 +141,7 @@ const TeamReviews = () => {
         }
     };
 
-    const canReview = (review) => review.status === 'Self Submitted';
-
+    const canReview = (review) => review?.status === 'Self Submitted';
     if (loading) {
         return (
             <Box sx={{ p: 3 }}>
@@ -385,7 +385,7 @@ const TeamReviews = () => {
                     <Button onClick={() => setOpenDialog(false)}>
                         Cancel
                     </Button>
-                    {canReview(selectedReview) && (
+                    {selectedReview && canReview(selectedReview) && (
                         <Button
                             variant="contained"
                             onClick={handleSubmitManagerReview}
