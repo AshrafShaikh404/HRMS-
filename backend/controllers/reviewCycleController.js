@@ -15,13 +15,7 @@ exports.createReviewCycle = async (req, res) => {
             status
         } = req.body;
 
-        // Validation: Only one ACTIVE cycle allowed
-        if (status === 'Active') {
-            const existingActive = await ReviewCycle.findOne({ status: 'Active' });
-            if (existingActive) {
-                return res.status(400).json({ success: false, message: 'There is already an active review cycle.' });
-            }
-        }
+        // Validation removed: multiple ACTIVE cycles allowed now
 
         const cycle = await ReviewCycle.create({
             name,
@@ -66,16 +60,7 @@ exports.updateReviewCycle = async (req, res) => {
     try {
         const { status } = req.body;
 
-        // Check active constraint if status changes to Active
-        if (status === 'Active') {
-            const existingActive = await ReviewCycle.findOne({
-                status: 'Active',
-                _id: { $ne: req.params.id }
-            });
-            if (existingActive) {
-                return res.status(400).json({ success: false, message: 'There is already an active review cycle.' });
-            }
-        }
+        // Check active constraint removed
 
         const cycle = await ReviewCycle.findByIdAndUpdate(req.params.id, req.body, {
             new: true,

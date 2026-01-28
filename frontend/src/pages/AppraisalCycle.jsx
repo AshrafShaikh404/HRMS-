@@ -7,7 +7,7 @@ import {
     TableCell, TableContainer, TableHead, TableRow, Paper,
     CircularProgress, Alert
 } from '@mui/material';
-import { Add as AddIcon, Link as LinkIcon } from '@mui/icons-material';
+import { Add as AddIcon } from '@mui/icons-material';
 import { appraisalAPI, reviewCycleAPI } from '../utils/api';
 
 const AppraisalCycle = () => {
@@ -19,7 +19,8 @@ const AppraisalCycle = () => {
     const [formData, setFormData] = useState({
         name: '',
         linkedReviewCycle: '',
-        effectiveFrom: ''
+        effectiveFrom: '',
+        status: 'Draft'
     });
     const [error, setError] = useState(null);
 
@@ -49,10 +50,29 @@ const AppraisalCycle = () => {
         try {
             await appraisalAPI.createCycle(formData);
             setOpen(false);
-            setFormData({ name: '', linkedReviewCycle: '', effectiveFrom: '' });
+            setFormData({ name: '', linkedReviewCycle: '', effectiveFrom: '', status: 'Draft' });
             fetchData();
         } catch (err) {
             setError(err.response?.data?.message || 'Failed to create cycle');
+        }
+    };
+
+    const handleStatusUpdate = async (id, newStatus) => {
+        try {
+            await appraisalAPI.updateCycle(id, { status: newStatus });
+            fetchData();
+        } catch (err) {
+            setError(err.response?.data?.message || 'Failed to update status');
+        }
+    };
+
+    const handleDelete = async (id) => {
+        if (!window.confirm('Are you sure you want to delete this cycle? This will only work if no appraisal records exist.')) return;
+        try {
+            await appraisalAPI.deleteCycle(id);
+            fetchData();
+        } catch (err) {
+            setError(err.response?.data?.message || 'Failed to delete cycle');
         }
     };
 
@@ -101,16 +121,36 @@ const AppraisalCycle = () => {
                                 <TableCell>{cycle.linkedReviewCycle?.name}</TableCell>
                                 <TableCell>{new Date(cycle.effectiveFrom).toLocaleDateString('en-GB', { month: 'long', year: 'numeric' })}</TableCell>
                                 <TableCell>
-                                    <Chip label={cycle.status} size="small" color={getStatusColor(cycle.status)} />
+                                    <TextField
+                                        select
+                                        size="small"
+                                        value={cycle.status}
+                                        onChange={(e) => handleStatusUpdate(cycle._id, e.target.value)}
+                                        sx={{ minWidth: 100 }}
+                                    >
+                                        <MenuItem value="Draft">Draft</MenuItem>
+                                        <MenuItem value="Active">Active</MenuItem>
+                                        <MenuItem value="Closed">Closed</MenuItem>
+                                    </TextField>
                                 </TableCell>
                                 <TableCell>
-                                    <Button
-                                        size="small"
-                                        variant="outlined"
-                                        onClick={() => navigate(`/appraisals/management?cycleId=${cycle._id}`)}
-                                    >
-                                        Manage
-                                    </Button>
+                                    <Box sx={{ display: 'flex', gap: 1 }}>
+                                        <Button
+                                            size="small"
+                                            variant="outlined"
+                                            onClick={() => navigate(`/appraisals/management?cycleId=${cycle._id}`)}
+                                        >
+                                            Manage
+                                        </Button>
+                                        <Button
+                                            size="small"
+                                            variant="outlined"
+                                            color="error"
+                                            onClick={() => handleDelete(cycle._id)}
+                                        >
+                                            Delete
+                                        </Button>
+                                    </Box>
                                 </TableCell>
                             </TableRow>
                         ))}
@@ -156,6 +196,17 @@ const AppraisalCycle = () => {
                             value={formData.effectiveFrom}
                             onChange={(e) => setFormData({ ...formData, effectiveFrom: e.target.value })}
                         />
+                        <TextField
+                            select
+                            label="Initial Status"
+                            fullWidth
+                            value={formData.status}
+                            onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                        >
+                            <MenuItem value="Draft">Draft</MenuItem>
+                            <MenuItem value="Active">Active</MenuItem>
+                            <MenuItem value="Closed">Closed</MenuItem>
+                        </TextField>
                     </Box>
                 </DialogContent>
                 <DialogActions sx={{ p: 2 }}>

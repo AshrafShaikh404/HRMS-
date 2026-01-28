@@ -83,7 +83,7 @@ const MyAppraisals = () => {
                                                     <Typography variant="caption" color="textSecondary">Increment Details</Typography>
                                                     <Typography variant="body1" fontWeight="700" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                                                         <IncrementIcon sx={{ color: '#10B981', fontSize: 18 }} />
-                                                        {record.incrementType === 'Percentage' ? `${record.incrementValue}%` : `₹${record.incrementValue.toLocaleString()}`}
+                                                        {record.incrementType === 'Percentage' ? `${record.incrementValue}%` : `₹${record.incrementValue?.toLocaleString()}`}
                                                     </Typography>
                                                 </Box>
                                                 <Box>

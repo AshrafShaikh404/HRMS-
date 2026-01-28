@@ -5,14 +5,15 @@ const PERMISSIONS = {
         'edit_profile',
         'view_attendance_own',
         'view_leaves_own',
-        'apply_leave',
+        'apply_leaves',
         'view_payroll_own',
         'create_ticket',
         'view_tickets_own',
         'view_holidays',
         'view_performance_review_own',
         'submit_self_review',
-        'view_own_goals'
+        'view_own_goals',
+        'view_appraisals'
     ],
     hr: [
         'view_dashboard_hr',

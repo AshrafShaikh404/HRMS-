@@ -35,7 +35,7 @@ const syncPermissions = async () => {
                         module: 'General' // Default module
                     });
                 }
-                permissionIds.push(perm.name);
+                permissionIds.push(perm._id);
             }
 
             // 2. Update Role

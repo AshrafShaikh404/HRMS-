@@ -5,7 +5,7 @@ import {
     TextField, MenuItem, Chip, Table, TableBody,
     TableCell, TableContainer, TableHead, TableRow, Paper,
     CircularProgress, Alert, Avatar, Stack, Dialog, DialogTitle,
-    DialogContent, DialogActions, Stepper, Step, StepLabel
+    DialogContent, DialogActions
 } from '@mui/material';
 import {
     TrendingUp as TrendingUpIcon,
@@ -203,7 +203,7 @@ const AppraisalManagement = () => {
                                                 <TableCell>
                                                     {record.incrementType === 'Percentage' ? `${record.incrementValue}%` : `₹${record.incrementValue}`}
                                                 </TableCell>
-                                                <TableCell fontWeight="bold">₹{record.newCTC?.toLocaleString()}</TableCell>
+                                                <TableCell sx={{ fontWeight: 'bold' }}>₹{record.newCTC?.toLocaleString()}</TableCell>
                                                 <TableCell>
                                                     {record.newDesignation?.name || '-'}
                                                 </TableCell>
@@ -305,7 +305,7 @@ const AppraisalManagement = () => {
                                 <Box>
                                     <Typography variant="caption" color="success.main">Projected New CTC</Typography>
                                     <Typography variant="h6" color="success.dark" fontWeight="bold">
-                                        ₹{calculateNewSalary().toLocaleString()}
+                                        ₹{calculateNewSalary()?.toLocaleString()}
                                     </Typography>
                                 </Box>
                                 <Chip label={`+${((calculateNewSalary() - selectedEmployee.employeeId.salary) / selectedEmployee.employeeId.salary * 100).toFixed(1)}%`} color="success" />

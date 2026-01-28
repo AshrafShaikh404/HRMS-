@@ -10,7 +10,7 @@ const mongoose = require('mongoose');
 // @access  Private (Admin, HR)
 exports.createAppraisalCycle = async (req, res) => {
     try {
-        const { name, linkedReviewCycle, effectiveFrom } = req.body;
+        const { name, linkedReviewCycle, effectiveFrom, status } = req.body;
 
         // Check if cycle already exists for this review cycle
         const existingCycle = await AppraisalCycle.findOne({ linkedReviewCycle });
@@ -22,6 +22,7 @@ exports.createAppraisalCycle = async (req, res) => {
             name,
             linkedReviewCycle,
             effectiveFrom,
+            status: status || 'Draft',
             createdBy: req.user._id
         });
 
@@ -249,6 +250,33 @@ exports.getAppraisalCycles = async (req, res) => {
     try {
         const cycles = await AppraisalCycle.find().populate('linkedReviewCycle', 'name status').sort({ createdAt: -1 });
         res.status(200).json({ success: true, data: cycles });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+exports.updateAppraisalCycle = async (req, res) => {
+    try {
+        const cycle = await AppraisalCycle.findByIdAndUpdate(req.params.id, req.body, {
+            new: true,
+            runValidators: true
+        });
+        if (!cycle) return res.status(404).json({ success: false, message: 'Appraisal cycle not found' });
+        res.status(200).json({ success: true, data: cycle });
+    } catch (error) {
+        res.status(400).json({ success: false, message: error.message });
+    }
+};
+
+exports.deleteAppraisalCycle = async (req, res) => {
+    try {
+        const appraisalCount = await AppraisalRecord.countDocuments({ appraisalCycleId: req.params.id });
+        if (appraisalCount > 0) {
+            return res.status(400).json({ success: false, message: 'Cannot delete cycle with existing appraisal records' });
+        }
+        const cycle = await AppraisalCycle.findByIdAndDelete(req.params.id);
+        if (!cycle) return res.status(404).json({ success: false, message: 'Appraisal cycle not found' });
+        res.status(200).json({ success: true, message: 'Appraisal cycle deleted' });
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
     }

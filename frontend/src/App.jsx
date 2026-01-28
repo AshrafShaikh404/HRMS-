@@ -198,7 +198,7 @@ const AppRoutes = () => {
                                 <Route
                                     path="/goals"
                                     element={
-                                        <ProtectedRoute requiredPermissions={['manage_employees']}>
+                                        <ProtectedRoute requiredPermissions={['manage_employees', 'view_own_goals', 'view_appraisals', 'view_dashboard', 'apply_leaves']}>
                                             <Goals />
                                         </ProtectedRoute>
                                     }
@@ -214,7 +214,7 @@ const AppRoutes = () => {
                                 <Route
                                     path="/my-performance"
                                     element={
-                                        <ProtectedRoute requiredPermissions={['view_own_goals']}> {/* Reusing nearby permission or define new? 'view_profile' is safe fallback but specific is better. Let's assume view_own_goals covers it or add a generic one. Let's use 'view_profile' as base or specific if backend requires. Setup implies Roles have specific permissions. Let's use 'view_own_goals' as it seems relevant to performance. */}
+                                        <ProtectedRoute requiredPermissions={['view_own_goals', 'view_appraisals', 'view_dashboard', 'apply_leaves']}>
                                             <MyPerformance />
                                         </ProtectedRoute>
                                     }
@@ -256,7 +256,7 @@ const AppRoutes = () => {
                                 <Route
                                     path="/my-appraisals"
                                     element={
-                                        <ProtectedRoute requiredPermissions={['view_appraisals']}>
+                                        <ProtectedRoute requiredPermissions={['view_appraisals', 'view_dashboard', 'apply_leaves']}>
                                             <MyAppraisals />
                                         </ProtectedRoute>
                                     }

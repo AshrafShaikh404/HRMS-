@@ -38,8 +38,7 @@ import {
     ExpandLess,
     ExpandMore,
     Place as LocationIcon,
-    TrendingUp as PerformanceIcon, // Added for PMS
-    TrendingUp as IncrementIcon,
+    TrendingUp as PerformanceIcon, // Reusing for Appraisal as well
     Assessment as AssessmentIcon,
     Settings as SettingsIcon,
 } from '@mui/icons-material';
@@ -108,15 +107,15 @@ function DashboardLayout({ children }) {
         {
             label: 'Performance',
             icon: <PerformanceIcon />,
-            requiredPermissions: ['view_own_goals', 'manage_employees'],
+            requiredPermissions: ['view_own_goals', 'manage_employees', 'view_appraisals'],
             children: [
-                { path: '/my-performance', label: 'My Performance', icon: <PerformanceIcon />, requiredPermissions: ['view_own_goals'] },
-                { path: '/goals', label: 'Goals', icon: <WorkIcon />, requiredPermissions: ['manage_employees', 'view_own_goals'] },
+                { path: '/my-performance', label: 'My Performance', icon: <PerformanceIcon />, requiredPermissions: ['view_own_goals', 'view_performance_review_own', 'submit_self_review', 'view_appraisals', 'view_dashboard', 'apply_leaves'] },
+                { path: '/goals', label: 'Goals', icon: <WorkIcon />, requiredPermissions: ['view_own_goals', 'manage_employees', 'view_appraisals', 'view_dashboard', 'apply_leaves'] },
                 { path: '/team-reviews', label: 'Team Reviews', icon: <PeopleIcon />, requiredPermissions: ['manage_employees'] },
                 { path: '/all-reviews', label: 'All Reviews', icon: <AssessmentIcon />, requiredPermissions: ['manage_employees'] },
                 { path: '/review-cycles', label: 'Review Cycles', icon: <SettingsIcon />, requiredPermissions: ['manage_employees'] },
                 { path: '/appraisals/cycles', label: 'Appraisal Cycles', icon: <PaymentsIcon />, requiredPermissions: ['manage_appraisals'] },
-                { path: '/my-appraisals', label: 'My Appraisals', icon: <IncrementIcon />, requiredPermissions: ['view_appraisals'] },
+                { path: '/my-appraisals', label: 'My Appraisals', icon: <PerformanceIcon />, requiredPermissions: ['view_appraisals'] },
             ]
         },
         { path: '/payroll', label: 'Payroll Management', icon: <PayrollIcon />, requiredPermissions: ['view_payroll_all', 'manage_payroll'] },

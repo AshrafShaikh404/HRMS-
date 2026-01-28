@@ -60,8 +60,12 @@ export const AuthProvider = ({ children }) => {
         const roleName = typeof user.role === 'string' ? user.role : user.role?.name;
         if (roleName?.toLowerCase() === 'admin') return true;
 
-        if (!user.permissions) return false;
-        return user.permissions.includes(permission);
+        if (!user.permissions || !Array.isArray(user.permissions)) return false;
+
+        const lowerPermission = permission.toLowerCase();
+        return user.permissions.some(p =>
+            (typeof p === 'string' ? p.toLowerCase() : p?.name?.toLowerCase()) === lowerPermission
+        );
     };
 
     const hasAnyPermission = (permissions) => {
@@ -71,8 +75,13 @@ export const AuthProvider = ({ children }) => {
         const roleName = typeof user.role === 'string' ? user.role : user.role?.name;
         if (roleName?.toLowerCase() === 'admin') return true;
 
-        if (!user.permissions) return false;
-        return permissions.some(p => user.permissions.includes(p));
+        if (!user.permissions || !Array.isArray(user.permissions)) return false;
+
+        const lowerUserPerms = user.permissions.map(p =>
+            (typeof p === 'string' ? p.toLowerCase() : p?.name?.toLowerCase())
+        );
+
+        return permissions.some(p => lowerUserPerms.includes(p.toLowerCase()));
     };
 
     return (
