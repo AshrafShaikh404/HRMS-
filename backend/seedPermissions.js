@@ -47,6 +47,8 @@ const permissionsList = [
     { name: 'manage_job_information', module: 'Employees', description: 'Manage Job Information' },
 
     { name: 'view_own_goals', module: 'Performance', description: 'View Assigned Goals' },
+    { name: 'manage_appraisals', module: 'Performance', description: 'Manage Employee Appraisals' },
+    { name: 'view_appraisals', module: 'Performance', description: 'View Appraisal History' },
 ];
 
 const roleDefinitions = {
@@ -60,13 +62,13 @@ const roleDefinitions = {
         name: 'HR',
         description: 'Human Resources Manager',
         isSystem: true,
-        permissions: ['view_dashboard', 'view_employees', 'create_employees', 'update_employees', 'view_attendance', 'update_attendance', 'view_leaves', 'approve_leaves', 'apply_leaves', 'manage_leave_types', 'manage_leave_policies', 'view_leave_balance', 'view_payroll', 'process_payroll', 'view_calendar', 'view_helpdesk', 'manage_helpdesk', 'view_reports', 'view_own_goals']
+        permissions: ['view_dashboard', 'view_employees', 'create_employees', 'update_employees', 'view_attendance', 'update_attendance', 'view_leaves', 'approve_leaves', 'apply_leaves', 'manage_leave_types', 'manage_leave_policies', 'view_leave_balance', 'view_payroll', 'process_payroll', 'view_calendar', 'view_helpdesk', 'manage_helpdesk', 'view_reports', 'view_own_goals', 'manage_appraisals', 'view_appraisals']
     },
     employee: {
         name: 'Employee',
         description: 'Standard Employee',
         isSystem: true,
-        permissions: ['view_dashboard', 'view_calendar', 'apply_leaves', 'view_leaves', 'view_leave_balance', 'view_attendance', 'view_helpdesk', 'view_own_goals']
+        permissions: ['view_dashboard', 'view_calendar', 'apply_leaves', 'view_leaves', 'view_leave_balance', 'view_attendance', 'view_helpdesk', 'view_own_goals', 'view_appraisals']
     }
 };
 

@@ -39,6 +39,7 @@ import {
     ExpandMore,
     Place as LocationIcon,
     TrendingUp as PerformanceIcon, // Added for PMS
+    TrendingUp as IncrementIcon,
     Assessment as AssessmentIcon,
     Settings as SettingsIcon,
 } from '@mui/icons-material';
@@ -114,6 +115,8 @@ function DashboardLayout({ children }) {
                 { path: '/team-reviews', label: 'Team Reviews', icon: <PeopleIcon />, requiredPermissions: ['manage_employees'] },
                 { path: '/all-reviews', label: 'All Reviews', icon: <AssessmentIcon />, requiredPermissions: ['manage_employees'] },
                 { path: '/review-cycles', label: 'Review Cycles', icon: <SettingsIcon />, requiredPermissions: ['manage_employees'] },
+                { path: '/appraisals/cycles', label: 'Appraisal Cycles', icon: <PaymentsIcon />, requiredPermissions: ['manage_appraisals'] },
+                { path: '/my-appraisals', label: 'My Appraisals', icon: <IncrementIcon />, requiredPermissions: ['view_appraisals'] },
             ]
         },
         { path: '/payroll', label: 'Payroll Management', icon: <PayrollIcon />, requiredPermissions: ['view_payroll_all', 'manage_payroll'] },
@@ -380,7 +383,7 @@ function DashboardLayout({ children }) {
                     sx={{
                         flexGrow: 1,
                         backgroundColor: 'background.default',
-                        p: { xs: 2, sm: 3 },
+                        p: { xs: 1.5, sm: 2, md: 3 },
                         overflow: 'auto',
                     }}
                 >

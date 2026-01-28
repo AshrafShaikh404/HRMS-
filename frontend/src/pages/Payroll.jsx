@@ -36,7 +36,7 @@ import {
 } from '@mui/icons-material';
 
 const Payroll = () => {
-    const { user, hasPermission } = useAuth();
+    const { user } = useAuth();
     const { showSuccess, showError } = useNotification();
     const [payslips, setPayslips] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -141,115 +141,276 @@ const Payroll = () => {
         setExporting(false);
     };
 
+    const role = typeof user.role === 'string' ? user.role : user.role?.name?.toLowerCase();
+    const isAdminOrHR = role === 'admin' || role === 'hr';
+
+    // Aggregated payroll metrics (admin/hr view)
+    const totalEmployeesInRun = payslips.length;
+    const totalNetPayout = payslips.reduce((sum, p) => sum + (p.netSalary || 0), 0);
+    const averageNetPayout = totalEmployeesInRun
+        ? Math.round(totalNetPayout / totalEmployeesInRun)
+        : 0;
+    const generatedCount = payslips.filter(p => p.status === 'generated').length;
+    const paidCount = payslips.filter(p => p.status === 'paid').length;
+    const pendingCount = payslips.filter(p => p.status === 'pending').length;
+    const lockedCount = payslips.filter(p => p.status === 'locked').length;
+
+    const periodLabel = new Date(selectedYear, selectedMonth - 1).toLocaleString('default', {
+        month: 'long',
+        year: 'numeric'
+    });
+
     if (loading) {
         return (
-            <Box>
-                <Skeleton variant="text" width={200} height={40} sx={{ mb: 3 }} />
-                <Skeleton variant="rounded" height={400} />
+            <Box
+                sx={{
+                    width: '100%',
+                    minHeight: '100vh',
+                    bgcolor: 'background.default',
+                    px: { xs: 2, md: 3 },
+                    py: { xs: 2, md: 3 }
+                }}
+            >
+                <Skeleton variant="text" width={260} height={40} sx={{ mb: 3 }} />
+                <Skeleton variant="rounded" height={140} sx={{ mb: 3 }} />
+                <Skeleton variant="rounded" height={320} />
             </Box>
         );
     }
 
     return (
-        <Box>
-            {/* Page Header */}
-            <Box sx={{
-                display: 'flex',
-                flexDirection: { xs: 'column', sm: 'row' },
-                justifyContent: 'space-between',
-                alignItems: { xs: 'flex-start', sm: 'center' },
-                gap: 2,
-                mb: 3
-            }}>
+        <Box
+            sx={{
+                width: '100%',
+                minHeight: '100vh',
+                bgcolor: 'background.default',
+                px: { xs: 2, md: 3 },
+                py: { xs: 2.5, md: 3 }
+            }}
+        >
+            {/* Header + period controls */}
+            <Box
+                sx={{
+                    display: 'flex',
+                    flexDirection: { xs: 'column', md: 'row' },
+                    alignItems: { xs: 'flex-start', md: 'center' },
+                    justifyContent: 'space-between',
+                    gap: 2,
+                    mb: 3
+                }}
+            >
                 <Box>
-                    <Typography variant="h4" fontWeight="bold" gutterBottom>
-                        Payroll
+                    <Typography variant="h4" fontWeight={700} sx={{ mb: 0.5 }}>
+                        Payroll Overview
                     </Typography>
-                    <Typography variant="body1" color="text.secondary">
-                        Manage employee salary and payslips
+                    <Typography variant="body2" color="text.secondary">
+                        Monthly payroll summary for {periodLabel}
                     </Typography>
                 </Box>
-                {['admin', 'hr'].includes(typeof user.role === 'string' ? user.role : user.role?.name?.toLowerCase()) && (
+
+                <Box
+                    sx={{
+                        display: 'flex',
+                        flexWrap: 'wrap',
+                        gap: 1.5,
+                        alignItems: 'center'
+                    }}
+                >
+                    <FormControl size="small" sx={{ minWidth: 140 }}>
+                        <InputLabel>Month</InputLabel>
+                        <Select
+                            value={selectedMonth}
+                            onChange={(e) => setSelectedMonth(Number(e.target.value))}
+                            label="Month"
+                        >
+                            {[...Array(12)].map((_, i) => (
+                                <MenuItem key={i + 1} value={i + 1}>
+                                    {new Date(2024, i).toLocaleString('default', { month: 'long' })}
+                                </MenuItem>
+                            ))}
+                        </Select>
+                    </FormControl>
+                    <FormControl size="small" sx={{ minWidth: 110 }}>
+                        <InputLabel>Year</InputLabel>
+                        <Select
+                            value={selectedYear}
+                            onChange={(e) => setSelectedYear(Number(e.target.value))}
+                            label="Year"
+                        >
+                            <MenuItem value={2024}>2024</MenuItem>
+                            <MenuItem value={2025}>2025</MenuItem>
+                            <MenuItem value={2026}>2026</MenuItem>
+                        </Select>
+                    </FormControl>
                     <Button
-                        variant="contained"
-                        startIcon={<SettingsIcon />}
-                        onClick={() => setShowGenerateModal(true)}
+                        variant="outlined"
+                        startIcon={<RefreshIcon />}
+                        onClick={fetchPayslips}
                         sx={{ borderRadius: 2 }}
                     >
-                        Generate Payroll
+                        Refresh
                     </Button>
-                )}
+                    {isAdminOrHR && (
+                        <>
+                            <Button
+                                variant="outlined"
+                                startIcon={exporting ? <CircularProgress size={16} /> : <DownloadIcon />}
+                                onClick={handleExportCSV}
+                                disabled={exporting || payslips.length === 0}
+                                sx={{ borderRadius: 2 }}
+                                color="success"
+                            >
+                                Export CSV
+                            </Button>
+                            <Button
+                                variant="outlined"
+                                startIcon={exporting ? <CircularProgress size={16} /> : <PdfIcon />}
+                                onClick={handleExportPDF}
+                                disabled={exporting || payslips.length === 0}
+                                sx={{ borderRadius: 2 }}
+                                color="error"
+                            >
+                                Export PDF
+                            </Button>
+                            <Button
+                                variant="contained"
+                                startIcon={<SettingsIcon />}
+                                onClick={() => setShowGenerateModal(true)}
+                                sx={{ borderRadius: 2 }}
+                            >
+                                Generate Payroll
+                            </Button>
+                        </>
+                    )}
+                </Box>
             </Box>
 
-            {/* Month/Year Filter */}
-            <Box sx={{
-                display: 'flex',
-                flexDirection: { xs: 'column', sm: 'row' },
-                gap: 2,
-                mb: 3
-            }}>
-                <FormControl size="small" sx={{ minWidth: 150 }}>
-                    <InputLabel>Month</InputLabel>
-                    <Select
-                        value={selectedMonth}
-                        onChange={(e) => setSelectedMonth(Number(e.target.value))}
-                        label="Month"
+            {/* KPI row – 12-column responsive grid */}
+            {isAdminOrHR && (
+                <Box sx={{ mb: 3 }}>
+                    <Box
+                        sx={{
+                            display: 'grid',
+                            gridTemplateColumns: {
+                                xs: '1fr',
+                                sm: 'repeat(2, minmax(0, 1fr))',
+                                lg: 'repeat(4, minmax(0, 1fr))'
+                            },
+                            gap: 2
+                        }}
                     >
-                        {[...Array(12)].map((_, i) => (
-                            <MenuItem key={i + 1} value={i + 1}>
-                                {new Date(2024, i).toLocaleString('default', { month: 'long' })}
-                            </MenuItem>
-                        ))}
-                    </Select>
-                </FormControl>
-                <FormControl size="small" sx={{ minWidth: 100 }}>
-                    <InputLabel>Year</InputLabel>
-                    <Select
-                        value={selectedYear}
-                        onChange={(e) => setSelectedYear(Number(e.target.value))}
-                        label="Year"
-                    >
-                        <MenuItem value={2024}>2024</MenuItem>
-                        <MenuItem value={2025}>2025</MenuItem>
-                        <MenuItem value={2026}>2026</MenuItem>
-                    </Select>
-                </FormControl>
-                <Button
-                    variant="outlined"
-                    startIcon={<RefreshIcon />}
-                    onClick={fetchPayslips}
-                    sx={{ borderRadius: 2 }}
-                >
-                    Refresh
-                </Button>
-                {['admin', 'hr'].includes(typeof user.role === 'string' ? user.role : user.role?.name?.toLowerCase()) && (
-                    <>
-                        <Button
-                            variant="outlined"
-                            startIcon={exporting ? <CircularProgress size={16} /> : <DownloadIcon />}
-                            onClick={handleExportCSV}
-                            disabled={exporting || payslips.length === 0}
-                            sx={{ borderRadius: 2 }}
-                            color="success"
+                        <Paper
+                            elevation={0}
+                            sx={{
+                                p: 2.25,
+                                borderRadius: 3,
+                                border: '1px solid',
+                                borderColor: 'divider',
+                                bgcolor: 'background.paper'
+                            }}
                         >
-                            Export CSV
-                        </Button>
-                        <Button
-                            variant="outlined"
-                            startIcon={exporting ? <CircularProgress size={16} /> : <PdfIcon />}
-                            onClick={handleExportPDF}
-                            disabled={exporting || payslips.length === 0}
-                            sx={{ borderRadius: 2 }}
-                            color="error"
-                        >
-                            Export PDF
-                        </Button>
-                    </>
-                )}
-            </Box>
+                            <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }}>
+                                Employees in run
+                            </Typography>
+                            <Typography
+                                variant="h4"
+                                sx={{ mt: 1, fontWeight: 800, letterSpacing: '-0.03em' }}
+                            >
+                                {totalEmployeesInRun}
+                            </Typography>
+                            <Typography variant="caption" color="text.secondary">
+                                For {periodLabel}
+                            </Typography>
+                        </Paper>
 
-            {/* Payslips Table */}
-            <TableContainer component={Paper} sx={{ borderRadius: 2, overflowX: 'auto' }}>
+                        <Paper
+                            elevation={0}
+                            sx={{
+                                p: 2.25,
+                                borderRadius: 3,
+                                border: '1px solid',
+                                borderColor: 'divider',
+                                bgcolor: 'background.paper'
+                            }}
+                        >
+                            <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }}>
+                                Total net payout
+                            </Typography>
+                            <Typography
+                                variant="h4"
+                                sx={{ mt: 1, fontWeight: 800, letterSpacing: '-0.03em' }}
+                            >
+                                ₹{totalNetPayout.toLocaleString()}
+                            </Typography>
+                            <Typography variant="caption" color="success.main" sx={{ fontWeight: 600 }}>
+                                Approved / paid salaries
+                            </Typography>
+                        </Paper>
+
+                        <Paper
+                            elevation={0}
+                            sx={{
+                                p: 2.25,
+                                borderRadius: 3,
+                                border: '1px solid',
+                                borderColor: 'divider',
+                                bgcolor: 'background.paper'
+                            }}
+                        >
+                            <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }}>
+                                Average net salary
+                            </Typography>
+                            <Typography
+                                variant="h4"
+                                sx={{ mt: 1, fontWeight: 800, letterSpacing: '-0.03em' }}
+                            >
+                                ₹{averageNetPayout.toLocaleString()}
+                            </Typography>
+                            <Typography variant="caption" color="text.secondary">
+                                Across all employees this run
+                            </Typography>
+                        </Paper>
+
+                        <Paper
+                            elevation={0}
+                            sx={{
+                                p: 2.25,
+                                borderRadius: 3,
+                                border: '1px solid',
+                                borderColor: 'divider',
+                                bgcolor: 'background.paper',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                justifyContent: 'space-between'
+                            }}
+                        >
+                            <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, mb: 1 }}>
+                                Run status
+                            </Typography>
+                            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.75 }}>
+                                <Chip label={`Generated ${generatedCount}`} size="small" color="info" />
+                                <Chip label={`Paid ${paidCount}`} size="small" color="success" />
+                                <Chip label={`Pending ${pendingCount}`} size="small" color="warning" />
+                                {lockedCount > 0 && (
+                                    <Chip label={`Locked ${lockedCount}`} size="small" color="default" />
+                                )}
+                            </Box>
+                        </Paper>
+                    </Box>
+                </Box>
+            )}
+
+            {/* Main table block */}
+            <TableContainer
+                component={Paper}
+                sx={{
+                    borderRadius: 3,
+                    overflowX: 'auto',
+                    border: '1px solid',
+                    borderColor: 'divider',
+                    bgcolor: 'background.paper'
+                }}
+            >
                 <Table sx={{ minWidth: 650 }}>
                     <TableHead>
                         <TableRow>

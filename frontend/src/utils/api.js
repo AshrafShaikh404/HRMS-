@@ -213,20 +213,20 @@ export const reviewCycleAPI = {
 export const performanceReviewAPI = {
     // Initialize review for employee
     initReview: (data) => api.post('/performance-reviews/init', data),
-    
+
     // Get reviews based on role
     getMyReview: () => api.get('/performance-reviews/my'),
     getTeamReviews: (filters) => api.get('/performance-reviews/team', { params: filters }),
     getAllReviews: (filters) => api.get('/performance-reviews/all', { params: filters }),
-    
+
     // Submit reviews
     submitSelfReview: (data) => api.patch('/performance-reviews/self', data),
     submitManagerReview: (data) => api.patch('/performance-reviews/manager', data),
     submitHRReview: (data) => api.patch('/performance-reviews/hr', data),
-    
+
     // Finalize review
     finalizeReview: (data) => api.patch('/performance-reviews/finalize', data),
-    
+
     // Legacy endpoints (for backward compatibility)
     get: (id) => api.get(`/performance-reviews/${id}`),
     getAll: (params) => api.get('/performance-reviews', { params }),
@@ -235,6 +235,18 @@ export const performanceReviewAPI = {
     updateManagerReview: (id, data) => api.put(`/performance-reviews/${id}/manager-review`, data),
     updateHRReview: (id, data) => api.put(`/performance-reviews/${id}/hr-review`, data),
     finalize: (id) => api.put(`/performance-reviews/${id}/finalize`),
+};
+
+// Appraisal & Increment APIs
+export const appraisalAPI = {
+    getCycles: () => api.get('/appraisals/cycles'),
+    createCycle: (data) => api.post('/appraisals/cycles', data),
+    getEligibleEmployees: (cycleId) => api.get(`/appraisals/cycles/${cycleId}/eligible-employees`),
+    proposeIncrement: (data) => api.post('/appraisals/propose', data),
+    approveAppraisal: (id) => api.patch(`/appraisals/${id}/approve`),
+    rejectAppraisal: (id) => api.patch(`/appraisals/${id}/reject`),
+    getAllAppraisals: (filters) => api.get('/appraisals', { params: filters }),
+    getMyHistory: () => api.get('/appraisals/my-history'),
 };
 
 export default api;

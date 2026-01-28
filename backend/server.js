@@ -1,4 +1,5 @@
-require('dotenv').config(); // Restart trigger
+const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '.env') });
 const express = require('express');
 const cors = require('cors');
 const connectDB = require('./config/database');
@@ -47,6 +48,7 @@ app.use('/api/v1/locations', require('./routes/location.routes'));
 app.use('/api/v1/goals', require('./routes/goal.routes'));
 app.use('/api/v1/review-cycles', require('./routes/reviewCycle.routes'));
 app.use('/api/v1/performance-reviews', require('./routes/performanceReview.routes'));
+app.use('/api/v1/appraisals', require('./routes/appraisal.routes'));
 
 // Error handling middleware
 app.use((err, req, res, next) => {
