@@ -1,12 +1,17 @@
 import { Navigate, Outlet } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { Box, Typography, Button } from '@mui/material';
+import { Box, CircularProgress } from '@mui/material';
+import AccessDenied from './AccessDenied';
 
 const ProtectedRoute = ({ requiredPermissions = [], children }) => {
     const { user, loading, hasAnyPermission } = useAuth();
 
     if (loading) {
-        return null; // Or a loading spinner
+        return (
+            <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+                <CircularProgress />
+            </Box>
+        );
     }
 
     if (!user) {
@@ -14,19 +19,7 @@ const ProtectedRoute = ({ requiredPermissions = [], children }) => {
     }
 
     if (requiredPermissions.length > 0 && !hasAnyPermission(requiredPermissions)) {
-        return (
-            <Box sx={{ p: 4, textAlign: 'center' }}>
-                <Typography variant="h5" color="error" gutterBottom>
-                    Access Denied
-                </Typography>
-                <Typography variant="body1" color="text.secondary" gutterBottom>
-                    You do not have permission to view this page.
-                </Typography>
-                <Button variant="contained" href="/dashboard" sx={{ mt: 2 }}>
-                    Go to Dashboard
-                </Button>
-            </Box>
-        );
+        return <AccessDenied />;
     }
 
     return children ? children : <Outlet />;

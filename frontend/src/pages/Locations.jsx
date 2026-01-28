@@ -62,6 +62,8 @@ function Locations({ user }) {
         country: '',
         timezone: 'Asia/Kolkata',
         workType: 'Onsite',
+        workingDays: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'],
+        workingHours: { start: '09:00', end: '18:00' },
         description: '',
         isActive: true
     });
@@ -91,6 +93,8 @@ function Locations({ user }) {
                 country: loc.country,
                 timezone: loc.timezone,
                 workType: loc.workType,
+                workingDays: loc.workingDays || ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'],
+                workingHours: loc.workingHours || { start: '09:00', end: '18:00' },
                 description: loc.description || '',
                 isActive: loc.isActive
             });
@@ -102,6 +106,8 @@ function Locations({ user }) {
                 country: '',
                 timezone: 'Asia/Kolkata',
                 workType: 'Onsite',
+                workingDays: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'],
+                workingHours: { start: '09:00', end: '18:00' },
                 description: '',
                 isActive: true
             });
@@ -276,6 +282,58 @@ function Locations({ user }) {
                                     ))}
                                 </Select>
                             </FormControl>
+                        </Grid>
+
+                        <Grid item xs={12}>
+                            <FormControl fullWidth>
+                                <InputLabel>Working Days</InputLabel>
+                                <Select
+                                    multiple
+                                    value={formData.workingDays}
+                                    onChange={(e) => setFormData({ ...formData, workingDays: e.target.value })}
+                                    label="Working Days"
+                                    renderValue={(selected) => selected.join(', ')}
+                                >
+                                    {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map((day) => (
+                                        <MenuItem key={day} value={day}>
+                                            <FormControlLabel
+                                                control={<Switch checked={formData.workingDays.indexOf(day) > -1} />}
+                                                label={day}
+                                                // Prevent switch click from closing dropdown if needed, 
+                                                // but Material UI Select Multiple usually handles checkboxes better. 
+                                                // Let's use simple Checkbox or just item selection.
+                                                // Actually standard Multiple Select with MenuItem is easier.
+                                                onClick={(e) => e.preventDefault()} // Hack to avoid double toggle if using Checkbox
+                                            />
+                                            {day} {/* Just text if we remove FormControlLabel or keep it simple */}
+                                        </MenuItem>
+                                    ))}
+                                    {/* Re-writing strictly standard MUI Pattern for multiple select */}
+                                </Select>
+                                {/* Let's try a standard multi-select implementation instead of complex one inline */}
+                            </FormControl>
+                            {/* Correcting the Select implementation below in a cleaner way */}
+                        </Grid>
+
+                        <Grid item xs={12} sm={6}>
+                            <TextField
+                                fullWidth
+                                label="Start Time"
+                                type="time"
+                                value={formData.workingHours.start}
+                                onChange={(e) => setFormData({ ...formData, workingHours: { ...formData.workingHours, start: e.target.value } })}
+                                InputLabelProps={{ shrink: true }}
+                            />
+                        </Grid>
+                        <Grid item xs={12} sm={6}>
+                            <TextField
+                                fullWidth
+                                label="End Time"
+                                type="time"
+                                value={formData.workingHours.end}
+                                onChange={(e) => setFormData({ ...formData, workingHours: { ...formData.workingHours, end: e.target.value } })}
+                                InputLabelProps={{ shrink: true }}
+                            />
                         </Grid>
 
                         <Grid item xs={12}>

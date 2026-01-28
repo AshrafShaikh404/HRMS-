@@ -90,8 +90,10 @@ exports.checkOut = async (req, res) => {
             });
         }
 
-        // Get employee
-        const employee = await Employee.findOne({ userId: targetEmployeeId });
+        // Get employee with location
+        const employee = await Employee.findOne({ userId: targetEmployeeId })
+            .populate('jobInfo.location');
+
         if (!employee) {
             return res.status(404).json({
                 success: false,
@@ -99,15 +101,20 @@ exports.checkOut = async (req, res) => {
             });
         }
 
-        // Find today's attendance
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        const tomorrow = new Date(today);
-        tomorrow.setDate(tomorrow.getDate() + 1);
+        // Determine Timezone
+        const timezone = employee.jobInfo?.location?.timezone || 'UTC';
+        const now = new Date();
+
+        // Calculate 'Today' in Employee's Timezone
+        const startOfDay = new Date(now.toLocaleString('en-US', { timeZone: timezone }));
+        startOfDay.setHours(0, 0, 0, 0);
+
+        const endOfDay = new Date(startOfDay);
+        endOfDay.setDate(endOfDay.getDate() + 1);
 
         const attendance = await Attendance.findOne({
             employeeId: employee._id,
-            date: { $gte: today, $lt: tomorrow }
+            date: { $gte: startOfDay, $lt: endOfDay }
         });
 
         if (!attendance || !attendance.checkInTime) {

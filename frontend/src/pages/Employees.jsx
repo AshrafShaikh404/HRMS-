@@ -220,7 +220,7 @@ const Employees = () => {
                                 </TableCell>
                                 <TableCell>{emp.firstName} {emp.lastName}</TableCell>
                                 <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>{emp.email}</TableCell>
-                                <TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }}>{emp.department}</TableCell>
+                                <TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }}>{emp.jobInfo?.department?.name || emp.department}</TableCell>
                                 <TableCell sx={{ display: { xs: 'none', lg: 'table-cell' } }}>{emp.designation}</TableCell>
                                 <TableCell>
                                     <Chip

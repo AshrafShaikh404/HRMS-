@@ -37,7 +37,10 @@ exports.getEmployees = async (req, res) => {
             .select('-documents -__v')
             .skip(skip)
             .limit(limit)
-            .sort({ createdAt: -1 });
+            .sort({ createdAt: -1 })
+            .populate('jobInfo.department')
+            .populate('jobInfo.designation')
+            .populate('jobInfo.location');
 
         const totalRecords = await Employee.countDocuments(query);
         const totalPages = Math.ceil(totalRecords / limit);
@@ -69,7 +72,11 @@ exports.getEmployees = async (req, res) => {
 // @access  Private (Admin, HR, Employee - own only)
 exports.getEmployee = async (req, res) => {
     try {
-        const employee = await Employee.findById(req.params.id);
+        const employee = await Employee.findById(req.params.id)
+            .populate('jobInfo.department')
+            .populate('jobInfo.designation')
+            .populate('jobInfo.location')
+            .populate('jobInfo.reportingManager');
 
         if (!employee) {
             return res.status(404).json({

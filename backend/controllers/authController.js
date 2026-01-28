@@ -326,7 +326,11 @@ exports.getMe = async (req, res) => {
         const roleName = user.role?.name?.toLowerCase();
         let employeeDetails = null;
         if (roleName === 'employee' || roleName === 'hr') {
-            employeeDetails = await Employee.findOne({ userId: user._id });
+            employeeDetails = await Employee.findOne({ userId: user._id })
+                .populate('jobInfo.department')
+                .populate('jobInfo.designation')
+                .populate('jobInfo.location')
+                .populate('jobInfo.reportingManager');
         }
 
         res.status(200).json({

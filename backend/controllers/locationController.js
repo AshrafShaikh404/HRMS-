@@ -51,7 +51,7 @@ exports.getLocations = async (req, res) => {
 // @access  Private (Admin)
 exports.createLocation = async (req, res) => {
     try {
-        const { name, city, country, timezone, workType, description } = req.body;
+        const { name, city, country, timezone, workType, description, workingDays, workingHours } = req.body;
 
         const location = await Location.create({
             name,
@@ -60,6 +60,8 @@ exports.createLocation = async (req, res) => {
             timezone,
             workType,
             description,
+            workingDays,
+            workingHours,
             createdBy: req.user._id
         });
 
@@ -88,7 +90,7 @@ exports.createLocation = async (req, res) => {
 // @access  Private (Admin)
 exports.updateLocation = async (req, res) => {
     try {
-        const { name, city, country, timezone, workType, isActive } = req.body;
+        const { name, city, country, timezone, workType, isActive, workingDays, workingHours } = req.body;
         const location = await Location.findById(req.params.id);
 
         if (!location) {
@@ -118,6 +120,8 @@ exports.updateLocation = async (req, res) => {
         if (country) location.country = country;
         if (timezone) location.timezone = timezone;
         if (workType) location.workType = workType;
+        if (workingDays) location.workingDays = workingDays;
+        if (workingHours) location.workingHours = workingHours;
         if (isActive !== undefined) location.isActive = isActive;
 
         await location.save();
