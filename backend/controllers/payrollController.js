@@ -67,7 +67,12 @@ exports.generatePayroll = async (req, res) => {
                 // A. Salary Structure (New Logic)
                 // Try to find defined structure, fallback to Employee model (Legacy) if missing
                 // In a real migration, we would run a script to create structures for all.
-                let salaryStruct = await SalaryStructure.findOne({ employeeId: employee._id, isActive: true });
+                // A. Salary Structure (Selection based on Effective Date)
+                // Find the most recent structure that is effective on or before the end of this payroll month
+                let salaryStruct = await SalaryStructure.findOne({
+                    employeeId: employee._id,
+                    effectiveFrom: { $lte: endDate }
+                }).sort({ effectiveFrom: -1 });
 
                 // Fallback (Logic from previous controller)
                 if (!salaryStruct) {

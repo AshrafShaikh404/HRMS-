@@ -3,52 +3,53 @@ import { createTheme, alpha } from '@mui/material/styles';
 const theme = createTheme({
     palette: {
         mode: 'light',
+        // GXON-like cool SaaS palette
         primary: {
-            main: '#FF9B44', // SmartHR Orange
-            light: '#ffb373',
-            dark: '#e68a30',
+            main: '#2563EB', // indigo / blue
+            light: '#60A5FA',
+            dark: '#1D4ED8',
             contrastText: '#ffffff',
         },
         secondary: {
-            main: '#008CBA', // SmartHR Teal/Blue
-            light: '#33a3c8',
-            dark: '#006d91',
+            main: '#0EA5E9', // cyan accent
+            light: '#38BDF8',
+            dark: '#0284C7',
             contrastText: '#ffffff',
         },
         success: {
-            main: '#55CE63', // SmartHR Green
-            light: '#77d882',
-            dark: '#45b351',
+            main: '#22C55E',
+            light: '#4ADE80',
+            dark: '#16A34A',
         },
         warning: {
-            main: '#f62d51', // SmartHR Pink/Red
-            light: '#f85774',
-            dark: '#d12644',
+            main: '#F97316',
+            light: '#FDBA74',
+            dark: '#EA580C',
         },
         error: {
-            main: '#f62d51',
-            light: '#f85774',
-            dark: '#d12644',
+            main: '#EF4444',
+            light: '#FCA5A5',
+            dark: '#B91C1C',
         },
         info: {
-            main: '#008CBA',
-            light: '#33a3c8',
-            dark: '#006d91',
+            main: '#0EA5E9',
+            light: '#38BDF8',
+            dark: '#0369A1',
         },
         purple: {
-            main: '#7460ee',
-            light: '#9080f1',
-            dark: '#5d4bc6',
+            main: '#6366F1',
+            light: '#A5B4FC',
+            dark: '#4F46E5',
         },
         background: {
-            default: '#F7F8FA', // SmartHR specific light grey
+            default: '#F6F7FB',
             paper: '#FFFFFF',
         },
         text: {
-            primary: '#1f1f1f',
-            secondary: '#777777',
+            primary: '#0F172A',
+            secondary: '#6B7280',
         },
-        divider: '#eeeeee',
+        divider: '#E5E7EB',
     },
     typography: {
         fontFamily: '"Inter", "Poppins", "Roboto", sans-serif',

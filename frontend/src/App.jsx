@@ -27,6 +27,9 @@ import ReviewCycleSettings from './pages/ReviewCycleSettings';
 import MyPerformance from './pages/MyPerformance';
 import TeamReviews from './pages/TeamReviews';
 import AllReviews from './pages/AllReviews';
+import AppraisalCycle from './pages/AppraisalCycle';
+import AppraisalManagement from './pages/AppraisalManagement';
+import MyAppraisals from './pages/MyAppraisals';
 
 import { NotificationProvider } from './contexts/NotificationContext';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
@@ -229,6 +232,32 @@ const AppRoutes = () => {
                                     element={
                                         <ProtectedRoute requiredPermissions={['manage_employees']}>
                                             <AllReviews />
+                                        </ProtectedRoute>
+                                    }
+                                />
+
+                                {/* Appraisal & Increment Management */}
+                                <Route
+                                    path="/appraisals/cycles"
+                                    element={
+                                        <ProtectedRoute requiredPermissions={['manage_appraisals']}>
+                                            <AppraisalCycle />
+                                        </ProtectedRoute>
+                                    }
+                                />
+                                <Route
+                                    path="/appraisals/management"
+                                    element={
+                                        <ProtectedRoute requiredPermissions={['manage_appraisals']}>
+                                            <AppraisalManagement />
+                                        </ProtectedRoute>
+                                    }
+                                />
+                                <Route
+                                    path="/my-appraisals"
+                                    element={
+                                        <ProtectedRoute requiredPermissions={['view_appraisals']}>
+                                            <MyAppraisals />
                                         </ProtectedRoute>
                                     }
                                 />
