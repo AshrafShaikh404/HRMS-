@@ -27,6 +27,19 @@ const locationSchema = new mongoose.Schema({
         enum: ['Onsite', 'Remote', 'Hybrid'],
         default: 'Onsite'
     },
+    workingDays: {
+        type: [String],
+        default: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'], // Default Mon-Fri
+        enum: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+    },
+    workingHours: {
+        start: { type: String, default: '09:00' }, // 24hr format
+        end: { type: String, default: '18:00' }
+    },
+    holidayCalendar: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Calendar' // Future proofing
+    },
     isActive: {
         type: Boolean,
         default: true

@@ -22,7 +22,6 @@ import {
     Chip,
     Card,
     Grid,
-    Skeleton,
     CircularProgress,
     Dialog,
     DialogTitle,
@@ -32,26 +31,31 @@ import {
     Tooltip,
     Checkbox,
     FormControlLabel,
-    Switch
+    useTheme,
+    Divider,
+    alpha
 } from '@mui/material';
 import {
     FilterAlt as FilterIcon,
-    Refresh as RefreshIcon,
-    FileDownload as DownloadIcon,
+    Download as DownloadIcon,
     PictureAsPdf as PdfIcon,
     Add as AddIcon,
     Edit as EditIcon,
     GroupAdd as BulkIcon,
     Lock as LockIcon,
-    LockOpen as UnlockIcon
+    LockOpen as UnlockIcon,
+    EventAvailable as PresentIcon,
+    EventBusy as AbsentIcon,
+    Sick as LeaveIcon,
+    HourglassBottom as HalfDayIcon
 } from '@mui/icons-material';
-import AttendanceChart from '../components/AttendanceChart';
 import AttendanceWidget from '../components/dashboard/AttendanceWidget';
 import AttendanceStats from '../components/AttendanceStats';
 import AttendanceInsights from '../components/AttendanceInsights';
 
 const Attendance = () => {
     const { user } = useAuth();
+    const theme = useTheme();
     const { showSuccess, showError } = useNotification();
     const [attendanceRecords, setAttendanceRecords] = useState([]);
     const [summary, setSummary] = useState(null);
@@ -94,10 +98,8 @@ const Attendance = () => {
             fetchEmployees();
         }
         fetchAttendance();
-        const role = typeof user.role === 'string' ? user.role : user.role?.name?.toLowerCase();
-        if (role === 'employee' || role === 'hr') {
-            checkTodayStatus();
-        }
+        // Always check today status for widget
+        checkTodayStatus();
     }, [user, isHRorAdmin]);
 
     const fetchEmployees = async () => {
@@ -122,12 +124,6 @@ const Attendance = () => {
             const response = await attendanceAPI.getRecords(params);
             setAttendanceRecords(response.data.data.attendance);
             setSummary(response.data.data.summary);
-
-            // Check if ANY record in the range is locked to set the toggle UI (simplification)
-            // Or ideally, check if today is locked. Let's assume the lock toggle controls a specific date, usually today or selected start date.
-            // For now, let's just default to false and not bind it deeply unless we add a specific "Lock Date" UI.
-            // Requirement says "Add Lock Attendance toggle per date/month". 
-            // Let's rely on backend refusal and simple toggle for TODAY or Start Date.
         } catch (err) {
             console.error('Error fetching attendance:', err);
         } finally {
@@ -158,22 +154,16 @@ const Attendance = () => {
 
     const handleClearFilter = () => {
         setSelectedEmployee('');
-        setDateFilter({
-            startDate: new Date(new Date().setDate(new Date().getDate() - 30)).toISOString().split('T')[0],
-            endDate: new Date().toISOString().split('T')[0]
-        });
-        // fetchAttendance called by effect when state changes? No, buttons usually trigger fetch explicitly or need dependency.
-        // Re-calling fetch manually to be safe.
-        // Actually setDateFilter is async, so better to pass defaults.
-        // For now, let's just reset state and let user click Filter, or use Effect on dateFilter (which might be too aggressive).
-        // Let's just manually fetch with defaults.
-        attendanceAPI.getRecords({
-            startDate: new Date(new Date().setDate(new Date().getDate() - 30)).toISOString().split('T')[0],
-            endDate: new Date().toISOString().split('T')[0]
-        }).then(res => {
-            setAttendanceRecords(res.data.data.attendance);
-            setSummary(res.data.data.summary);
-        });
+        const defaultStart = new Date(new Date().setDate(new Date().getDate() - 30)).toISOString().split('T')[0];
+        const defaultEnd = new Date().toISOString().split('T')[0];
+        setDateFilter({ startDate: defaultStart, endDate: defaultEnd });
+
+        // Use timeout to allow state update or verify strict flow
+        attendanceAPI.getRecords({ startDate: defaultStart, endDate: defaultEnd })
+            .then(res => {
+                setAttendanceRecords(res.data.data.attendance);
+                setSummary(res.data.data.summary);
+            });
     };
 
     const handleExportCSV = async () => {
@@ -205,16 +195,10 @@ const Attendance = () => {
     // Manual Entry Handlers
     const handleManualSubmit = async () => {
         try {
-            // Combine date and time
             let payload = { ...manualData };
-
-            if (payload.checkInTime) {
-                payload.checkInTime = `${payload.date}T${payload.checkInTime}`;
-            }
-
+            if (payload.checkInTime) payload.checkInTime = `${payload.date}T${payload.checkInTime}`;
             if (payload.checkOutTime) {
                 let checkOutDate = payload.date;
-                // Handle overnight shift: if checkOut < checkIn, assume it's the next day
                 if (payload.checkInTime && payload.checkOutTime < manualData.checkInTime) {
                     const nextDay = new Date(payload.date);
                     nextDay.setDate(nextDay.getDate() + 1);
@@ -224,7 +208,7 @@ const Attendance = () => {
             }
 
             await attendanceAPI.manualEntry(payload);
-            showSuccess('Attendance updated successfully');
+            showSuccess('Request submitted successfully');
             setOpenManualModal(false);
             fetchAttendance();
         } catch (error) {
@@ -235,7 +219,7 @@ const Attendance = () => {
     const openManual = (record = null) => {
         if (record) {
             setManualData({
-                employeeId: record.employeeId._id,
+                employeeId: record.employeeId?._id || user._id, // Fallback to current user if request
                 date: new Date(record.date).toISOString().split('T')[0],
                 status: record.status,
                 checkInTime: record.checkInTime ? new Date(record.checkInTime).toTimeString().substring(0, 5) : '',
@@ -244,7 +228,7 @@ const Attendance = () => {
             });
         } else {
             setManualData({
-                employeeId: '',
+                employeeId: user._id, // Default to self for regular employees
                 date: new Date().toISOString().split('T')[0],
                 status: 'present',
                 checkInTime: '',
@@ -255,7 +239,6 @@ const Attendance = () => {
         setOpenManualModal(true);
     };
 
-    // Bulk Handlers
     const handleBulkSubmit = async () => {
         try {
             await attendanceAPI.bulkEntry({
@@ -270,10 +253,8 @@ const Attendance = () => {
         }
     };
 
-    // Lock Handler
     const handleLockToggle = async (date) => {
         try {
-            // For simplicity, let's lock/unlock the START DATE of the filter
             const lockDate = dateFilter.startDate;
             await attendanceAPI.toggleLock({ date: lockDate, lock: !isLocked });
             setIsLocked(!isLocked);
@@ -281,24 +262,6 @@ const Attendance = () => {
         } catch (error) {
             showError(error.response?.data?.message || 'Failed to toggle lock');
         }
-    };
-
-
-    const getChartData = () => {
-        if (!attendanceRecords.length) return [];
-        // Group by Date
-        const grouped = {};
-        attendanceRecords.forEach(record => {
-            const dateKey = new Date(record.date).toLocaleDateString();
-            if (!grouped[dateKey]) {
-                grouped[dateKey] = { name: dateKey, Present: 0, Absent: 0, Leave: 0 };
-            }
-            if (record.status === 'present') grouped[dateKey].Present++;
-            else if (record.status === 'absent') grouped[dateKey].Absent++;
-            else if (record.status === 'leave') grouped[dateKey].Leave++;
-            else if (record.status === 'half_day') grouped[dateKey].Leave++; // Group half day with leave for simpler chart or separate
-        });
-        return Object.values(grouped).sort((a, b) => new Date(a.name) - new Date(b.name)).slice(-7);
     };
 
     const getStatusColor = (status) => {
@@ -312,309 +275,189 @@ const Attendance = () => {
         }
     };
 
+    const SummaryCard = ({ title, value, icon, color }) => (
+        <Card sx={{ p: 2, height: '100%', display: 'flex', alignItems: 'center', gap: 2, border: '1px solid', borderColor: alpha(theme.palette[color].main, 0.2) }}>
+            <Box sx={{ p: 1, borderRadius: 2, bgcolor: alpha(theme.palette[color].main, 0.1), color: `${color}.main` }}>
+                {icon}
+            </Box>
+            <Box>
+                <Typography variant="h6" fontWeight={800}>{value || 0}</Typography>
+                <Typography variant="caption" color="text.secondary" fontWeight={600}>{title}</Typography>
+            </Box>
+        </Card>
+    );
+
     return (
-        <Box sx={{ pb: 5 }}>
-            {/* 1. Header Section */}
-            <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <Box>
-                    <Typography variant="h4" fontWeight="800" sx={{ mb: 0.5, letterSpacing: '-0.5px' }}>
-                        Attendance
-                    </Typography>
-                    <Typography variant="body1" color="text.secondary">
-                        {isHRorAdmin ? 'Manage and monitor employee attendance records' : 'Track your daily attendance and work hours'}
-                    </Typography>
-                </Box>
-                {isHRorAdmin && (
-                    <Box sx={{ display: 'flex', gap: 2 }}>
-                        <Button
-                            variant="outlined"
-                            color={isLocked ? "error" : "primary"}
-                            startIcon={isLocked ? <LockIcon /> : <UnlockIcon />}
-                            onClick={() => handleLockToggle()}
-                            sx={{ height: 48, px: 3, borderRadius: 2, fontWeight: 600, textTransform: 'none' }}
-                        >
-                            {isLocked ? "Unlock Date" : "Lock Date"}
-                        </Button>
-                        <Button
-                            variant="outlined"
-                            startIcon={<BulkIcon />}
-                            onClick={() => setOpenBulkModal(true)}
-                            sx={{ height: 48, px: 3, borderRadius: 2, fontWeight: 600, textTransform: 'none' }}
-                        >
-                            Bulk Mark
-                        </Button>
-                        <Button
-                            variant="contained"
-                            startIcon={<AddIcon />}
-                            onClick={() => openManual()}
-                            sx={{ height: 48, px: 3, borderRadius: 2, fontWeight: 600, boxShadow: 0, textTransform: 'none' }}
-                        >
-                            Manual Entry
-                        </Button>
-                    </Box>
-                )}
+        <Box sx={{ pb: 5, maxWidth: 1600, mx: 'auto' }}>
+            {/* Header */}
+            <Box sx={{ mb: 3 }}>
+                <Typography variant="h5" fontWeight={800} sx={{ letterSpacing: -0.5 }}>Attendance</Typography>
+                <Typography variant="body2" color="text.secondary">Track and manage your attendance records</Typography>
             </Box>
 
-            {/* 2. KPI Summary Row */}
-            {isHRorAdmin && <AttendanceStats summary={summary} />}
+            <Grid container spacing={3}>
+                {/* 1. Today's Attendance (Top Priority) - Full Width on Mobile, Side on Desktop */}
+                <Grid item xs={12} md={4} order={{ xs: 1, md: 2 }}>
+                    <AttendanceWidget
+                        user={user}
+                        todayStatus={todayStatus}
+                        onStatusChange={() => { checkTodayStatus(); fetchAttendance(); }}
+                    />
+                </Grid>
 
-            {/* 3. Insights and Analytics Row */}
-            {isHRorAdmin && (
-                <Grid container spacing={3} sx={{ mb: 4 }}>
-                    <Grid item xs={12} md={6} lg={4}>
-                        <AttendanceInsights summary={summary} />
-                    </Grid>
-                    <Grid item xs={12} md={6} lg={8}>
-                        <Paper
-                            elevation={0}
-                            sx={{
-                                p: 3,
-                                height: '100%',
-                                minHeight: 300,
-                                border: '1px solid',
-                                borderColor: 'divider',
-                                borderRadius: 3,
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                bgcolor: 'background.default',
-                                borderStyle: 'dashed'
-                            }}
-                        >
-                            <Box sx={{ textAlign: 'center', color: 'text.secondary' }}>
-                                <Typography variant="h6" fontWeight="600" gutterBottom>
-                                    More Analytics Coming Soon
-                                </Typography>
-                                <Typography variant="body2">
-                                    Trends, overtime analysis, and efficiency metrics.
-                                </Typography>
+                {/* Main Content Area */}
+                <Grid item xs={12} md={8} order={{ xs: 2, md: 1 }}>
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+
+                        {/* 2. Monthly Summary */}
+                        <Grid container spacing={2}>
+                            <Grid item xs={6} sm={3}>
+                                <SummaryCard title="Present" value={summary?.present} icon={<PresentIcon />} color="success" />
+                            </Grid>
+                            <Grid item xs={6} sm={3}>
+                                <SummaryCard title="Absent" value={summary?.absent} icon={<AbsentIcon />} color="error" />
+                            </Grid>
+                            <Grid item xs={6} sm={3}>
+                                <SummaryCard title="Half Days" value={summary?.half_day} icon={<HalfDayIcon />} color="warning" />
+                            </Grid>
+                            <Grid item xs={6} sm={3}>
+                                <SummaryCard title="Leaves" value={summary?.leave} icon={<LeaveIcon />} color="info" />
+                            </Grid>
+                        </Grid>
+
+                        {/* 3. Filters */}
+                        <Paper elevation={0} sx={{ p: 2, borderRadius: 3, border: '1px solid', borderColor: 'divider' }}>
+                            <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', alignItems: 'center' }}>
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, color: 'text.secondary' }}>
+                                    <FilterIcon fontSize="small" />
+                                    <Typography variant="subtitle2" fontWeight={700}>Filters</Typography>
+                                </Box>
+                                <Divider orientation="vertical" flexItem sx={{ height: 20, my: 'auto' }} />
+
+                                {isHRorAdmin && (
+                                    <FormControl size="small" sx={{ minWidth: 200 }}>
+                                        <InputLabel>Employee</InputLabel>
+                                        <Select
+                                            value={selectedEmployee}
+                                            onChange={(e) => setSelectedEmployee(e.target.value)}
+                                            label="Employee"
+                                        >
+                                            <MenuItem value="">All Employees</MenuItem>
+                                            {employees.map((emp) => (
+                                                <MenuItem key={emp._id} value={emp._id}>{emp.firstName} {emp.lastName}</MenuItem>
+                                            ))}
+                                        </Select>
+                                    </FormControl>
+                                )}
+
+                                <TextField
+                                    type="date"
+                                    label="Start"
+                                    value={dateFilter.startDate}
+                                    onChange={(e) => setDateFilter({ ...dateFilter, startDate: e.target.value })}
+                                    size="small"
+                                    sx={{ width: 140 }}
+                                    InputLabelProps={{ shrink: true }}
+                                />
+                                <TextField
+                                    type="date"
+                                    label="End"
+                                    value={dateFilter.endDate}
+                                    onChange={(e) => setDateFilter({ ...dateFilter, endDate: e.target.value })}
+                                    size="small"
+                                    sx={{ width: 140 }}
+                                    InputLabelProps={{ shrink: true }}
+                                />
+                                <Box sx={{ ml: 'auto', display: 'flex', gap: 1 }}>
+                                    <Button variant="contained" onClick={handleFilter} size="small" sx={{ borderRadius: 2 }}>Apply</Button>
+                                    <Button variant="outlined" onClick={handleClearFilter} size="small" sx={{ borderRadius: 2 }}>Reset</Button>
+                                </Box>
                             </Box>
                         </Paper>
-                    </Grid>
-                </Grid>
-            )}
 
-            {/* 4. Filter & Actions Bar */}
-            {isHRorAdmin && (
-                <Card
-                    elevation={0}
-                    sx={{
-                        p: 2,
-                        mb: 3,
-                        border: '1px solid',
-                        borderColor: 'divider',
-                        borderRadius: 3,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        flexWrap: 'wrap',
-                        gap: 2
-                    }}
-                >
-                    <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap', flex: 1 }}>
-                        <FormControl size="small" sx={{ minWidth: 200 }}>
-                            <InputLabel>Employee</InputLabel>
-                            <Select
-                                value={selectedEmployee}
-                                onChange={(e) => setSelectedEmployee(e.target.value)}
-                                label="Employee"
-                            >
-                                <MenuItem value="">All Employees</MenuItem>
-                                {employees.map((emp) => (
-                                    <MenuItem key={emp._id} value={emp._id}>
-                                        {emp.firstName} {emp.lastName}
-                                    </MenuItem>
-                                ))}
-                            </Select>
-                        </FormControl>
-                        <TextField
-                            type="date"
-                            label="Start Date"
-                            value={dateFilter.startDate}
-                            onChange={(e) => setDateFilter({ ...dateFilter, startDate: e.target.value })}
-                            size="small"
-                            InputLabelProps={{ shrink: true }}
-                            sx={{ width: 150 }}
-                        />
-                        <TextField
-                            type="date"
-                            label="End Date"
-                            value={dateFilter.endDate}
-                            onChange={(e) => setDateFilter({ ...dateFilter, endDate: e.target.value })}
-                            size="small"
-                            InputLabelProps={{ shrink: true }}
-                            sx={{ width: 150 }}
-                        />
-                        <Button
-                            variant="contained"
-                            onClick={handleFilter}
-                            startIcon={<FilterIcon />}
-                            sx={{ borderRadius: 2, textTransform: 'none' }}
-                        >
-                            Filter
-                        </Button>
-                        <Button
-                            variant="text"
-                            onClick={handleClearFilter}
-                            color="inherit"
-                            sx={{ borderRadius: 2, textTransform: 'none' }}
-                        >
-                            Clear
-                        </Button>
-                    </Box>
-
-                    <Box sx={{ display: 'flex', gap: 1 }}>
-                        <Button
-                            variant="outlined"
-                            size="small"
-                            startIcon={<DownloadIcon />}
-                            onClick={handleExportCSV}
-                            disabled={exporting}
-                            sx={{ borderRadius: 2, textTransform: 'none', borderColor: 'divider', color: 'text.primary' }}
-                        >
-                            Export CSV
-                        </Button>
-                        <Button
-                            variant="outlined"
-                            size="small"
-                            startIcon={<PdfIcon />}
-                            onClick={handleExportPDF}
-                            disabled={exporting}
-                            sx={{ borderRadius: 2, textTransform: 'none', borderColor: 'divider', color: 'text.primary' }}
-                        >
-                            Export PDF
-                        </Button>
-                    </Box>
-                </Card>
-            )}
-
-            {/* 5. Attendance Table */}
-            <Paper
-                elevation={0}
-                sx={{
-                    borderRadius: 3,
-                    border: '1px solid',
-                    borderColor: 'divider',
-                    overflow: 'hidden'
-                }}
-            >
-                <TableContainer>
-                    <Table>
-                        <TableHead sx={{ bgcolor: 'background.default' }}>
-                            <TableRow>
-                                {isHRorAdmin && <TableCell sx={{ fontWeight: 600, py: 2 }}>Employee</TableCell>}
-                                <TableCell sx={{ fontWeight: 600, py: 2 }}>Date</TableCell>
-                                <TableCell sx={{ fontWeight: 600, py: 2 }}>Check In</TableCell>
-                                <TableCell sx={{ fontWeight: 600, py: 2 }}>Check Out</TableCell>
-                                <TableCell sx={{ fontWeight: 600, py: 2 }}>Hours</TableCell>
-                                <TableCell sx={{ fontWeight: 600, py: 2 }}>Status</TableCell>
-                                {isHRorAdmin && <TableCell sx={{ fontWeight: 600, py: 2, textAlign: 'right' }}>Actions</TableCell>}
-                            </TableRow>
-                        </TableHead>
-                        <TableBody>
-                            {loading && (
-                                <TableRow>
-                                    <TableCell colSpan={7} align="center" sx={{ py: 5 }}>
-                                        <CircularProgress size={30} />
-                                    </TableCell>
-                                </TableRow>
-                            )}
-                            {!loading && attendanceRecords.length === 0 && (
-                                <TableRow>
-                                    <TableCell colSpan={7} align="center" sx={{ py: 5, color: 'text.secondary' }}>
-                                        No attendance records found
-                                    </TableCell>
-                                </TableRow>
-                            )}
-                            {!loading && attendanceRecords.map((record, index) => (
-                                <TableRow
-                                    key={record._id}
-                                    hover
-                                    sx={{
-                                        '&:last-child td, &:last-child th': { border: 0 },
-                                        transition: 'background-color 0.1s'
-                                    }}
-                                >
-                                    {isHRorAdmin && (
-                                        <TableCell>
-                                            <Box>
-                                                <Typography variant="body2" fontWeight="600" color="text.primary">
-                                                    {record.employeeId?.firstName} {record.employeeId?.lastName}
-                                                </Typography>
-                                                <Typography variant="caption" color="text.secondary">
-                                                    {record.employeeId?.employeeCode}
-                                                </Typography>
-                                            </Box>
-                                        </TableCell>
-                                    )}
-                                    <TableCell>
-                                        <Typography variant="body2" color="text.primary">
-                                            {new Date(record.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
-                                        </Typography>
-                                    </TableCell>
-                                    <TableCell>
-                                        <Typography variant="body2" sx={{ fontFamily: 'monospace', bgcolor: 'action.hover', px: 1, py: 0.5, borderRadius: 1, display: 'inline-block' }}>
-                                            {record.checkInTime ? new Date(record.checkInTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--:--'}
-                                        </Typography>
-                                    </TableCell>
-                                    <TableCell>
-                                        <Typography variant="body2" sx={{ fontFamily: 'monospace', bgcolor: 'action.hover', px: 1, py: 0.5, borderRadius: 1, display: 'inline-block' }}>
-                                            {record.checkOutTime ? new Date(record.checkOutTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--:--'}
-                                        </Typography>
-                                    </TableCell>
-                                    <TableCell>
-                                        <Typography variant="body2" fontWeight="500">
-                                            {record.workedHours ? `${record.workedHours} hrs` : '-'}
-                                        </Typography>
-                                    </TableCell>
-                                    <TableCell>
-                                        <Tooltip title={record.markedBy ? `Marked by: ${record.markedBy.firstName} ${record.markedBy.lastName}` : 'Auto-marked'}>
-                                            <Chip
-                                                label={record.status}
-                                                color={getStatusColor(record.status)}
-                                                size="small"
-                                                sx={{
-                                                    fontWeight: 600,
-                                                    textTransform: 'capitalize',
-                                                    borderRadius: 1.5,
-                                                    height: 26
-                                                }}
-                                            />
-                                        </Tooltip>
-                                        {record.isLocked && (
-                                            <Tooltip title="Date Locked">
-                                                <LockIcon fontSize="small" color="disabled" sx={{ ml: 1, verticalAlign: 'middle', fontSize: 16 }} />
-                                            </Tooltip>
+                        {/* 4. Attendance Log Table */}
+                        <Card sx={{ borderRadius: 3, overflow: 'hidden', border: '1px solid', borderColor: 'divider', boxShadow: 'none' }}>
+                            <TableContainer sx={{ maxHeight: 500 }}>
+                                <Table stickyHeader>
+                                    <TableHead>
+                                        <TableRow>
+                                            <TableCell sx={{ fontWeight: 700, bgcolor: 'background.neutral' }}>Date</TableCell>
+                                            <TableCell sx={{ fontWeight: 700, bgcolor: 'background.neutral' }}>Check In</TableCell>
+                                            <TableCell sx={{ fontWeight: 700, bgcolor: 'background.neutral' }}>Check Out</TableCell>
+                                            <TableCell sx={{ fontWeight: 700, bgcolor: 'background.neutral' }}>Work Hrs</TableCell>
+                                            <TableCell sx={{ fontWeight: 700, bgcolor: 'background.neutral' }}>Status</TableCell>
+                                            <TableCell align="right" sx={{ fontWeight: 700, bgcolor: 'background.neutral' }}>Action</TableCell>
+                                        </TableRow>
+                                    </TableHead>
+                                    <TableBody>
+                                        {loading ? (
+                                            <TableRow>
+                                                <TableCell colSpan={6} align="center" sx={{ py: 5 }}><CircularProgress /></TableCell>
+                                            </TableRow>
+                                        ) : attendanceRecords.length === 0 ? (
+                                            <TableRow>
+                                                <TableCell colSpan={6} align="center" sx={{ py: 5, color: 'text.secondary' }}>No records found</TableCell>
+                                            </TableRow>
+                                        ) : (
+                                            attendanceRecords.map((record) => (
+                                                <TableRow key={record._id} hover>
+                                                    <TableCell>
+                                                        <Typography variant="body2" fontWeight={600}>
+                                                            {new Date(record.date).toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short' })}
+                                                        </Typography>
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        <Typography variant="body2" fontFamily="monospace" sx={{ bgcolor: 'action.hover', px: 1, borderRadius: 1, display: 'inline-block' }}>
+                                                            {record.checkInTime ? new Date(record.checkInTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--:--'}
+                                                        </Typography>
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        <Typography variant="body2" fontFamily="monospace" sx={{ bgcolor: 'action.hover', px: 1, borderRadius: 1, display: 'inline-block' }}>
+                                                            {record.checkOutTime ? new Date(record.checkOutTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--:--'}
+                                                        </Typography>
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        <Typography variant="body2" fontWeight={500}>
+                                                            {record.workedHours ? `${record.workedHours}h` : '-'}
+                                                        </Typography>
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        <Chip
+                                                            label={record.status}
+                                                            color={getStatusColor(record.status)}
+                                                            size="small"
+                                                            sx={{ borderRadius: 1, fontWeight: 700, textTransform: 'capitalize', height: 24 }}
+                                                        />
+                                                    </TableCell>
+                                                    <TableCell align="right">
+                                                        <Button
+                                                            size="small"
+                                                            startIcon={<EditIcon />}
+                                                            onClick={() => openManual(record)}
+                                                            sx={{ minWidth: 0, textTransform: 'none' }}
+                                                        >
+                                                            Regularize
+                                                        </Button>
+                                                    </TableCell>
+                                                </TableRow>
+                                            ))
                                         )}
-                                    </TableCell>
-                                    {isHRorAdmin && (
-                                        <TableCell align="right">
-                                            <IconButton
-                                                size="small"
-                                                onClick={() => openManual(record)}
-                                                disabled={record.isLocked}
-                                                sx={{
-                                                    color: 'primary.main',
-                                                    '&:disabled': { color: 'action.disabled' }
-                                                }}
-                                            >
-                                                <EditIcon fontSize="small" />
-                                            </IconButton>
-                                        </TableCell>
-                                    )}
-                                </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
-                </TableContainer>
-            </Paper>
+                                    </TableBody>
+                                </Table>
+                            </TableContainer>
+                        </Card>
+                    </Box>
+                </Grid>
+            </Grid>
 
-            {/* Manual Entry Modal */}
+            {/* Manual/Regularization Modal */}
             <Dialog open={openManualModal} onClose={() => setOpenManualModal(false)} maxWidth="sm" fullWidth>
-                <DialogTitle>{manualData.employeeId ? 'Edit Attendance' : 'Manual Attendance Entry'}</DialogTitle>
+                <DialogTitle sx={{ fontWeight: 700 }}>
+                    {manualData.employeeId && manualData.employeeId !== user._id ? 'Edit Attendance' : 'Request Regularization'}
+                </DialogTitle>
                 <DialogContent>
-                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 2 }}>
-                        {!manualData.employeeId && ( // Only show Select if creating new or if not pre-filled (simple toggling logic)
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5, pt: 1 }}>
+                        {(isHRorAdmin && !manualData.employeeId) && (
                             <FormControl fullWidth>
                                 <InputLabel>Employee</InputLabel>
                                 <Select
@@ -635,21 +478,8 @@ const Attendance = () => {
                             onChange={(e) => setManualData({ ...manualData, date: e.target.value })}
                             fullWidth
                             InputLabelProps={{ shrink: true }}
+                            disabled={!isHRorAdmin} // Employees usually regularize specific past dates, but generic date picker ok for now
                         />
-                        <FormControl fullWidth>
-                            <InputLabel>Status</InputLabel>
-                            <Select
-                                value={manualData.status}
-                                onChange={(e) => setManualData({ ...manualData, status: e.target.value })}
-                                label="Status"
-                            >
-                                <MenuItem value="present">Present</MenuItem>
-                                <MenuItem value="absent">Absent</MenuItem>
-                                <MenuItem value="half_day">Half Day</MenuItem>
-                                <MenuItem value="leave">Leave</MenuItem>
-                                <MenuItem value="holiday">Holiday</MenuItem>
-                            </Select>
-                        </FormControl>
                         <Box sx={{ display: 'flex', gap: 2 }}>
                             <TextField
                                 type="time"
@@ -669,85 +499,30 @@ const Attendance = () => {
                             />
                         </Box>
                         <TextField
-                            label="Remarks"
+                            label="Reason / Remarks"
                             value={manualData.remarks}
                             onChange={(e) => setManualData({ ...manualData, remarks: e.target.value })}
                             fullWidth
                             multiline
-                            rows={2}
+                            rows={3}
+                            placeholder="Reason for regularization..."
                         />
                     </Box>
                 </DialogContent>
-                <DialogActions>
-                    <Button onClick={() => setOpenManualModal(false)}>Cancel</Button>
-                    <Button onClick={handleManualSubmit} variant="contained">Save</Button>
+                <DialogActions sx={{ p: 2.5 }}>
+                    <Button onClick={() => setOpenManualModal(false)} sx={{ borderRadius: 2 }}>Cancel</Button>
+                    <Button
+                        onClick={handleManualSubmit}
+                        variant="contained"
+                        sx={{ borderRadius: 2, px: 3 }}
+                    >
+                        Submit Request
+                    </Button>
                 </DialogActions>
             </Dialog>
 
-            {/* Bulk Entry Modal */}
-            <Dialog open={openBulkModal} onClose={() => setOpenBulkModal(false)} maxWidth="sm" fullWidth>
-                <DialogTitle>Bulk Attendance Marking</DialogTitle>
-                <DialogContent>
-                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 2 }}>
-                        <TextField
-                            type="date"
-                            label="Date"
-                            value={bulkData.date}
-                            onChange={(e) => setBulkData({ ...bulkData, date: e.target.value })}
-                            fullWidth
-                            InputLabelProps={{ shrink: true }}
-                        />
-                        <FormControl fullWidth>
-                            <InputLabel>Status</InputLabel>
-                            <Select
-                                value={bulkData.status}
-                                onChange={(e) => setBulkData({ ...bulkData, status: e.target.value })}
-                                label="Status"
-                            >
-                                <MenuItem value="present">Present</MenuItem>
-                                <MenuItem value="absent">Absent</MenuItem>
-                                <MenuItem value="half_day">Half Day</MenuItem>
-                                <MenuItem value="leave">Leave</MenuItem>
-                                <MenuItem value="holiday">Holiday</MenuItem>
-                            </Select>
-                        </FormControl>
-                        <FormControlLabel
-                            control={<Checkbox checked={selectAll} onChange={(e) => setSelectAll(e.target.checked)} />}
-                            label={`Select All Active Employees (${employees.length})`}
-                        />
-                        {!selectAll && (
-                            <FormControl fullWidth>
-                                <InputLabel>Select Employees</InputLabel>
-                                <Select
-                                    multiple
-                                    value={bulkData.employeeIds}
-                                    onChange={(e) => setBulkData({ ...bulkData, employeeIds: e.target.value })}
-                                    label="Select Employees"
-                                    renderValue={(selected) => `${selected.length} selected`}
-                                >
-                                    {employees.map((emp) => (
-                                        <MenuItem key={emp._id} value={emp._id}>{emp.firstName} {emp.lastName}</MenuItem>
-                                    ))}
-                                </Select>
-                            </FormControl>
-                        )}
-                        <TextField
-                            label="Remarks"
-                            value={bulkData.remarks}
-                            onChange={(e) => setBulkData({ ...bulkData, remarks: e.target.value })}
-                            fullWidth
-                            multiline
-                            rows={2}
-                        />
-                    </Box>
-                </DialogContent>
-                <DialogActions>
-                    <Button onClick={() => setOpenBulkModal(false)}>Cancel</Button>
-                    <Button onClick={handleBulkSubmit} variant="contained">Apply Bulk</Button>
-                </DialogActions>
-            </Dialog>
         </Box>
     );
-}
+};
 
 export default Attendance;

@@ -244,7 +244,7 @@ function ProfileDrawer({ open, onClose, mode = 'view', onModeChange }) {
                                         <InfoItem label="Employee Code" value={employee?.employeeCode} />
                                     </Grid>
                                     <Grid item xs={6}>
-                                        <InfoItem label="Department" value={employee?.department} />
+                                        <InfoItem label="Department" value={employee?.jobInfo?.department?.name || employee?.department} />
                                     </Grid>
                                     <Grid item xs={6}>
                                         <InfoItem label="Designation" value={employee?.designation} />
@@ -384,7 +384,7 @@ function ProfileDrawer({ open, onClose, mode = 'view', onModeChange }) {
                                         <TextField
                                             fullWidth
                                             label="Department"
-                                            value={employee?.department || ''}
+                                            value={employee?.jobInfo?.department?.name || employee?.department || ''}
                                             disabled
                                             variant="filled"
                                         />

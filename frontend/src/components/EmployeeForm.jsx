@@ -46,7 +46,7 @@ const EmployeeForm = ({ employeeId, onSuccess, onClose }) => {
     const [departments, setDepartments] = useState([]);
     const [designations, setDesignations] = useState([]);
     const [locations, setLocations] = useState([]);
-    const [filteredDesignations, setFilteredDesignations] = useState([]);
+
     const [loadingDepts, setLoadingDepts] = useState(true);
     const [loadingDesigs, setLoadingDesigs] = useState(false);
 
@@ -91,14 +91,12 @@ const EmployeeForm = ({ employeeId, onSuccess, onClose }) => {
         const fetchData = async () => {
             try {
                 setLoadingDepts(true);
-                const [deptRes, desigRes, locRes, mgrRes] = await Promise.all([
+                const [deptRes, locRes, mgrRes] = await Promise.all([
                     departmentAPI.getAll(),
-                    designationAPI.getAll(),
                     locationAPI.getAll(),
                     employeeAPI.getAll({ limit: 1000, status: 'Active' })
                 ]);
                 setDepartments(deptRes.data.data);
-                setDesignations(desigRes.data.data);
                 setLocations(locRes.data.data);
                 setManagers(mgrRes.data.data.employees);
             } catch (err) {
@@ -116,17 +114,28 @@ const EmployeeForm = ({ employeeId, onSuccess, onClose }) => {
         }
     }, [employeeId]);
 
-    // Filter Designations when Department changes
+    // Fetch Designations when Department changes
     useEffect(() => {
-        if (formData.jobInfo.department && designations.length > 0) {
-            const filtered = designations.filter(d =>
-                (typeof d.department === 'object' ? d.department._id === formData.jobInfo.department : d.department === formData.jobInfo.department)
-            );
-            setFilteredDesignations(filtered);
-        } else {
-            setFilteredDesignations([]);
-        }
-    }, [formData.jobInfo.department, designations]);
+        const fetchDesignations = async () => {
+            if (!formData.jobInfo.department) {
+                setDesignations([]);
+                return;
+            }
+
+            setLoadingDesigs(true);
+            try {
+                const res = await designationAPI.getAll(formData.jobInfo.department);
+                setDesignations(res.data.data);
+            } catch (err) {
+                showError('Failed to fetch designations');
+                setDesignations([]);
+            } finally {
+                setLoadingDesigs(false);
+            }
+        };
+
+        fetchDesignations();
+    }, [formData.jobInfo.department]);
 
     const loadEmployeeData = async () => {
         try {
@@ -185,10 +194,21 @@ const EmployeeForm = ({ employeeId, onSuccess, onClose }) => {
         const { name, value } = e.target;
         if (name.startsWith('jobInfo.')) {
             const field = name.split('.')[1];
-            setFormData(prev => ({
-                ...prev,
-                jobInfo: { ...prev.jobInfo, [field]: value }
-            }));
+            if (field === 'department') {
+                setFormData(prev => ({
+                    ...prev,
+                    jobInfo: {
+                        ...prev.jobInfo,
+                        [field]: value,
+                        designation: '' // Reset designation
+                    }
+                }));
+            } else {
+                setFormData(prev => ({
+                    ...prev,
+                    jobInfo: { ...prev.jobInfo, [field]: value }
+                }));
+            }
         } else if (name.startsWith('employmentDetails.')) {
             const field = name.split('.')[1];
             setFormData(prev => ({
@@ -443,10 +463,20 @@ const EmployeeForm = ({ employeeId, onSuccess, onClose }) => {
                         <Grid item xs={12} sm={6}>
                             <FormControl fullWidth required error={!!errors['jobInfo.designation']}>
                                 <InputLabel>Designation</InputLabel>
-                                <Select name="jobInfo.designation" value={formData.jobInfo.designation} onChange={handleChange} label="Designation" disabled={!formData.jobInfo.department}>
-                                    {filteredDesignations.map(desig => (
-                                        <MenuItem key={desig._id} value={desig._id}>{desig.name}</MenuItem>
-                                    ))}
+                                <Select
+                                    name="jobInfo.designation"
+                                    value={formData.jobInfo.designation}
+                                    onChange={handleChange}
+                                    label="Designation"
+                                    disabled={!formData.jobInfo.department || loadingDesigs}
+                                >
+                                    {loadingDesigs ? (
+                                        <MenuItem disabled><CircularProgress size={20} /></MenuItem>
+                                    ) : (
+                                        designations.map(desig => (
+                                            <MenuItem key={desig._id} value={desig._id}>{desig.name}</MenuItem>
+                                        ))
+                                    )}
                                 </Select>
                             </FormControl>
                         </Grid>
