@@ -49,7 +49,7 @@ import {
     Sick as LeaveIcon,
     HourglassBottom as HalfDayIcon
 } from '@mui/icons-material';
-import AttendanceWidget from '../components/dashboard/AttendanceWidget';
+import AttendancePanel from '../components/AttendancePanel';
 import AttendanceStats from '../components/AttendanceStats';
 import AttendanceInsights from '../components/AttendanceInsights';
 
@@ -296,46 +296,36 @@ const Attendance = () => {
             </Box>
 
             <Grid container spacing={3}>
-                {/* 1. Today's Attendance (Top Priority) - Full Width on Mobile, Side on Desktop */}
-                <Grid item xs={12} md={4} order={{ xs: 1, md: 2 }}>
-                    <AttendanceWidget
-                        user={user}
-                        todayStatus={todayStatus}
-                        onStatusChange={() => { checkTodayStatus(); fetchAttendance(); }}
-                    />
-                </Grid>
+                {/* Left Section: Summary + Filters + List */}
+                <Grid item xs={12} md={6} order={{ xs: 2, md: 1 }}>
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, height: '100%' }}>
 
-                {/* Main Content Area */}
-                <Grid item xs={12} md={8} order={{ xs: 2, md: 1 }}>
-                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-
-                        {/* 2. Monthly Summary */}
+                        {/* Summary Cards - 2x2 Grid */}
                         <Grid container spacing={2}>
-                            <Grid item xs={6} sm={3}>
+                            <Grid item xs={6}>
                                 <SummaryCard title="Present" value={summary?.present} icon={<PresentIcon />} color="success" />
                             </Grid>
-                            <Grid item xs={6} sm={3}>
+                            <Grid item xs={6}>
                                 <SummaryCard title="Absent" value={summary?.absent} icon={<AbsentIcon />} color="error" />
                             </Grid>
-                            <Grid item xs={6} sm={3}>
+                            <Grid item xs={6}>
                                 <SummaryCard title="Half Days" value={summary?.half_day} icon={<HalfDayIcon />} color="warning" />
                             </Grid>
-                            <Grid item xs={6} sm={3}>
+                            <Grid item xs={6}>
                                 <SummaryCard title="Leaves" value={summary?.leave} icon={<LeaveIcon />} color="info" />
                             </Grid>
                         </Grid>
 
-                        {/* 3. Filters */}
+                        {/* Filters */}
                         <Paper elevation={0} sx={{ p: 2, borderRadius: 3, border: '1px solid', borderColor: 'divider' }}>
                             <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', alignItems: 'center' }}>
-                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, color: 'text.secondary' }}>
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, color: 'text.secondary', width: { xs: '100%', sm: 'auto' } }}>
                                     <FilterIcon fontSize="small" />
                                     <Typography variant="subtitle2" fontWeight={700}>Filters</Typography>
                                 </Box>
-                                <Divider orientation="vertical" flexItem sx={{ height: 20, my: 'auto' }} />
 
                                 {isHRorAdmin && (
-                                    <FormControl size="small" sx={{ minWidth: 200 }}>
+                                    <FormControl size="small" sx={{ minWidth: 150, flex: 1 }}>
                                         <InputLabel>Employee</InputLabel>
                                         <Select
                                             value={selectedEmployee}
@@ -356,7 +346,7 @@ const Attendance = () => {
                                     value={dateFilter.startDate}
                                     onChange={(e) => setDateFilter({ ...dateFilter, startDate: e.target.value })}
                                     size="small"
-                                    sx={{ width: 140 }}
+                                    sx={{ width: 130 }}
                                     InputLabelProps={{ shrink: true }}
                                 />
                                 <TextField
@@ -365,79 +355,68 @@ const Attendance = () => {
                                     value={dateFilter.endDate}
                                     onChange={(e) => setDateFilter({ ...dateFilter, endDate: e.target.value })}
                                     size="small"
-                                    sx={{ width: 140 }}
+                                    sx={{ width: 130 }}
                                     InputLabelProps={{ shrink: true }}
                                 />
-                                <Box sx={{ ml: 'auto', display: 'flex', gap: 1 }}>
-                                    <Button variant="contained" onClick={handleFilter} size="small" sx={{ borderRadius: 2 }}>Apply</Button>
-                                    <Button variant="outlined" onClick={handleClearFilter} size="small" sx={{ borderRadius: 2 }}>Reset</Button>
-                                </Box>
+                                <Button variant="contained" onClick={handleFilter} size="small" sx={{ borderRadius: 2, ml: 'auto' }}>Apply</Button>
                             </Box>
                         </Paper>
 
-                        {/* 4. Attendance Log Table */}
-                        <Card sx={{ borderRadius: 3, overflow: 'hidden', border: '1px solid', borderColor: 'divider', boxShadow: 'none' }}>
-                            <TableContainer sx={{ maxHeight: 500 }}>
-                                <Table stickyHeader>
+                        {/* Table */}
+                        <Card sx={{ borderRadius: 3, overflow: 'hidden', border: '1px solid', borderColor: 'divider', boxShadow: 'none', flex: 1, display: 'flex', flexDirection: 'column' }}>
+                            <TableContainer sx={{ flex: 1, overflowY: 'auto', minHeight: 300 }}>
+                                <Table stickyHeader size="small">
                                     <TableHead>
                                         <TableRow>
                                             <TableCell sx={{ fontWeight: 700, bgcolor: 'background.neutral' }}>Date</TableCell>
-                                            <TableCell sx={{ fontWeight: 700, bgcolor: 'background.neutral' }}>Check In</TableCell>
-                                            <TableCell sx={{ fontWeight: 700, bgcolor: 'background.neutral' }}>Check Out</TableCell>
-                                            <TableCell sx={{ fontWeight: 700, bgcolor: 'background.neutral' }}>Work Hrs</TableCell>
                                             <TableCell sx={{ fontWeight: 700, bgcolor: 'background.neutral' }}>Status</TableCell>
+                                            <TableCell sx={{ fontWeight: 700, bgcolor: 'background.neutral' }}>Work Hrs</TableCell>
                                             <TableCell align="right" sx={{ fontWeight: 700, bgcolor: 'background.neutral' }}>Action</TableCell>
                                         </TableRow>
                                     </TableHead>
                                     <TableBody>
                                         {loading ? (
                                             <TableRow>
-                                                <TableCell colSpan={6} align="center" sx={{ py: 5 }}><CircularProgress /></TableCell>
+                                                <TableCell colSpan={4} align="center" sx={{ py: 5 }}><CircularProgress /></TableCell>
                                             </TableRow>
                                         ) : attendanceRecords.length === 0 ? (
                                             <TableRow>
-                                                <TableCell colSpan={6} align="center" sx={{ py: 5, color: 'text.secondary' }}>No records found</TableCell>
+                                                <TableCell colSpan={4} align="center" sx={{ py: 5, color: 'text.secondary' }}>No records found</TableCell>
                                             </TableRow>
                                         ) : (
                                             attendanceRecords.map((record) => (
                                                 <TableRow key={record._id} hover>
                                                     <TableCell>
-                                                        <Typography variant="body2" fontWeight={600}>
-                                                            {new Date(record.date).toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short' })}
-                                                        </Typography>
-                                                    </TableCell>
-                                                    <TableCell>
-                                                        <Typography variant="body2" fontFamily="monospace" sx={{ bgcolor: 'action.hover', px: 1, borderRadius: 1, display: 'inline-block' }}>
-                                                            {record.checkInTime ? new Date(record.checkInTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--:--'}
-                                                        </Typography>
-                                                    </TableCell>
-                                                    <TableCell>
-                                                        <Typography variant="body2" fontFamily="monospace" sx={{ bgcolor: 'action.hover', px: 1, borderRadius: 1, display: 'inline-block' }}>
-                                                            {record.checkOutTime ? new Date(record.checkOutTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--:--'}
-                                                        </Typography>
-                                                    </TableCell>
-                                                    <TableCell>
-                                                        <Typography variant="body2" fontWeight={500}>
-                                                            {record.workedHours ? `${record.workedHours}h` : '-'}
-                                                        </Typography>
+                                                        <Box>
+                                                            <Typography variant="body2" fontWeight={600}>
+                                                                {new Date(record.date).toLocaleDateString(undefined, { day: 'numeric', month: 'short' })}
+                                                            </Typography>
+                                                            <Typography variant="caption" color="text.secondary">
+                                                                {new Date(record.date).toLocaleDateString(undefined, { weekday: 'short' })}
+                                                            </Typography>
+                                                        </Box>
                                                     </TableCell>
                                                     <TableCell>
                                                         <Chip
                                                             label={record.status}
                                                             color={getStatusColor(record.status)}
                                                             size="small"
-                                                            sx={{ borderRadius: 1, fontWeight: 700, textTransform: 'capitalize', height: 24 }}
+                                                            sx={{ borderRadius: 1, fontWeight: 700, textTransform: 'capitalize', height: 24, fontSize: '0.75rem' }}
                                                         />
                                                     </TableCell>
+                                                    <TableCell>
+                                                        <Typography variant="body2" fontFamily="monospace">
+                                                            {record.workedHours ? `${record.workedHours}h` : '-'}
+                                                        </Typography>
+                                                    </TableCell>
                                                     <TableCell align="right">
-                                                        <Button
+                                                        <IconButton
                                                             size="small"
-                                                            startIcon={<EditIcon />}
                                                             onClick={() => openManual(record)}
-                                                            sx={{ minWidth: 0, textTransform: 'none' }}
+                                                            sx={{ color: 'primary.main' }}
                                                         >
-                                                            Regularize
-                                                        </Button>
+                                                            <EditIcon fontSize="small" />
+                                                        </IconButton>
                                                     </TableCell>
                                                 </TableRow>
                                             ))
@@ -447,6 +426,15 @@ const Attendance = () => {
                             </TableContainer>
                         </Card>
                     </Box>
+                </Grid>
+
+                {/* Right Section: Today's Attendance Panel */}
+                <Grid item xs={12} md={6} order={{ xs: 1, md: 2 }} sx={{ height: { md: 'calc(100vh - 140px)' }, minHeight: 600 }}>
+                    <AttendancePanel
+                        user={user}
+                        todayStatus={todayStatus}
+                        onStatusChange={() => { checkTodayStatus(); fetchAttendance(); }}
+                    />
                 </Grid>
             </Grid>
 
